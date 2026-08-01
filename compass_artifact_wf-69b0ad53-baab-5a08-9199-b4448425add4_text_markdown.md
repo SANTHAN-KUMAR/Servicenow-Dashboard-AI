@@ -1,6 +1,21 @@
 # Beautiful, ServiceNow-Native Dashboards + AI Insights: Technical & Competitive Dossier
 *Confidence labels: Verified-Documentation / Verified-Practitioner / Verified-HandsOn(ours) / Inference / Unverified. Current as of mid-2026 (July 31, 2026).*
 
+> ## ⚠️ Red-teamed — see [`docs/use-case-2/04-red-team-verification.md`](docs/use-case-2/04-red-team-verification.md)
+>
+> This dossier held up better than the derived docs, but three items changed:
+> - **A5 / claim 8 — "GlideQuery also does not enforce ACLs by default" is FALSE as worded.**
+>   `GlideQuery.withAcls()` exists and enforces ACLs; it *refuses to aggregate*, throwing
+>   **"Cannot use aggregate queries with withAcls()"**. That is a stronger argument than the one
+>   written here — use it. Also: `GlideAggregate.canRead()` exists (table-level), so the gap is
+>   specifically **row-level**. The underlying leak is now confirmed hands-on: 67 vs 0.
+> - **C11(b) / claim 11 — "autonomous KPI discovery not documented as existing" is overstated.**
+>   Performance Analytics ships KPI Signals (autonomous anomaly detection), Spotlight (ML driver
+>   ranking) and forecasting. The open gap is metric *candidacy*, not autonomous analysis.
+> - **A6 / A3 — export is not a gap.** ServiceNow ships native scheduled PPT/PDF dashboard export.
+>
+> Claims 1–7, 9, 10, 12, 14, 15 and the whole of Part C's chart-cap finding stand.
+
 ## TL;DR
 - **Technically buildable at high quality: YES.** A ServiceNow-native dashboard can reach an estimated ~80–90% of Power BI/Tableau *dashboard* visual richness by embedding libraries like ECharts/D3/Highcharts inside custom Next Experience components or Service Portal widgets — VividCharts is the live existence proof. The structural ceiling is not chart rendering; it is cross-source data modeling, ACL-safe aggregation, and end-user ad-hoc exploration. *(Verified-Practitioner / Verified-Documentation; the % is Inference)*
 - **Meaningfully differentiated from existing ServiceNow dashboard tools: PARTIALLY — genuine white space exists.** No shipped ServiceNow-native product combines (a) beautiful custom visualization + (b) AI-driven metric/insight selection + (c) provable ACL-correctness. VividCharts nails (a), does neither (b) nor (c) natively; Now Assist does a narrow (b) but not (a) or (c). *(Inference, based on currently documented capabilities)*

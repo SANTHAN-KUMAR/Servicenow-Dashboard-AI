@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "servicenow-analytics": {
+      "command": "node",
+      "args": ["/absolute/path/to/Servicenow-Dashboard-AI/mcp/servicenow-analytics-mcp.js"],
+      "env": {
+        "SN_INSTANCE": "eypocinst.service-now.com",
+        "SN_USER": "ey_Kumar",
+        "SN_PASS": "REPLACE_ME"
+      }
+    }
+  }
+}

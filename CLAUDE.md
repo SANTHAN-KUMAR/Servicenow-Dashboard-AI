@@ -121,6 +121,21 @@ scratch and do not treat it as an absolute ban on custom charting. The resolved 
   that looks like every other ServiceNow dashboard.** **Correction:** Section 4's exception clause
   exists precisely so this doesn't happen. Beautiful is the requirement; use it.
 
+- **DRIFT: repeating the falsified "OOB only has six chart types" figure.** A red-team pass
+  (`docs/use-case-2/04-red-team-verification.md`) traced that number to a search-filter artifact.
+  The real OOB palette is **~16 types** (Visualization Designer) / 29 in classic reporting.
+  **Correction:** argue from *kind*, not count — no sankey/treemap/sunburst/network/radar/waterfall,
+  fixed visual treatment, no free-form canvas. Same conclusion, defensible premise.
+
+- **DRIFT: pitching export (PPT/PDF) as an open native gap.** It isn't — ServiceNow ships native,
+  scheduled, emailable PPT and PDF dashboard export, verified live. **Correction:** treat export as
+  parity work, never as a differentiator.
+
+- **DRIFT: claiming nothing native surfaces insight autonomously.** Performance Analytics ships
+  KPI Signals, Spotlight and forecasting, all unprompted. **Correction:** the open gap is metric
+  ***candidacy*** — which metrics should exist — upstream of PA's indicator definition. That is a
+  real gap and a much smaller claim than "autonomous analytics."
+
 - **DRIFT: building "AI picks one of five chart types from a prompt" and calling it the moat.**
   **Correction:** that's what native Now Assist Data Visualization Generation already ships,
   unchanged across the last two releases. It is not a differentiator. The actual moat, per
@@ -129,9 +144,12 @@ scratch and do not treat it as an absolute ban on custom charting. The resolved 
   ACL-correct aggregate binding. Build toward those three, not toward NL-to-chart.
 
 - **DRIFT: shipping an aggregate/KPI card without checking ACL correctness.** GlideAggregate does
-  **not** enforce ACLs, and there is no GlideAggregateSecure. A card that silently shows a count
-  including records the viewer can't read is a real, documented failure mode, not a hypothetical
-  one. **Correction:** every aggregate binding must be checked against the viewer's persona before
+  **not** enforce **row-level** ACLs (it does expose a table-level `canRead()` you must remember to
+  call), there is no GlideAggregateSecure, and `GlideQuery.withAcls()` **throws rather than
+  aggregate** — verified live. A card that silently shows a count including records the viewer can't
+  read is a **demonstrated** failure mode: on dev390988, a role-less user gets `GlideAggregate` = 67
+  where `GlideRecordSecure` returns 0 rows. This is now the engagement's **lead** differentiator —
+  the only one that got stronger under red-teaming — not the third pillar. **Correction:** every aggregate binding must be checked against the viewer's persona before
   it's considered done. This is also where the AI moat and the correctness obligation are the same
   piece of work — don't treat them as separate backlog items.
 

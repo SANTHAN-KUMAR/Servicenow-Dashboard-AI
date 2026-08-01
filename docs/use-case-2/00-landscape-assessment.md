@@ -1,7 +1,22 @@
 # Use Case 2 — Landscape Assessment & Positioning
 
-**Status:** assessment / pre-build
-**Date:** 2026-07-31
+> ## ⚠️ CORRECTED — read [`04-red-team-verification.md`](04-red-team-verification.md) alongside this
+>
+> An adversarial re-verification pass falsified several claims below. The three that change the
+> pitch most:
+> - **Ceiling 1 was never live-backed and the "6 chart types" figure is wrong** (real: ~15–16). §8's
+>   claim that live data confirms it is exactly backwards — live data contradicts it.
+> - **Ceiling 2 is overstated.** Performance Analytics ships KPI Signals, Spotlight and forecasting,
+>   which autonomously surface anomalies and rank KPI drivers without being prompted. Both are
+>   active on this instance.
+> - **The ACL claim (Ceiling 3) is CONFIRMED and got stronger** — now hands-on reproducible
+>   (`GlideAggregate` = 67 vs `GlideRecordSecure` = 0 for a role-less user) and reinforced by
+>   `GlideQuery.withAcls()` hard-blocking aggregates. It should be the lead, not the third pillar.
+>
+> Inline corrections are marked below. Where this doc and `04` disagree on a fact, `04` wins.
+
+**Status:** assessment / pre-build — **partially superseded, see banner**
+**Date:** 2026-07-31 (red-teamed same day)
 **Instance checked:** dev390988 (live-verified, see [`01-live-instance-findings.md`](01-live-instance-findings.md))
 **Governs:** everything here is subordinate to [`/CLAUDE.md`](../../CLAUDE.md) — if this doc and CLAUDE.md ever disagree on *what we're building for*, CLAUDE.md wins.
 **Primary research source:** [`/compass_artifact_wf-69b0ad53-baab-5a08-9199-b4448425add4_text_markdown.md`](../../compass_artifact_wf-69b0ad53-baab-5a08-9199-b4448425add4_text_markdown.md) — a confidence-rated technical/competitive dossier (Verified-Documentation / Verified-Practitioner / Inference labels throughout) that CLAUDE.md's own claims are drawn from. This assessment cites its precise, sourced figures below rather than restating them from general knowledge.
@@ -38,14 +53,68 @@ Four things a client could point to and ask "why not just use this." Scored on t
 
 Four concrete, checkable limitations — not vibes. Ceiling 1 is now backed by a live component inventory, not just documentation (see §8 / live-instance findings doc).
 
-**Ceiling 1 — chart type is capped, not learned.**
-Now Assist's visualization generation offers a fixed, small set of chart types, unchanged across the last two platform releases. It selects from that list based on the prompt and field types — it does not evaluate the actual statistical shape of the data (skew, cardinality, time density, outliers) to decide what visualization would honestly represent it. A distribution with three extreme outliers gets the same bar chart as one without.
+**Ceiling 1 — chart type is capped, not learned.** *(claim survives; "live-confirmed" does not)*
+Now Assist's visualization generation offers a fixed, small set of chart types (5: single score, line, vertical bar, pie, list), unchanged across the last two platform releases. It selects from that list based on the prompt and field types — it does not evaluate the actual statistical shape of the data (skew, cardinality, time density, outliers) to decide what visualization would honestly represent it. A distribution with three extreme outliers gets the same bar chart as one without.
 
-**Ceiling 2 — it waits to be asked.**
+> ✅ **FULLY VERIFIED-HANDSON (customer instance).** On **`eypocinst`** (EY POC, Zurich), two
+> unrelated prompts drew the same refusal pattern from Now Assist:
+> - *"…as a heatmap"* → **"Heatmap is currently not supported. Alternative chart type is selected instead."**
+> - *"Show me incident resolution time distribution"* → **"Distribution is currently not supported. Alternative chart type is selected instead."**
+>
+> **The data-fit objection is dead.** The Visualization Designer picker on the same instance ships
+> **heatmap** *and* **boxplot** as first-class types — so the platform has them and **Now Assist
+> simply cannot emit them.** This is a skill-level cap, not a palette or data limitation.
+> See [`04`](04-red-team-verification.md) §9C.1–§9C.2.
+>
+> ⚠️ **Keep straight:** the skill is not installed on `dev390988`, so EY is the sole hands-on
+> source, and the result is at the **Zurich** end of the "unchanged Zurich→Australia" claim.
+>
+> 🔴 **But do not build the pitch on the chart cap.** The native palette is **24 types** (§9C.3) —
+> arguing "limited chart variety" loses the room. The durable argument is the *intelligence* gap
+> below, not the type list. Separately: the **OOB** chart palette is ~15–16 types, not the 6 previously
+> claimed; do not conflate the Now Assist cap with the OOB palette. See [`04`](04-red-team-verification.md) §2, §7.
+
+**Ceiling 2 — it waits to be asked.** *(⚠️ materially overstated — see correction)*
 Every Now Assist chart starts from a human-written prompt. It has no autonomous mode that looks at a table, a module, or a persona's workspace and decides *what's worth surfacing* — that judgment call stays entirely on the user. A dashboard "AI layer" that only responds to prompts one chart at a time isn't doing dashboard-level metric curation; it's NL-to-chart, which is table stakes, not a differentiator.
 
-**Ceiling 3 — the ACL gap is platform-wide, not Now-Assist-specific.**
-Any aggregate binding built on `GlideAggregate` or `GlideQuery` — which is what both OOB widgets and Now Assist's generated visualizations ultimately run on — does not enforce row-level ACLs. There is no `GlideAggregateSecure`. A count or sum card can silently include records the viewer isn't entitled to see. Nothing in the native stack checks this today; it's a documented, real failure mode, not hypothetical.
+> ⚠️ **Correction — this ceiling is much lower than written.** It is true of the *Now Assist chat
+> surface* and false of *Performance Analytics*. Active on dev390988: **KPI Signals** (continuously
+> analyses time-series indicators and autonomously flags anomalies, spikes, dips and trend breaks),
+> **Spotlight** (ML-ranks which factors most influence a KPI), **Performance Analytics AI**, plus
+> native forecasting (`sn-par-forecast-config`) and computed-insight/recommendation tables
+> (`par_computed_insight`, `par_recommendation`, `par_custom_insight_content`). None of that is
+> prompt-driven.
+>
+> **The surviving, narrower differentiator:** PA autonomously analyses **indicators a human already
+> defined**. It does not decide **which metrics should exist**. Our pillar is *candidate metric
+> definition from table/process content*, sitting upstream of PA indicator configuration — not
+> "autonomous analytics," which ServiceNow ships. See [`04`](04-red-team-verification.md) §5.
+>
+> 🔴 **Escalated: this is no longer theoretical at the client.** On **`eypocinst`**,
+> `par_computed_insight` holds **292 rows** and `par_recommendation` **35** — on the PDI both were
+> empty. KPI Signals, Spotlight and Performance Analytics AI are all active. **Native autonomous
+> insight generation is running in production against EY's own data today.**
+> **Do not say "no native autonomous analytics" in front of this client.**
+> See [`04`](04-red-team-verification.md) §9B.1.
+
+**Ceiling 3 — the ACL gap is platform-wide, not Now-Assist-specific.** *(✅ CONFIRMED hands-on — strengthened)*
+Any aggregate binding built on `GlideAggregate` — which is what both OOB widgets and Now Assist's generated visualizations ultimately run on — does not enforce row-level ACLs. There is no `GlideAggregateSecure`. A count or sum card can silently include records the viewer isn't entitled to see.
+
+> ✅ **Verified hands-on, and sharper than originally written.** On dev390988, impersonating a user
+> with **zero roles**: `GlideAggregate('incident').COUNT` → **67**, while `GlideRecordSecure('incident')`
+> returns **0 visible rows**. A user entitled to see nothing gets a tile reading 67.
+>
+> Two wording corrections that matter, because both are checkable and the original phrasing hands a
+> client an easy rebuttal:
+> 1. **`GlideQuery` is not part of the gap — it is the best evidence for it.** `GlideQuery.withAcls()`
+>    *does* enforce ACLs. It simply refuses to aggregate: `new GlideQuery('incident').withAcls().aggregate('count')`
+>    throws **"Cannot use aggregate queries with withAcls()"**. ServiceNow's own ACL-aware query API
+>    is deliberately blocked from aggregating. Lead with this.
+> 2. **`GlideAggregate.canRead()` exists** and gives a correct *table-level* answer; ServiceNow's own
+>    OOB `SOW - Announcements Aggregate` broker calls it. So say "no **row-level** ACL enforcement,
+>    and a table-level check you have to remember to call" — not "no ACL awareness at all."
+>
+> See [`04`](04-red-team-verification.md) §3. **This should be the lead differentiator, not the third one.**
 
 **Closing, not settled.**
 On **April 9, 2026**, ServiceNow collapsed its five legacy tiers (Standard/Pro/Pro Plus/Enterprise/Enterprise Plus) into three AI-native tiers (Foundation/Advanced/Prime) and bundled Now Assist, the Moveworks layer, Workflow Data Fabric, Context Engine, and AI Control Tower into every tier rather than selling them as add-ons (legacy SKUs hit end-of-sale July 1, 2026). At Knowledge 2026 (May 5), ServiceNow launched **Otto** — a unified AI experience folding Now Assist + Moveworks + AI Experience together, with **AI Data Explorer (AIDE)** as its analytics channel, plus **Autonomous Data Analytics** (Pyramid-Analytics-fueled, acquisition closed March 10, 2026), marketed as letting "any person or AI agent query the entire enterprise data estate in plain language."
@@ -61,12 +130,15 @@ The pitch should lean on the specific capability gap, not on Now Assist being pa
 
 ## 4. Capability matrix
 
+> ⚠️ **Three rows in this matrix were corrected by [`04`](04-red-team-verification.md).** Fixed values shown inline.
+
 | Capability | OOB Data Viz / PA | Now Assist | VividCharts | Our build |
 |---|---|---|---|---|
-| Chart variety | ~6-8 fixed primitives (live-confirmed, §8) | Small fixed set, capped | 20+ (charting-library-grade) | Full ECharts library |
-| Data-shape-adaptive specs | none | none | none | targeted — unproven anywhere yet |
-| Autonomous KPI/metric discovery | none | none (prompt-driven only) | none | targeted, via content graph reuse |
-| ACL-correct aggregate binding | not enforced | not enforced | not verified / not their concern | targeted, via persona-validation engine reuse |
+| Chart variety | ~~~6-8 fixed primitives~~ ~~~16~~ → **24 types, read from the picker** (incl. heatmap, boxplot, scatter, pareto, geomap, pivot, quadrant bubble); 29 in classic. Fixed *treatment*, no composability | Small fixed set, capped at 5 | 20+ (charting-library-grade) | Full ECharts library — **but do not lead with this**; the palette gap is narrower than assumed |
+| Data-shape-adaptive specs | none | **none — proven.** Asked for a distribution it says *"Distribution is currently not supported"* and renders one bar per raw value, `(empty)` dominant, 43→345,805 on a linear axis | none | targeted — **the strongest surviving visual argument**, and the gap is now demonstrable rather than asserted |
+| Autonomous KPI/metric discovery | ~~none~~ → **partial: KPI Signals (anomaly detection), Spotlight (driver ranking), forecasting — all on *human-defined* indicators** | none (prompt-driven only) | none | targeted: metric **candidacy** from content, upstream of indicator definition, via content graph reuse |
+| Autonomous dashboard export (PPT/PDF) | ~~n/a~~ → **native, scheduled, emailed; 150-viz cap** | — | yes (marketed differentiator) | parity, not a differentiator |
+| ACL-correct aggregate binding | **not enforced at row level** (table-level `canRead()` only; `GlideQuery.withAcls()` refuses to aggregate) | not enforced | not verified / not their concern | targeted, via persona-validation engine reuse |
 | Runs fully native, no export | yes | yes | yes | yes — hard constraint |
 | NDS token / brand consistency | yes (it is NDS) | yes | library-dependent | yes — tokens consumed by design |
 | Licensing | included | bundled into every tier as of Apr 9 2026 | commercial, pricing not public (G2: "No pricing available") | Apache-2.0 (ECharts) |
@@ -87,6 +159,18 @@ Three sentences that should anchor every stakeholder conversation, in order:
 > "Now Assist turns a prompt into one of a handful of chart types. We turn the data itself into the right chart, chosen automatically, provably safe for whoever's looking at it."
 
 That's autonomous discovery + shape-adaptive specs + ACL correctness — the three things nothing on the market does together.
+
+> ⚠️ **Re-ranked.** "Autonomous discovery" is the weakest of the three, not the strongest —
+> Performance Analytics already does autonomous anomaly detection and driver ranking on defined
+> indicators ([`04`](04-red-team-verification.md) §5). **Open with correctness instead**, because
+> it is the only leg that survived red-teaming and got stronger:
+>
+> > *"On your instance, a user entitled to see zero incidents sees a KPI tile reading 67. ServiceNow's
+> > own ACL-aware query API refuses to aggregate at all — it throws rather than answer. Here's the
+> > five-line script. Let's run it on yours."*
+>
+> Then layer shape-adaptive specs (still genuinely novel, still the biggest risk) and metric
+> *candidacy* discovery (narrower than originally claimed) on top.
 
 ---
 
@@ -132,10 +216,16 @@ Full methodology, raw data, and access-troubleshooting history: [`01-live-instan
 
 Summary: REST API on dev390988 is OAuth-only (Basic Auth and session-cookie auth are both rejected by design). Once an OAuth application was registered and a password-grant token issued, live Table API reads confirmed:
 
-- Now Assist Core v29.3.10, active, current build
-- OOB chart component inventory is a genuinely small, fixed set (bar, pie/donut, line/timeseries, sparkline, timeline, single-score) — live confirmation of Ceiling 1
-- Performance Analytics extensively active, but running on the same limited chart primitives
-- No third-party charting app (VividCharts or similar) installed — clean instance
-- UI Builder / Data Visualization are not separate toggleable plugins; they're bundled into the core Now Experience Framework (correction from an earlier draft of this assessment)
+- Now Assist Core v29.3.10, active, current build ✅ *(but the analytics/DV-generation skills are **not** installed — see [`04`](04-red-team-verification.md) §7)*
+- ~~OOB chart component inventory is a genuinely small, fixed set (bar, pie/donut, line/timeseries, sparkline, timeline, single-score) — live confirmation of Ceiling 1~~ ❌ **FALSIFIED** — search-filter artifact; the real palette is ≥15 types ([`04`](04-red-team-verification.md) §2)
+- Performance Analytics extensively active ✅ — ~~but running on the same limited chart primitives~~ **and running KPI Signals, Spotlight, forecasting, computed insights and native PPT/PDF/scheduled export** ([`04`](04-red-team-verification.md) §4, §5)
+- ~~No third-party charting app (VividCharts or similar) installed — clean instance~~ ⚠️ weaker than stated: `sys_store_app` was unreadable, so this is "no evidence found," not confirmed
+- UI Builder / Data Visualization are not separate toggleable plugins; they're bundled into the core Now Experience Framework ✅
 
-Nothing in §3–7 needed to change as a result — if anything, Ceiling 1 is now backed by live data instead of an inferred count.
+~~Nothing in §3–7 needed to change as a result — if anything, Ceiling 1 is now backed by live data instead of an inferred count.~~
+
+> ❌ **That closing sentence is the most wrong sentence in this repo.** Live data *contradicts*
+> Ceiling 1's chart-count framing rather than backing it, and Ceiling 2 is contradicted too. What
+> the live pass actually established, decisively, is **Ceiling 3** — and that one is now
+> demonstrable in five lines of script. Read [`04-red-team-verification.md`](04-red-team-verification.md)
+> for the corrected picture and what it does to §3–7.

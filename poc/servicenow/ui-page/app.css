@@ -1,0 +1,206 @@
+/* EY AI Analytics Dashboard — Use Case 2 POC
+   Data-series colours come from the validated categorical/ordinal palette
+   (checked with the dataviz validator in both light and dark).
+   Chrome (surfaces, ink, spacing, type) follows Now Design System conventions. */
+
+.eyd {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --page:      #f4f4f1;
+  --ink-1:     #0b0b0b;
+  --ink-2:     #52514e;
+  --ink-3:     #898781;
+  --grid:      #e1e0d9;
+  --axis:      #c3c2b7;
+  --ring:      rgba(11, 11, 11, 0.10);
+  --shadow:    0 1px 2px rgba(11,11,11,.04), 0 4px 16px rgba(11,11,11,.06);
+
+  --s1: #2a78d6;  /* blue   — primary series */
+  --s2: #eb6834;  /* orange — second sequential context */
+  --s3: #1baf7a;  /* aqua   */
+
+  --good: #0ca30c;
+  --warn: #fab219;
+  --crit: #d03b3b;
+  --good-text: #006300;
+
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--page);
+  color: var(--ink-1);
+  min-height: 100vh;
+  padding: 20px 24px 56px;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .eyd {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --page:      #0d0d0d;
+    --ink-1:     #ffffff;
+    --ink-2:     #c3c2b7;
+    --ink-3:     #898781;
+    --grid:      #2c2c2a;
+    --axis:      #383835;
+    --ring:      rgba(255, 255, 255, 0.10);
+    --shadow:    0 1px 2px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5);
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --good-text: #0ca30c;
+  }
+}
+:root[data-theme="dark"] .eyd {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --page:      #0d0d0d;
+  --ink-1:     #ffffff;
+  --ink-2:     #c3c2b7;
+  --ink-3:     #898781;
+  --grid:      #2c2c2a;
+  --axis:      #383835;
+  --ring:      rgba(255, 255, 255, 0.10);
+  --shadow:    0 1px 2px rgba(0,0,0,.4), 0 4px 18px rgba(0,0,0,.5);
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --good-text: #0ca30c;
+}
+
+.eyd * { box-sizing: border-box; }
+
+/* ---------------------------------------------------------------- header */
+.eyd-top {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 24px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.eyd-title { font-size: 24px; font-weight: 680; letter-spacing: -0.02em; margin: 0; }
+.eyd-sub   { font-size: 13px; color: var(--ink-2); margin: 5px 0 0; }
+.eyd-sub b { color: var(--ink-1); font-weight: 600; }
+
+.eyd-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+.eyd-btn {
+  font: inherit; font-size: 13px; font-weight: 600;
+  padding: 9px 16px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--ring); background: var(--surface-1); color: var(--ink-1);
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.eyd-btn:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+.eyd-btn:active { transform: translateY(0); }
+.eyd-btn[disabled] { opacity: .55; cursor: progress; transform: none; }
+.eyd-btn-primary {
+  background: var(--s1); border-color: transparent; color: #fff;
+}
+.eyd-btn-primary:hover { filter: brightness(1.06); }
+
+.eyd-select {
+  font: inherit; font-size: 13px; padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--ring); background: var(--surface-1); color: var(--ink-1);
+}
+
+/* ------------------------------------------------------------- stat tiles */
+.eyd-kpis {
+  display: grid; gap: 14px; margin-bottom: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+.eyd-kpi {
+  background: var(--surface-1); border: 1px solid var(--ring); border-radius: 14px;
+  padding: 16px 18px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+}
+.eyd-kpi::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--accent, var(--s1));
+}
+.eyd-kpi-label {
+  font-size: 11px; font-weight: 620; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 8px;
+}
+.eyd-kpi-value { font-size: 30px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.05; }
+.eyd-kpi-foot  { font-size: 12px; color: var(--ink-2); margin-top: 6px; }
+.eyd-kpi-foot .ok   { color: var(--good-text); font-weight: 620; }
+.eyd-kpi-foot .bad  { color: var(--crit); font-weight: 620; }
+
+/* ----------------------------------------------------------------- charts */
+.eyd-grid { display: grid; gap: 14px; grid-template-columns: repeat(12, 1fr); }
+.eyd-card {
+  background: var(--surface-1); border: 1px solid var(--ring); border-radius: 14px;
+  padding: 16px 18px 8px; box-shadow: var(--shadow); min-width: 0;
+}
+.eyd-c12 { grid-column: span 12; }
+.eyd-c8  { grid-column: span 8; }
+.eyd-c6  { grid-column: span 6; }
+.eyd-c4  { grid-column: span 4; }
+@media (max-width: 1100px) {
+  .eyd-c8, .eyd-c6, .eyd-c4 { grid-column: span 12; }
+}
+
+.eyd-card-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.eyd-card-t { font-size: 14px; font-weight: 660; letter-spacing: -0.01em; margin: 0; }
+.eyd-card-n { font-size: 11.5px; color: var(--ink-3); }
+.eyd-chart  { width: 100%; height: 280px; margin-top: 6px; }
+.eyd-chart-tall { height: 340px; }
+
+/* ------------------------------------------------------------- AI panel */
+.eyd-ai {
+  grid-column: span 12;
+  background: var(--surface-1);
+  border: 1px solid var(--ring); border-radius: 14px; box-shadow: var(--shadow);
+  padding: 18px 20px;
+}
+.eyd-ai-h { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+.eyd-ai-t { font-size: 15px; font-weight: 680; margin: 0; }
+.eyd-badge {
+  font-size: 10.5px; font-weight: 650; letter-spacing: .05em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid var(--ring); color: var(--ink-2);
+}
+.eyd-badge-live { background: rgba(12,163,12,.10); color: var(--good-text); border-color: transparent; }
+.eyd-headline { font-size: 15px; font-weight: 600; margin: 10px 0 14px; color: var(--ink-1); line-height: 1.45; }
+
+.eyd-ins { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.eyd-ins-item {
+  border: 1px solid var(--ring); border-radius: 11px; padding: 12px 14px;
+  border-left-width: 3px; border-left-style: solid;
+}
+.eyd-sev-info     { border-left-color: var(--s1); }
+.eyd-sev-watch    { border-left-color: var(--warn); }
+.eyd-sev-critical { border-left-color: var(--crit); }
+.eyd-ins-t { font-size: 13px; font-weight: 650; margin: 0 0 5px; display: flex; gap: 6px; align-items: center; }
+.eyd-ins-d { font-size: 12.5px; color: var(--ink-2); margin: 0; line-height: 1.5; }
+.eyd-ins-sev {
+  font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  padding: 1px 6px; border-radius: 4px; background: var(--grid); color: var(--ink-2);
+}
+
+.eyd-empty { font-size: 13px; color: var(--ink-2); line-height: 1.55; margin: 6px 0 0; }
+
+/* --------------------------------------------------------- ACL correctness */
+.eyd-acl {
+  display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+  padding: 14px 16px; border-radius: 12px; border: 1px solid var(--ring);
+  background: var(--surface-1); box-shadow: var(--shadow); margin-top: 14px;
+}
+.eyd-acl-num { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+.eyd-acl-lbl { font-size: 11px; font-weight: 620; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.eyd-acl-v   { font-size: 12.5px; color: var(--ink-2); flex: 1 1 320px; line-height: 1.5; }
+.eyd-pill {
+  font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px;
+}
+.eyd-pill-safe { background: rgba(12,163,12,.12); color: var(--good-text); }
+.eyd-pill-leak { background: rgba(208,59,59,.12); color: var(--crit); }
+
+/* ------------------------------------------------------------------ misc */
+.eyd-foot { margin-top: 22px; font-size: 11.5px; color: var(--ink-3); line-height: 1.6; }
+.eyd-skel {
+  background: linear-gradient(90deg, var(--grid) 25%, var(--surface-1) 50%, var(--grid) 75%);
+  background-size: 200% 100%; animation: eyd-sh 1.3s infinite; border-radius: 8px;
+}
+@keyframes eyd-sh { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+.eyd-table-wrap { overflow-x: auto; margin-top: 8px; }
+.eyd-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.eyd-table th, .eyd-table td { text-align: left; padding: 7px 12px; border-bottom: 1px solid var(--grid); }
+.eyd-table th { color: var(--ink-3); font-weight: 620; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
+.eyd-table td.num { text-align: right; font-variant-numeric: tabular-nums; }

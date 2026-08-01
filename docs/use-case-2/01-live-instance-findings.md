@@ -1,5 +1,21 @@
 # Live-Instance Findings — dev390988
 
+> ## ⚠️ SUPERSEDED IN PART — read [`04-red-team-verification.md`](04-red-team-verification.md) first
+>
+> A later adversarial re-verification pass on the same instance **falsified two of this
+> document's load-bearing findings**:
+>
+> - **§1 (access) is wrong.** REST is *not* OAuth-only. Session-cookie auth works; the prior pass
+>   omitted the `X-UserToken` header and misread the resulting 401 as an auth-policy decision.
+>   See [`04`](04-red-team-verification.md) §1 for the working method.
+> - **§5 (the "six primitives" chart inventory) is wrong.** The query filtered component names for
+>   *chart / visualization / graph*, which excludes ServiceNow's actual `now-vis-*` /
+>   `now-visualization-extensions/*` family. The real palette is **≥15 types**, not 6.
+>   See [`04`](04-red-team-verification.md) §2.
+>
+> §3 (build info), §4 (plugin inventory) and §7 (MCP side note) stand. §6 is weaker than stated.
+> Everything below is kept as the historical record; do not cite §1 or §5 as evidence.
+
 **Date:** 2026-07-31
 **Instance:** `https://dev390988.service-now.com`
 **Purpose:** ground the claims in [`00-landscape-assessment.md`](00-landscape-assessment.md) in live data instead of documentation alone.
@@ -8,7 +24,15 @@
 
 ---
 
-## 1. Access troubleshooting (for future reference)
+## 1. Access troubleshooting (for future reference) — ❌ CONCLUSION FALSIFIED
+
+> **This section's conclusion is wrong.** Session-cookie auth against the Table API works fine on
+> this instance; it requires the `X-UserToken: <g_ck>` header, scraped from `/navpage.do`. Without
+> that header ServiceNow returns `401 User is not authenticated` — **the same error text a bad
+> credential produces** — which is what led to the mistaken "OAuth-only by design" diagnosis below.
+> The same session also drives `POST /sys.scripts.do` for background scripts, a far more useful
+> verification surface than the Table API. Full method: [`04`](04-red-team-verification.md) §1.
+> The Basic Auth row was not re-tested (no password available); treat it as unverified, not settled.
 
 REST API access on this instance did **not** work via the two most common methods, and it's worth recording why so it isn't re-litigated:
 
@@ -79,7 +103,24 @@ Many other Content Packs and Premium modules are present but **inactive** (Custo
 | Glide Conversation Generative AI | inactive |
 | Flow Designer – Generative AI Extensions | inactive |
 
-## 5. OOB chart component inventory (the load-bearing finding)
+## 5. OOB chart component inventory — ❌ FALSIFIED (search-filter artifact)
+
+> **This section is wrong and its conclusion must not be cited.** The query below filtered
+> component names for **chart / visualization / graph**. ServiceNow's actual visualization
+> components are named `now-vis-*` with extension modules under `now-visualization-extensions/*`
+> — none of which match that filter. The search excluded the very components it was counting.
+> The instance holds **1,831** components in `sys_ux_lib_component`; this pass looked at 21.
+>
+> **Actual live inventory** (`source_script_name LIKE now-visualization-extensions`, exhaustive):
+> `__bar__`, `__bubble__`, `__dial__`, `__gauge__`, `__geomap__`, `__heatmap__`, `__pareto__`,
+> `__pie__`, `__singleScore__`, `__timeseries__` — **10** — plus `now-vis-sparkline`,
+> `now-vis-navigator`, `sn-multipivot` / `sn-par-multipivot-extension` (pivot),
+> `sn-par-calendar-connected` (calendar report), `sn-par-scorecard-*` (indicator scorecard),
+> `timeline-chart`. **≥15 types, not 6.** Corroborated by ServiceNow's own
+> [Types of data visualization](https://www.servicenow.com/docs/r/now-intelligence/data-visualization-type-overview.html),
+> which names ~16 Visualization Designer types (adding boxplot and list).
+>
+> Full analysis and what the argument becomes instead: [`04`](04-red-team-verification.md) §2.
 
 Queried `sys_ux_lib_component` (fields are `sys_name` / `tag` / `source_script_name`, not `name`/`label` — the table doesn't use conventional field names) for anything matching chart/visualization/graph:
 
@@ -109,7 +150,11 @@ sn-par-saved-data-visualization  | sn-app-par-components-saved-data-visualizatio
 sn-visualization-controls-section | @now-par-components/sn-par-visualization-controls-section
 ```
 
-**Distinct chart *types* in that list** (stripping out config panels, wrappers, and accessibility helpers): **bar, donut/pie, line/timeseries, sparkline, timeline, single-score.** Six primitives. This is what both native Now Assist visualization generation and OOB UI Builder dashboards are ultimately drawing from — live, direct confirmation of the "fixed, capped chart palette" claim (Ceiling 1) in the main assessment, not an assumption carried over from documentation.
+**Distinct chart *types* in that list** (stripping out config panels, wrappers, and accessibility helpers): **bar, donut/pie, line/timeseries, sparkline, timeline, single-score.** Six primitives. ~~This is what both native Now Assist visualization generation and OOB UI Builder dashboards are ultimately drawing from — live, direct confirmation of the "fixed, capped chart palette" claim (Ceiling 1) in the main assessment, not an assumption carried over from documentation.~~
+
+> ❌ **The conclusion in the struck-through sentence is false.** See the banner at the top of this
+> section. The list above is an incomplete slice of the component library, not the OOB chart
+> palette, and it was never evidence for Ceiling 1.
 
 ## 6. Third-party charting apps
 
@@ -120,6 +165,11 @@ Queried `sys_app` for any app with a non-empty `vendor` field, and separately se
 - `sys_store_app` name search: `403 Failed API level ACL Validation` (table not readable with this token's scope — inconclusive by that path, but the `sys_app` result is consistent with a clean instance)
 
 No evidence of VividCharts, Highcharts, ECharts, or D3 already installed as an app. Treat dev390988 as a clean slate for a custom-build demo — no existing charting app to work around or be confused with.
+
+> ⚠️ **Weaker than stated.** `sys_store_app` was unreadable (403), so the primary table for
+> Store-installed apps was never checked; the `sys_app` vendor query is an indirect proxy. The
+> conclusion is *probably* right for a fresh PDI, but the honest wording is "no evidence found,
+> `sys_store_app` unreadable" — not "confirmed clean."
 
 ## 7. ServiceNow MCP connector (side note, different tenant)
 
