@@ -413,8 +413,7 @@
   function boot() {
     var msg = el('boot-msg');
     if (typeof echarts === 'undefined') {
-      if (msg) msg.textContent = 'The dashboard script loaded, but the charting library did not. ' +
-        'Check that the echarts.min.js attachment on this UI page is readable.';
+      if (msg) msg.textContent = 'The charting library did not load from any source on this instance.';
       return;
     }
     // Assets are all present -- clear the bootstrap notice.
@@ -437,6 +436,7 @@
     loadAcl();
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  // The page's inline loader owns timing: it resolves the charting library from
+  // whichever instance source works, then calls this.
+  window.EYD_BOOT = boot;
 })();

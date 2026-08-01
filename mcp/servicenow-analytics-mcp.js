@@ -235,6 +235,15 @@ async function handle(msg) {
 }
 
 let buf = '';
+let inFlight = 0;
+let stdinClosed = false;
+
+// Tool calls are async. Exiting the moment stdin closes would drop any request
+// still waiting on ServiceNow, so shutdown waits for the last one to answer.
+function maybeExit() {
+  if (stdinClosed && inFlight === 0) process.exit(0);
+}
+
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', (chunk) => {
   buf += chunk;
@@ -249,10 +258,19 @@ process.stdin.on('data', (chunk) => {
     } catch {
       continue;
     }
-    Promise.resolve(handle(msg)).catch((e) => {
-      if (msg && msg.id !== undefined) replyError(msg.id, -32603, String(e));
-    });
+    inFlight++;
+    Promise.resolve(handle(msg))
+      .catch((e) => {
+        if (msg && msg.id !== undefined) replyError(msg.id, -32603, String(e));
+      })
+      .finally(() => {
+        inFlight--;
+        maybeExit();
+      });
   }
 });
 
-process.stdin.on('end', () => process.exit(0));
+process.stdin.on('end', () => {
+  stdinClosed = true;
+  maybeExit();
+});

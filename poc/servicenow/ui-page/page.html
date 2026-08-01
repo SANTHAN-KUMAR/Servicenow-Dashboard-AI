@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+  EY Service Operations Intelligence dashboard - UI Page shell.
+
+  UI Pages are parsed as XML, so only the five XML-predefined entities are legal
+  here (&amp; &lt; &gt; &quot; &apos;). Any other character must be numeric -
+  &#183; not &middot;. One undefined entity aborts the parse and serves a blank
+  page with no error, so build.py XML-validates before it deploys.
+
+  The two placeholder tokens below are replaced with app.css / app.js by
+  build_deploy.py, inlined rather than linked so the page carries no attachment
+  dependency of its own.
+-->
 <j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
 
-<link rel="stylesheet" href="/sys_attachment.do?sys_id=da84ee3b33568390c63690834d5c7b04" />
+<style><![CDATA[
+@@CSS@@
+]]></style>
 
 <div class="eyd">
 
-  <div id="boot-msg" style="padding:14px 16px;margin-bottom:14px;border-radius:10px;border:1px solid #888;font:14px system-ui">
-    Loading dashboard assets from the instance&#8230;
-  </div>
+  <div id="boot-msg" class="eyd-boot">Loading the charting library from this instance&#8230;</div>
 
   <div class="eyd-top">
     <div>
@@ -118,16 +130,60 @@
 
   <p class="eyd-foot">
     Rendered entirely inside ServiceNow. Charting library (Apache ECharts, Apache-2.0) is served
-    from an instance attachment &#8212; no external CDN, no runtime dependency outside the platform.
+    from the instance itself &#8212; no external CDN, no runtime dependency outside the platform.
     Data comes from the <code>ey_ai_dashboard</code> Scripted REST API. Colours are validated for
     colour-vision deficiency and contrast in both light and dark themes.
   </p>
 
 </div>
 
-<script src="/sys_attachment.do?sys_id=c8dc5e7333928390c63690834d5c7b6d"
-        onerror="document.getElementById('boot-msg').textContent='Could not load the charting library (echarts.min.js) from the instance attachment.'"></script>
-<script src="/sys_attachment.do?sys_id=74ae66ff335a8390c63690834d5c7b44"
-        onerror="document.getElementById('boot-msg').textContent='Could not load the dashboard script (eyd-app.js) from the instance attachment.'"></script>
+<script><![CDATA[
+@@APP@@
+]]></script>
+
+<script><![CDATA[
+// Resolve the charting library from the instance. Two sources are tried because
+// only one of them can be verified from outside a browser session: a UI Script
+// (/eyd_echarts.jsdbx, the platform's supported way to serve JS) and the same
+// library as an attachment. Whichever answers first wins; if neither does, the
+// boot notice says so instead of the page going quietly blank.
+(function () {
+  var SOURCES = [
+    '/eyd_echarts.jsdbx',
+    '/sys_attachment.do?sys_id=c8dc5e7333928390c63690834d5c7b6d'
+  ];
+  var msg = document.getElementById('boot-msg');
+
+  function done() {
+    if (typeof window.EYD_BOOT === 'function') window.EYD_BOOT();
+  }
+
+  function attempt(i) {
+    if (typeof window.echarts !== 'undefined') return done();
+    if (i >= SOURCES.length) {
+      if (msg) {
+        msg.className = 'eyd-boot eyd-boot-bad';
+        msg.textContent = 'Could not load the charting library from this instance. Tried: ' +
+          SOURCES.join('  and  ') + '. Everything else on this page is live.';
+      }
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = SOURCES[i];
+    s.onload = function () {
+      if (typeof window.echarts === 'undefined') return attempt(i + 1);
+      done();
+    };
+    s.onerror = function () { attempt(i + 1); };
+    document.body.appendChild(s);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () { attempt(0); });
+  } else {
+    attempt(0);
+  }
+})();
+]]></script>
 
 </j:jelly>
