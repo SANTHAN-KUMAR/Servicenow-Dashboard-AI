@@ -44,6 +44,24 @@ drift. Beautiful first. AI as the differentiator layered on top.
    makes the beautiful dashboard smarter — never let it become the reason the dashboard itself
    ships thin.
 
+4. **The artifact is a dashboard *library*, not a dashboard.** Added 2026-08-01
+   after comparing the POC against the client's own Dashboards experience. The
+   entry point is a **catalog page** listing every dashboard/report the logged-in
+   user is entitled to open — cards, search, group filter, Recent / Owned by Me /
+   Shared with Me / All. Opening a card renders *that* dashboard at the full
+   visual bar. Two surfaces, not one. **The catalog is permission-scoped**: a user
+   must not see a card for data they cannot read, which makes entitlement
+   correctness a catalog-membership concern as well as a cell-value one.
+
+5. **Different report types get different visual grammars.** The client's tool
+   already does this — an approval-state breakdown draws part-to-whole, a ranked
+   task list draws sorted bars, a trend draws a time series. A fixed chart set for
+   every subject is the specific failure they identified in our build. Chart form
+   follows the kind of question plus the measured shape of the data. Also: *give
+   the user options to analyse rather than overwhelming them* — their words.
+
+Full detail in `docs/use-case-2/07-scope-catalog-and-report-types.md`.
+
 **What is NOT constrained:** the *build process*. Design tools, external LLMs, any charting
 library, any AI model used during generation are all fair game — the constraint is only on the
 **delivered runtime artifact**, which must be ServiceNow-native.
@@ -166,6 +184,35 @@ scratch and do not treat it as an absolute ban on custom charting. The resolved 
   IA and entitlement correctness, pointed at a different output. Don't rebuild them from scratch;
   don't silently merge the two products either — the target artifact (a dashboard/report page,
   not a whole generated portal) is genuinely distinct and gets its own emission surface.
+
+- **DRIFT: building one hard-coded dashboard page instead of a catalog.** This
+  already happened once — the POC shipped a single page with six fixed charts over
+  `incident`, which the client called *"a dumb stub with some random default
+  graphs."* **Correction:** the entry point is the catalog (Section 1.4). A page
+  that only ever shows one subject is a spike, not a deliverable.
+
+- **DRIFT: drawing the same chart set regardless of subject.** **Correction:** the
+  shape profiler (`profileField()` — distinct count, top share, concentration)
+  already exists and is already computed. Use it to *choose the form*, not just to
+  print a caption. See Section 1.5.
+
+- **DRIFT: assuming the page can fetch its own data over XHR.** Measured on this
+  instance: Scripted REST called from a logged-in browser session never returns,
+  and the platform's own Table API behaves the same. **Correction:** compute
+  server-side in `<g:evaluate>` and embed the payload; treat XHR as refresh-only.
+  See `poc/servicenow/ui-page/probe-results.md`.
+
+- **DRIFT: inlining client JavaScript into a UI Page.** Jelly evaluates `<script>`
+  bodies; a CDATA-wrapped one makes the platform serve the **whole page as zero
+  bytes**, HTTP 200, no error anywhere. **Correction:** client JS is always a UI
+  Script loaded by `src`, with a content hash on the URL because `.jsdbx` is
+  cached hard. `build_deploy.py` enforces this.
+
+- **DRIFT: trusting an HTTP 200 from the Table API as proof a write landed.** It
+  returns 200 whether or not it stored what you sent. Two rounds of this
+  engagement were lost to reporting a fix as deployed while the instance still
+  served the old record. **Correction:** read the record back and compare byte for
+  byte. Never report something as fixed on the strength of a status code.
 
 - **DRIFT: overclaiming the ceiling.** Do not describe the product, internally or to the client,
   as achieving true Power BI parity. The honest ceiling is high on visual/interaction richness and
