@@ -5,10 +5,14 @@
 
 <div class="eyd">
 
+  <div id="boot-msg" style="padding:14px 16px;margin-bottom:14px;border-radius:10px;border:1px solid #888;font:14px system-ui">
+    Loading dashboard assets from the instance&#8230;
+  </div>
+
   <div class="eyd-top">
     <div>
       <h1 class="eyd-title">Service Operations Intelligence</h1>
-      <p class="eyd-sub">EY POC instance &middot; <b><span id="viewer">Loading&#8230;</span></b></p>
+      <p class="eyd-sub">EY POC instance &#183; <b><span id="viewer">Loading&#8230;</span></b></p>
     </div>
     <div class="eyd-actions">
       <select class="eyd-select" id="range" aria-label="Time range">
@@ -121,7 +125,9 @@
 
 </div>
 
-<script src="/sys_attachment.do?sys_id=c8dc5e7333928390c63690834d5c7b6d"></script>
-<script src="/sys_attachment.do?sys_id=49d62eb733968390c63690834d5c7b1e"></script>
+<script src="/sys_attachment.do?sys_id=c8dc5e7333928390c63690834d5c7b6d"
+        onerror="document.getElementById('boot-msg').textContent='Could not load the charting library (echarts.min.js) from the instance attachment.'"></script>
+<script src="/sys_attachment.do?sys_id=74ae66ff335a8390c63690834d5c7b44"
+        onerror="document.getElementById('boot-msg').textContent='Could not load the dashboard script (eyd-app.js) from the instance attachment.'"></script>
 
 </j:jelly>

@@ -132,7 +132,7 @@ async function callTool(name, args) {
     const q = args.query ? `&query=${encodeURIComponent(args.query)}` : '';
     const j = await snGet(
       `/api/eyi/ey_ai_dashboard/aclproof?table=${encodeURIComponent(args.table)}` +
-        `&field=${encodeURIComponent(args.field)}${q}`
+      `&field=${encodeURIComponent(args.field)}${q}`
     );
     const d = j.result;
     return {
@@ -152,7 +152,7 @@ async function callTool(name, args) {
     const q = args.query ? `&query=${encodeURIComponent(args.query)}` : '';
     const j = await snGet(
       `/api/eyi/ey_ai_dashboard/aclproof?table=${encodeURIComponent(table)}` +
-        `&field=${encodeURIComponent(field)}${q}`
+      `&field=${encodeURIComponent(field)}${q}`
     );
     const d = j.result;
     return {

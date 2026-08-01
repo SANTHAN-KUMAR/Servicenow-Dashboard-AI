@@ -411,10 +411,14 @@
   }
 
   function boot() {
+    var msg = el('boot-msg');
     if (typeof echarts === 'undefined') {
-      el('viewer').textContent = 'Chart library failed to load from the instance attachment.';
+      if (msg) msg.textContent = 'The dashboard script loaded, but the charting library did not. ' +
+        'Check that the echarts.min.js attachment on this UI page is readable.';
       return;
     }
+    // Assets are all present -- clear the bootstrap notice.
+    if (msg && msg.parentNode) msg.parentNode.removeChild(msg);
     el('btn-refresh').addEventListener('click', load);
     el('btn-ai').addEventListener('click', runAI);
     el('range').addEventListener('change', load);
