@@ -297,13 +297,8 @@
 
   // -------------------------------------------------------------- ACL proof
 
-  function loadAcl() {
-    var box = el('acl');
-    box.innerHTML = '<div class="eyd-acl-v">Running both aggregation paths as you…</div>';
-    fetch(API + '/aclproof?table=incident&field=priority', { credentials: 'same-origin' })
-      .then(function (r) { return r.json(); })
-      .then(function (j) {
-        var d = j.result;
+  function paintAcl(d) {
+        var box = el('acl');
         var leaked = Number(d.leaked) || 0;
         box.innerHTML =
           '<div><div class="eyd-acl-lbl">GlideAggregate</div><div class="eyd-acl-num">' + full(d.aggregate_total) + '</div></div>' +
@@ -313,9 +308,39 @@
           '<span class="eyd-pill ' + (leaked > 0 ? 'eyd-pill-leak' : 'eyd-pill-safe') + '">' +
             (leaked > 0 ? 'Leak detected' : 'Verified safe') + '</span>' +
           '<div class="eyd-acl-v">' + esc(d.verdict) + '</div>';
-      })
+  }
+
+  /* The correctness check compares the same two totals the payload already
+   * carries, so the panel is drawn from those rather than from a second request
+   * the session may never answer. "Re-run check" still goes to the endpoint -
+   * that is the point of the button - and reports if it cannot get through. */
+  function aclFromPayload(d) {
+    var agg = Number(d.kpis.total) || 0;
+    var sec = Number(d.kpis.total_visible_to_viewer) || 0;
+    var leaked = agg - sec;
+    return {
+      aggregate_total: agg, secure_total: sec, leaked: leaked,
+      verdict: leaked > 0
+        ? 'LEAK: GlideAggregate counts ' + full(leaked) + ' record(s) this viewer cannot open.'
+        : 'SAFE: aggregate and ACL-filtered counts agree for this viewer (' + full(sec) + ').'
+    };
+  }
+
+  function loadAcl() {
+    var box = el('acl');
+    box.innerHTML = '<div class="eyd-acl-v">Re-running both aggregation paths as you…</div>';
+
+    var timer = setTimeout(function () {
+      box.innerHTML = '<div class="eyd-acl-v">The re-run did not come back within 30s. ' +
+        'The figures above are from the server-side check performed when this page loaded.</div>';
+    }, 30000);
+
+    fetch(API + '/aclproof?table=incident&field=priority', { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { clearTimeout(timer); paintAcl(j.result); })
       .catch(function (e) {
-        box.innerHTML = '<div class="eyd-acl-v">ACL check failed: ' + esc(e.message) + '</div>';
+        clearTimeout(timer);
+        box.innerHTML = '<div class="eyd-acl-v">ACL re-check failed: ' + esc(e.message) + '</div>';
       });
   }
 
@@ -396,17 +421,42 @@
 
   // ---------------------------------------------------------------- bootstrap
 
+  /* First paint uses the payload the page already carries: Jelly computed it
+   * server-side and parked it, base64'd, on the root element. No request, no
+   * spinner, and it works even where in-session XHR to the REST API does not -
+   * which on this instance is everywhere, including the platform's own Table
+   * API. Changing the range still has to ask the server, so that path keeps
+   * using the endpoint, with a timeout so it reports instead of hanging. */
+  function embedded() {
+    var root = el('eyd-root');
+    var raw = root && root.getAttribute('data-payload');
+    if (!raw) return null;
+    try {
+      return JSON.parse(decodeURIComponent(escape(window.atob(raw))));
+    } catch (e) {
+      return null;
+    }
+  }
+
   function load() {
     var months = el('range').value;
     el('viewer').textContent = 'Loading…';
+
+    var timer = setTimeout(function () {
+      el('viewer').textContent =
+        'The server did not answer within 30s - showing the figures the page ' +
+        'loaded with. Reload to refresh.';
+    }, 30000);
+
     fetch(API + '/overview?months=' + months, { credentials: 'same-origin' })
       .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       })
-      .then(function (j) { render(j.result); })
+      .then(function (j) { clearTimeout(timer); render(j.result); })
       .catch(function (e) {
-        el('viewer').textContent = 'Failed to load: ' + e.message;
+        clearTimeout(timer);
+        el('viewer').textContent = 'Could not refresh: ' + e.message;
       });
   }
 
@@ -432,11 +482,44 @@
       });
     }
 
-    load();
-    loadAcl();
+    var seed = embedded();
+    if (seed) {
+      render(seed);
+      paintAcl(aclFromPayload(seed));
+    } else {
+      // No server-side payload on the page - fall back to asking the endpoint.
+      load();
+      loadAcl();
+    }
   }
 
-  // The page's inline loader owns timing: it resolves the charting library from
-  // whichever instance source works, then calls this.
-  window.EYD_BOOT = boot;
+  /* This file is served as a UI Script (/eyd_app.jsdbx), not inlined into the
+   * page. A UI Page runs its <script> bodies through Jelly, which silently
+   * renders the ENTIRE page to zero bytes if the body is wrapped in CDATA - and
+   * without CDATA any '<' in this code would break the page's XML parse. Loading
+   * it by src sidesteps both, so it must stay a separate script.
+   *
+   * echarts.jsdbx is requested by the page immediately before this file, so it
+   * is normally already present; the attachment is a second chance if that
+   * request failed.
+   */
+  function start() {
+    if (typeof echarts !== 'undefined') return boot();
+
+    var fallback = document.createElement('script');
+    fallback.src = '/sys_attachment.do?sys_id=c8dc5e7333928390c63690834d5c7b6d';
+    fallback.onload = boot;
+    fallback.onerror = function () {
+      var msg = el('boot-msg');
+      if (msg) {
+        msg.className = 'eyd-boot eyd-boot-bad';
+        msg.textContent = 'The charting library could not be loaded from this instance ' +
+          '(tried /eyd_echarts.jsdbx and the attachment copy).';
+      }
+    };
+    document.body.appendChild(fallback);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
 })();

@@ -7,9 +7,14 @@
   &#183; not &middot;. One undefined entity aborts the parse and serves a blank
   page with no error, so build.py XML-validates before it deploys.
 
-  The two placeholder tokens below are replaced with app.css / app.js by
-  build_deploy.py, inlined rather than linked so the page carries no attachment
-  dependency of its own.
+  Scripts are loaded by src, never inlined. Jelly evaluates script bodies (it
+  stamps eval="true" on them); a body wrapped in CDATA makes the platform serve
+  the WHOLE page as zero bytes, with HTTP 200 and no error anywhere. Without
+  CDATA, any less-than sign in the code breaks the XML parse instead. Measured
+  on this instance - see probe-results.md.
+
+  A style element with CDATA is fine, so the stylesheet is inlined: the CSS
+  placeholder token below is replaced with app.css by build_deploy.py.
 -->
 <j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
 
@@ -17,7 +22,11 @@
 @@CSS@@
 ]]></style>
 
-<div class="eyd">
+<g:evaluate var="jvar_payload" object="true">
+  new EYAIDashPayload().overviewB64('incident', 12);
+</g:evaluate>
+
+<div class="eyd" id="eyd-root" data-payload="${jvar_payload}">
 
   <div id="boot-msg" class="eyd-boot">Loading the charting library from this instance&#8230;</div>
 
@@ -137,53 +146,11 @@
 
 </div>
 
-<script><![CDATA[
-@@APP@@
-]]></script>
-
-<script><![CDATA[
-// Resolve the charting library from the instance. Two sources are tried because
-// only one of them can be verified from outside a browser session: a UI Script
-// (/eyd_echarts.jsdbx, the platform's supported way to serve JS) and the same
-// library as an attachment. Whichever answers first wins; if neither does, the
-// boot notice says so instead of the page going quietly blank.
-(function () {
-  var SOURCES = [
-    '/eyd_echarts.jsdbx',
-    '/sys_attachment.do?sys_id=c8dc5e7333928390c63690834d5c7b6d'
-  ];
-  var msg = document.getElementById('boot-msg');
-
-  function done() {
-    if (typeof window.EYD_BOOT === 'function') window.EYD_BOOT();
-  }
-
-  function attempt(i) {
-    if (typeof window.echarts !== 'undefined') return done();
-    if (i >= SOURCES.length) {
-      if (msg) {
-        msg.className = 'eyd-boot eyd-boot-bad';
-        msg.textContent = 'Could not load the charting library from this instance. Tried: ' +
-          SOURCES.join('  and  ') + '. Everything else on this page is live.';
-      }
-      return;
-    }
-    var s = document.createElement('script');
-    s.src = SOURCES[i];
-    s.onload = function () {
-      if (typeof window.echarts === 'undefined') return attempt(i + 1);
-      done();
-    };
-    s.onerror = function () { attempt(i + 1); };
-    document.body.appendChild(s);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { attempt(0); });
-  } else {
-    attempt(0);
-  }
-})();
-]]></script>
+<!-- UI Scripts are cached hard by the browser, so a redeploy alone does not
+     reach anyone who has already loaded the page. The version below is the
+     content hash, stamped in by build_deploy.py, so the URL changes exactly
+     when the code does. -->
+<script src="/eyd_echarts.jsdbx"></script>
+<script src="/eyd_app.jsdbx?v=@@APPV@@"></script>
 
 </j:jelly>

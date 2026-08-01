@@ -8,6 +8,7 @@ record back and compare it byte for byte with what was built.
 Usage:  build_deploy.py <netrc-file> [--dry-run]
 """
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -25,20 +26,27 @@ def build() -> str:
     app = (HERE / "app.js").read_text()
 
     # CDATA has exactly one escape hazard: the terminator itself.
-    for name, body in (("app.css", css), ("app.js", app)):
-        if "]]>" in body:
-            sys.exit(f"{name} contains ']]>' and cannot be inlined in CDATA")
+    if "]]>" in css:
+        sys.exit("app.css contains ']]>' and cannot be inlined in CDATA")
 
-    return shell.replace("@@CSS@@", css).replace("@@APP@@", app)
+    version = hashlib.sha256(app.encode()).hexdigest()[:12]
+    return shell.replace("@@CSS@@", css).replace("@@APPV@@", version)
 
 
 def validate(html: str) -> None:
-    """UI Pages are parsed as XML. An undefined entity serves a blank page."""
+    """Two ways this page can serve as zero bytes, both silent and both HTTP 200."""
     try:
         ET.fromstring(html)
     except ET.ParseError as e:
         sys.exit(f"XML parse failed - this would deploy as a blank page: {e}")
-    print(f"  XML parses clean ({len(html):,} bytes)")
+
+    # Jelly evaluates script bodies; a CDATA-wrapped one blanks the whole page.
+    for el in ET.fromstring(html).iter():
+        if el.tag.endswith("script") and (el.text or "").strip():
+            sys.exit("A <script> element has an inline body. Jelly evaluates script "
+                     "bodies and serves the whole page as 0 bytes when one is wrapped "
+                     "in CDATA. Move the code to a UI Script and load it by src.")
+    print(f"  XML parses clean, no inline script bodies ({len(html):,} bytes)")
 
 
 def curl(netrc: str, method: str, url: str, body: dict | None = None) -> dict:
@@ -70,7 +78,28 @@ def main() -> None:
         print("  dry run - wrote built.html, nothing deployed")
         return
 
-    print("Deploying...")
+    print("Deploying app.js as UI Script eyd_app...")
+    app = (HERE / "app.js").read_text()
+    found = curl(netrc, "GET", f"https://{INSTANCE}/api/now/table/sys_ui_script"
+                               "?sysparm_query=name=eyd_app&sysparm_fields=sys_id")["result"]
+    rec = {"name": "eyd_app", "script": app, "active": "true", "ui_type": "0",
+           "description": "EY analytics dashboard client code. Served by src because a "
+                          "UI Page cannot carry it inline - see page.html."}
+    if found:
+        curl(netrc, "PATCH",
+             f"https://{INSTANCE}/api/now/table/sys_ui_script/{found[0]['sys_id']}"
+             "?sysparm_fields=sys_id", rec)
+        uis = found[0]["sys_id"]
+    else:
+        uis = curl(netrc, "POST", f"https://{INSTANCE}/api/now/table/sys_ui_script"
+                                  "?sysparm_fields=sys_id", rec)["result"]["sys_id"]
+    back = curl(netrc, "GET", f"https://{INSTANCE}/api/now/table/sys_ui_script/{uis}"
+                              "?sysparm_fields=script")["result"]["script"]
+    if back != app:
+        sys.exit(f"MISMATCH on eyd_app - sent {len(app):,}, instance holds {len(back):,}")
+    print(f"  eyd_app holds exactly what was built ({len(back):,} bytes)")
+
+    print("Deploying page...")
     base = f"https://{INSTANCE}/api/now/table/sys_ui_page/{PAGE_SYS_ID}"
     curl(netrc, "PATCH", base + "?sysparm_fields=sys_id", {"html": html})
 
