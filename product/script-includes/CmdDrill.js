@@ -47,9 +47,15 @@ CmdDrill.GATES = {
 
 CmdDrill.prototype = {
 
-    initialize: function () {
-        this.meta = new CmdMeta();
-        this.data = new CmdData();
+    /**
+     * Accepts the caller's CmdData and CmdMeta so the whole request shares one
+     * memoisation cache. Constructing its own would give the drill gates a second
+     * empty cache and make them re-prove and re-profile everything the panels had
+     * already paid for, which is most of the cost of a page.
+     */
+    initialize: function (data, meta) {
+        this.data = data || new CmdData();
+        this.meta = meta || new CmdMeta();
     },
 
     /**
@@ -106,7 +112,9 @@ CmdDrill.prototype = {
             rows: null
         };
 
-        var total = this.data.secureCount(table, query);
+        /* Routed through total() so it uses the request's single ACL verdict
+           rather than re-proving the table for every candidate field. */
+        var total = this.data.total(table, query);
         res.rows = total.count;
 
         if (total.count === 0) {
@@ -118,17 +126,18 @@ CmdDrill.prototype = {
             return res;
         }
 
-        var fr = this.data.fillRate(table, dim.name, query);
-        res.fill = Math.round(fr.rate * 1000) / 1000;
+        /* One grouped query answers fill rate and cardinality together. Asking
+           for them separately cost two extra table scans per candidate field, and
+           a gate that examines fourteen candidates pays that fourteen times. */
+        var prof = this.data.profile(table, dim.name, query);
+        res.fill = prof.fill;
+        res.distinct = prof.distinctNonEmpty;
 
-        if (fr.rate < G.FATAL_FILL) {
+        if (prof.fill < G.FATAL_FILL) {
             res.reason = dim.label + ' is empty on ' +
-                         this._pct(1 - fr.rate) + ' of these records';
+                         this._pct(1 - prof.fill) + ' of these records';
             return res;
         }
-
-        var prof = this.data.profile(table, dim.name, query);
-        res.distinct = prof.distinctNonEmpty;
 
         if (prof.distinctNonEmpty < G.MIN_DISTINCT) {
             res.reason = 'every record here has the same ' + dim.label.toLowerCase();
@@ -139,18 +148,18 @@ CmdDrill.prototype = {
             res.searchable = true;
             return res;
         }
-        if (fr.rate < G.MIN_FILL) {
+        if (prof.fill < G.MIN_FILL) {
             /* Offered, but the caveat travels with it. A 45%-populated field is
                still a real breakdown of the part that is populated. */
             res.offer = true;
             res.partial = true;
-            res.reason = 'covers the ' + this._pct(fr.rate) + ' of records that have a ' +
+            res.reason = 'covers the ' + this._pct(prof.fill) + ' of records that have a ' +
                          dim.label.toLowerCase();
             return res;
         }
 
         res.offer = true;
-        res.reason = prof.distinctNonEmpty + ' values, populated on ' + this._pct(fr.rate);
+        res.reason = prof.distinctNonEmpty + ' values, populated on ' + this._pct(prof.fill);
         return res;
     },
 

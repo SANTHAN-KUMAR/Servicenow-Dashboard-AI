@@ -34,7 +34,73 @@ CmdData.MAX_GROUPS = 200;
 
 CmdData.prototype = {
 
-    initialize: function () {},
+    initialize: function () {
+        /* Per-request memoisation. Measured before this existed: assembling eight
+           panels plus drill gates over 4,264 incidents took 60 seconds, because
+           every panel independently re-scanned the table securely to get a
+           denominator that was the same number every time.
+           See aclVerdict() for the change that actually matters. */
+        this._verdict = {};
+        this._counts = {};
+        this._profiles = {};
+    },
+
+    /**
+     * The per-request ACL verdict for one table and query. This is the single
+     * most important performance decision in the product.
+     *
+     * The correctness obligation is that no number includes rows the viewer
+     * cannot open. The naive reading of that is "compute everything securely",
+     * which costs one ACL evaluation per row per panel and does not survive
+     * contact with a real page.
+     *
+     * The observation that fixes it: whether row-level ACLs filter this table for
+     * this viewer is a property of the viewer and the table, not of the panel. So
+     * establish it once, with one fast count and one bounded secure count, and
+     * then every panel in the request can use the fast path with that proof
+     * attached. A viewer who can read everything, which is the common case, pays
+     * for one proof instead of one scan per panel.
+     *
+     * When the proof fails, nothing is trusted and every panel pays for the
+     * secure path. That is the correct trade: correctness is not negotiable, and
+     * the slow case is the case that actually needs the work.
+     */
+    aclVerdict: function (table, query) {
+        var key = table + '|' + (query || '');
+        if (this._verdict[key]) return this._verdict[key];
+
+        var v;
+        if (!this.canRead(table)) {
+            v = { trusted: false, denied: true, aggregate: 0, secure: 0,
+                  delta: 0, capped: false };
+        } else {
+            var fast = this.fastCount(table, query);
+            var proof = this.secureCount(table, query);
+            v = {
+                trusted: (!proof.capped && proof.count === fast),
+                denied: false,
+                aggregate: fast,
+                secure: proof.count,
+                delta: fast - proof.count,
+                capped: proof.capped
+            };
+        }
+        this._verdict[key] = v;
+        return v;
+    },
+
+    /** The row count to show, and where it came from. Cheap after the first call. */
+    total: function (table, query) {
+        var v = this.aclVerdict(table, query);
+        return {
+            count: v.trusted ? v.aggregate : v.secure,
+            mode: v.denied ? 'DENIED'
+                : v.capped ? 'BOUNDED'
+                : v.trusted ? 'VERIFIED' : 'FILTERED',
+            delta: v.delta,
+            capped: v.capped
+        };
+    },
 
     /* ══════════════════════════════════════════════════════════════════════
        Counting
@@ -52,18 +118,47 @@ CmdData.prototype = {
     /**
      * ACL-correct count. Bounded, so it returns {count, capped}: `capped` true
      * means the real total is at least `count` and the caller must say so.
+     *
+     * `cap` overrides the default scan limit, and callers should use it. Measured
+     * on this instance: a secure count is one ACL evaluation per row, and the
+     * platform logs "Slow ACL" on tables with expensive read rules. kb_knowledge
+     * and sys_flow_context both hit 40 to 86ms on single evaluations. Scanning
+     * 20,000 rows of those to populate a catalog card that only needs to say
+     * "enough rows to be worth opening" is the wrong trade, which is why the
+     * catalog passes a small cap and renders a floor rather than an exact total.
      */
-    secureCount: function (table, query) {
+    secureCount: function (table, query, cap) {
+        cap = cap || CmdData.SECURE_SCAN_CAP;
+        var ck = table + '|' + (query || '') + '|' + cap;
+        if (this._counts[ck]) return this._counts[ck];
         var gr = new GlideRecordSecure(table);
         if (query) gr.addEncodedQuery(query);
-        gr.setLimit(CmdData.SECURE_SCAN_CAP + 1);
+        gr.setLimit(cap + 1);
         gr.query();
         var n = 0, capped = false;
         while (gr.next()) {
-            if (n >= CmdData.SECURE_SCAN_CAP) { capped = true; break; }
+            if (n >= cap) { capped = true; break; }
             n++;
         }
-        return { count: n, capped: capped };
+        this._counts[ck] = { count: n, capped: capped };
+        return this._counts[ck];
+    },
+
+    /**
+     * Is this table worth offering at all, answered as cheaply as possible.
+     *
+     * The catalog needs a yes or no and a magnitude, not a total. Stops as soon as
+     * `enough` rows have been seen, so a table with a million readable rows costs
+     * the same as one with `enough`.
+     */
+    hasAtLeast: function (table, query, enough) {
+        var gr = new GlideRecordSecure(table);
+        if (query) gr.addEncodedQuery(query);
+        gr.setLimit(enough);
+        gr.query();
+        var n = 0;
+        while (gr.next()) n++;
+        return { count: n, atLeast: n >= enough };
     },
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -157,49 +252,33 @@ CmdData.prototype = {
      *   DENIED    the viewer cannot read the table at all
      */
     tieredGroupBy: function (table, field, query) {
-        if (!this.canRead(table)) {
+        var v = this.aclVerdict(table, query);
+
+        if (v.denied) {
+            return { rows: [],
+                     acl: { mode: 'DENIED', aggregate: 0, secure: 0, delta: 0, capped: false } };
+        }
+
+        /* The proof already ran once for this table and query, so a trusted
+           verdict means the fast path is known safe and costs one grouped query
+           with no per-row ACL evaluation at all. */
+        if (v.trusted) {
             return {
-                rows: [],
-                acl: { mode: 'DENIED', aggregate: 0, secure: 0, delta: 0, capped: false }
+                rows: this.fastGroupBy(table, field, query),
+                acl: { mode: 'VERIFIED', aggregate: v.aggregate,
+                       secure: v.secure, delta: 0, capped: false }
             };
         }
 
-        var fast = this.fastGroupBy(table, field, query);
-        var fastTotal = 0, i;
-        for (i = 0; i < fast.length; i++) fastTotal += fast[i].count;
-
-        /* The proof. One count, not a full group-by: it answers "did the ACLs
-           remove anything" without paying for a second grouped pass. */
-        var proof = this.secureCount(table, query);
-
-        if (proof.capped) {
-            var capped = this.secureGroupBy(table, field, query);
-            return {
-                rows: capped.rows,
-                acl: { mode: 'BOUNDED', aggregate: fastTotal, secure: capped.scanned,
-                       delta: fastTotal - capped.scanned, capped: true }
-            };
-        }
-
-        if (proof.count === fastTotal) {
-            return {
-                rows: fast,
-                acl: { mode: 'VERIFIED', aggregate: fastTotal, secure: proof.count,
-                       delta: 0, capped: false }
-            };
-        }
-
-        /* They disagree, so the fast numbers include rows this viewer cannot
-           open. Pay for the correct answer. */
+        /* Not trusted, so pay for the correct answer. */
         var secure = this.secureGroupBy(table, field, query);
-        var secureTotal = 0;
-        for (i = 0; i < secure.rows.length; i++) secureTotal += secure.rows[i].count;
-
+        var total = 0;
+        for (var i = 0; i < secure.rows.length; i++) total += secure.rows[i].count;
         return {
             rows: secure.rows,
             acl: { mode: secure.capped ? 'BOUNDED' : 'FILTERED',
-                   aggregate: fastTotal, secure: secureTotal,
-                   delta: fastTotal - secureTotal, capped: secure.capped }
+                   aggregate: v.aggregate, secure: total,
+                   delta: v.aggregate - total, capped: secure.capped }
         };
     },
 
@@ -246,18 +325,16 @@ CmdData.prototype = {
      * affordances using data they are not entitled to.
      */
     fillRate: function (table, field, query) {
-        var total = this.secureCount(table, query);
-        if (total.count === 0) {
-            return { total: 0, filled: 0, rate: 1, capped: total.capped };
-        }
-        var q = field + 'ISNOTEMPTY';
-        if (query) q = query + '^' + q;
-        var filled = this.secureCount(table, q);
+        /* Derived from the grouping rather than counted separately. A group-by
+           already returns the empty bucket, so the fill rate is arithmetic on
+           data in hand; counting it independently cost two more table scans per
+           field and returned the same answer. */
+        var p = this.profile(table, field, query);
         return {
-            total: total.count,
-            filled: filled.count,
-            rate: filled.count / total.count,
-            capped: total.capped || filled.capped
+            total: p.total,
+            filled: p.total - p.empty,
+            rate: p.fill,
+            capped: p.acl.capped
         };
     },
 
@@ -266,6 +343,8 @@ CmdData.prototype = {
      * Returns distinct count, top share and concentration alongside the rows.
      */
     profile: function (table, field, query) {
+        var pk = table + '|' + field + '|' + (query || '');
+        if (this._profiles[pk]) return this._profiles[pk];
         var g = this.tieredGroupBy(table, field, query);
         var rows = g.rows;
         var total = 0, i;
@@ -293,7 +372,7 @@ CmdData.prototype = {
             if (rows[i].key === '') { emptyCount = rows[i].count; break; }
         }
 
-        return {
+        var out = {
             table: table, field: field,
             total: total,
             distinct: distinct,
@@ -308,6 +387,8 @@ CmdData.prototype = {
             rows: rows,
             acl: g.acl
         };
+        this._profiles[pk] = out;
+        return out;
     },
 
     /**
