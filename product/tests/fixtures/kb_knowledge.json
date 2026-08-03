@@ -1,0 +1,104 @@
+{
+ "version": 1,
+ "generated": "2026-08-03 06:34:22",
+ "viewer": {
+  "name": "admin",
+  "display": "Santhan K"
+ },
+ "subject": {
+  "table": "kb_knowledge",
+  "label": "Knowledge",
+  "query": "",
+  "rows": 500,
+  "listUrl": "/kb_knowledge_list.do?sysparm_query=&sysparm_view="
+ },
+ "acl": {
+  "mode": "BOUNDED",
+  "aggregate": 757,
+  "secure": 500,
+  "delta": 257,
+  "capped": true
+ },
+ "path": [],
+ "panels": [
+  {
+   "id": "dim_author",
+   "kind": "dimension",
+   "question": "Author, ranked",
+   "field": "author",
+   "fieldLabel": "Author",
+   "form": "ranked_bar",
+   "selectedForm": "ranked_bar",
+   "demoted": false,
+   "reason": "few enough categories to rank and draw in full",
+   "caveats": [
+    {
+     "code": "acl_filtered",
+     "severity": "info",
+     "text": "Filtered to the 410 records you can read. 347 more exist that you do not have access to."
+    },
+    {
+     "code": "capped",
+     "severity": "warn",
+     "text": "Counts are a lower bound. The permission-checked scan stopped at 20,000 records."
+    }
+   ],
+   "rows": {
+    "series": [
+     {
+      "key": "6816f79cc0a8016401c5a33be04be441",
+      "label": "Santhan K",
+      "count": 390
+     },
+     {
+      "key": "62d78687c0a8010e00b3d84178adc913",
+      "label": "Ron Kettering",
+      "count": 6
+     },
+     {
+      "key": "46d14f04a9fe19810142e40c6b071512",
+      "label": "Wayne Webb",
+      "count": 5
+     },
+     {
+      "key": "46d85d4aa9fe198101e36eb956587fe7",
+      "label": "Sam Sorokin",
+      "count": 4
+     },
+     {
+      "key": "a6826bf03710200044e0bfc8bcbe5de6",
+      "label": "Boris Catino",
+      "count": 4
+     },
+     {
+      "key": "46bbf3daa9fe1981001fd0ccdd391f83",
+      "label": "Ted Bozelle",
+      "count": 1
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 6,
+    "fill": 1,
+    "topShare": 0.951,
+    "concentration": 0.966
+   },
+   "ordinal": false,
+   "span": 1
+  }
+ ],
+ "drill": {
+  "atMax": false,
+  "options": []
+ },
+ "notes": [
+  "Stopped after examining 9 of 36 fields, to keep this page inside its time budget. This table is expensive to permission-check.",
+  "9 further analysis panels were not built, to keep this page inside its time budget. This table is expensive to permission-check.",
+  "Drill options were not computed, to keep this page inside its time budget."
+ ],
+ "kpis": [],
+ "matrix": null,
+ "declared": [],
+ "timingMs": 7561
+}

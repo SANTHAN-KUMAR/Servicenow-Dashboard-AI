@@ -1,0 +1,300 @@
+{
+ "version": 1,
+ "generated": "2026-08-03 06:34:12",
+ "viewer": {
+  "name": "admin",
+  "display": "Santhan K"
+ },
+ "subject": {
+  "table": "task",
+  "label": "Task",
+  "query": "",
+  "rows": 910,
+  "listUrl": "/task_list.do?sysparm_query=&sysparm_view="
+ },
+ "acl": {
+  "mode": "BOUNDED",
+  "aggregate": 7505,
+  "secure": 910,
+  "delta": 6595,
+  "capped": true
+ },
+ "path": [],
+ "panels": [
+  {
+   "id": "dim_impact",
+   "kind": "dimension",
+   "question": "Impact across the scale",
+   "field": "impact",
+   "fieldLabel": "Impact",
+   "form": "stacked_ordinal",
+   "selectedForm": "stacked_ordinal",
+   "demoted": false,
+   "reason": "an ordered scale, so the sequence is preserved and the parts are shown against the whole",
+   "caveats": [
+    {
+     "code": "acl_filtered",
+     "severity": "info",
+     "text": "Filtered to the 330 records you can read. 7,175 more exist that you do not have access to."
+    },
+    {
+     "code": "capped",
+     "severity": "warn",
+     "text": "Counts are a lower bound. The permission-checked scan stopped at 20,000 records."
+    }
+   ],
+   "rows": {
+    "series": [
+     {
+      "key": "2",
+      "label": "2 - Medium",
+      "count": 188
+     },
+     {
+      "key": "3",
+      "label": "3 - Low",
+      "count": 135
+     },
+     {
+      "key": "1",
+      "label": "1 - High",
+      "count": 7
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 3,
+    "fill": 1,
+    "topShare": 0.57,
+    "concentration": 0.57
+   },
+   "ordinal": true,
+   "span": 1
+  },
+  {
+   "id": "dim_approval",
+   "kind": "dimension",
+   "question": "Approval as a share of the whole",
+   "field": "approval",
+   "fieldLabel": "Approval",
+   "form": "semi_donut",
+   "selectedForm": "semi_donut",
+   "demoted": false,
+   "reason": "a part-to-whole with very few slices, where a half arc reads cleaner and leaves room for the total",
+   "caveats": [
+    {
+     "code": "acl_filtered",
+     "severity": "info",
+     "text": "Filtered to the 330 records you can read. 7,175 more exist that you do not have access to."
+    },
+    {
+     "code": "capped",
+     "severity": "warn",
+     "text": "Counts are a lower bound. The permission-checked scan stopped at 20,000 records."
+    }
+   ],
+   "rows": {
+    "series": [
+     {
+      "key": "not requested",
+      "label": "Not Yet Requested",
+      "count": 306
+     },
+     {
+      "key": "requested",
+      "label": "Requested",
+      "count": 13
+     },
+     {
+      "key": "approved",
+      "label": "Approved",
+      "count": 11
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 3,
+    "fill": 1,
+    "topShare": 0.927,
+    "concentration": 0.927
+   },
+   "ordinal": false,
+   "span": 1
+  },
+  {
+   "id": "dim_reassignment_count",
+   "kind": "dimension",
+   "question": "Reassignment count by value",
+   "field": "reassignment_count",
+   "fieldLabel": "Reassignment count",
+   "form": "column",
+   "selectedForm": "column",
+   "demoted": false,
+   "reason": "a numeric field with few enough levels to treat as categorical",
+   "caveats": [
+    {
+     "code": "acl_filtered",
+     "severity": "info",
+     "text": "Filtered to the 330 records you can read. 7,175 more exist that you do not have access to."
+    },
+    {
+     "code": "capped",
+     "severity": "warn",
+     "text": "Counts are a lower bound. The permission-checked scan stopped at 20,000 records."
+    }
+   ],
+   "rows": {
+    "series": [
+     {
+      "key": "0",
+      "label": "0",
+      "count": 322
+     },
+     {
+      "key": "",
+      "label": "",
+      "count": 4
+     },
+     {
+      "key": "1",
+      "label": "1",
+      "count": 3
+     },
+     {
+      "key": "2",
+      "label": "2",
+      "count": 1
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 3,
+    "fill": 0.9878787878787879,
+    "topShare": 0.976,
+    "concentration": 0.976
+   },
+   "ordinal": false,
+   "span": 1
+  },
+  {
+   "id": "dim_assigned_to",
+   "kind": "dimension",
+   "question": "Assigned to, ranked",
+   "field": "assigned_to",
+   "fieldLabel": "Assigned to",
+   "form": "ranked_bar_top_n",
+   "selectedForm": "ranked_bar_top_n",
+   "demoted": false,
+   "reason": "many categories with no dominant head, ranked and truncated with the remainder named",
+   "caveats": [
+    {
+     "code": "acl_filtered",
+     "severity": "info",
+     "text": "Filtered to the 330 records you can read. 7,175 more exist that you do not have access to."
+    },
+    {
+     "code": "capped",
+     "severity": "warn",
+     "text": "Counts are a lower bound. The permission-checked scan stopped at 20,000 records."
+    },
+    {
+     "code": "truncated",
+     "severity": "info",
+     "text": "Showing the top 12 of 24. The remaining 12 are grouped as Other."
+    }
+   ],
+   "rows": {
+    "series": [
+     {
+      "key": "",
+      "label": "",
+      "count": 89
+     },
+     {
+      "key": "\n    ",
+      "label": "\n    ",
+      "count": 53
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d3f",
+      "label": "Lucius Bagnoli",
+      "count": 15
+     },
+     {
+      "key": "005d500b536073005e0addeeff7b12f4",
+      "label": "survey user",
+      "count": 14
+     },
+     {
+      "key": "06826bf03710200044e0bfc8bcbe5d57",
+      "label": "Cherie Fuhri",
+      "count": 14
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d76",
+      "label": "Jacinto Gawron",
+      "count": 14
+     },
+     {
+      "key": "04d8edbdb7517210693cfeb0be11a9ca",
+      "label": "Tom Diggins-Barnes",
+      "count": 13
+     },
+     {
+      "key": "06826bf03710200044e0bfc8bcbe5d41",
+      "label": "Jess Assad",
+      "count": 13
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d5e",
+      "label": "Melinda Carleton",
+      "count": 11
+     },
+     {
+      "key": "0382abf03710200044e0bfc8bcbe5d42",
+      "label": "Naomi Greenly",
+      "count": 11
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d64",
+      "label": "Jewel Agresta",
+      "count": 11
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d6d",
+      "label": "Sean Bonnet",
+      "count": 10
+     }
+    ],
+    "other": {
+     "count": 62,
+     "groups": 13
+    }
+   },
+   "shape": {
+    "distinct": 24,
+    "fill": 0.7303030303030303,
+    "topShare": 0.27,
+    "concentration": 0.561
+   },
+   "ordinal": false,
+   "span": 1
+  }
+ ],
+ "drill": {
+  "atMax": false,
+  "options": []
+ },
+ "notes": [
+  "Stopped after examining 9 of 33 fields, to keep this page inside its time budget. This table is expensive to permission-check.",
+  "10 further analysis panels were not built, to keep this page inside its time budget. This table is expensive to permission-check.",
+  "Drill options were not computed, to keep this page inside its time budget."
+ ],
+ "kpis": [],
+ "matrix": null,
+ "declared": [],
+ "timingMs": 7613
+}

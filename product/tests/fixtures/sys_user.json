@@ -1,0 +1,836 @@
+{
+ "version": 1,
+ "generated": "2026-08-03 06:34:37",
+ "viewer": {
+  "name": "admin",
+  "display": "Santhan K"
+ },
+ "subject": {
+  "table": "sys_user",
+  "label": "User",
+  "query": "",
+  "rows": 664,
+  "listUrl": "/sys_user_list.do?sysparm_query=&sysparm_view="
+ },
+ "acl": {
+  "mode": "VERIFIED",
+  "aggregate": 664,
+  "secure": 664,
+  "delta": 0,
+  "capped": false
+ },
+ "path": [],
+ "panels": [
+  {
+   "id": "series",
+   "kind": "series",
+   "question": "Volume by created, per month",
+   "field": "sys_created_on",
+   "fieldLabel": "Created",
+   "grain": "month",
+   "form": "line",
+   "reason": "one series of events per period, where the line is the mark and area would overstate it",
+   "caveats": [
+    {
+     "code": "partial_tail",
+     "severity": "info",
+     "text": "The final month is still in progress and is drawn dashed."
+    }
+   ],
+   "points": [
+    {
+     "period": "2025-09",
+     "label": "Sep '25",
+     "count": 0,
+     "partial": false
+    },
+    {
+     "period": "2025-10",
+     "label": "Oct '25",
+     "count": 1,
+     "partial": false
+    },
+    {
+     "period": "2025-11",
+     "label": "Nov '25",
+     "count": 1,
+     "partial": false
+    },
+    {
+     "period": "2025-12",
+     "label": "Dec '25",
+     "count": 1,
+     "partial": false
+    },
+    {
+     "period": "2026-01",
+     "label": "Jan '26",
+     "count": 0,
+     "partial": false
+    },
+    {
+     "period": "2026-02",
+     "label": "Feb '26",
+     "count": 1,
+     "partial": false
+    },
+    {
+     "period": "2026-03",
+     "label": "Mar '26",
+     "count": 1,
+     "partial": false
+    },
+    {
+     "period": "2026-04",
+     "label": "Apr '26",
+     "count": 0,
+     "partial": false
+    },
+    {
+     "period": "2026-05",
+     "label": "May '26",
+     "count": 0,
+     "partial": false
+    },
+    {
+     "period": "2026-06",
+     "label": "Jun '26",
+     "count": 18,
+     "partial": false
+    },
+    {
+     "period": "2026-07",
+     "label": "Jul '26",
+     "count": 14,
+     "partial": false
+    },
+    {
+     "period": "2026-08",
+     "label": "Aug '26",
+     "count": 2,
+     "partial": true
+    }
+   ],
+   "story": "The last three periods run 1607% above the average of the 8 before them.",
+   "span": 2,
+   "annotation": {
+    "slope": 1.22,
+    "intercept": -2.73,
+    "sigma": 5.13,
+    "direction": "rising",
+    "perPeriod": 1.2,
+    "anomalies": [],
+    "forecast": [
+     {
+      "index": 12,
+      "value": 12,
+      "lo": 1,
+      "hi": 23
+     },
+     {
+      "index": 13,
+      "value": 13,
+      "lo": 2,
+      "hi": 24
+     },
+     {
+      "index": 14,
+      "value": 14,
+      "lo": 3,
+      "hi": 26
+     }
+    ],
+    "fitFrom": {
+     "index": 0,
+     "value": -3
+    },
+    "fitTo": {
+     "index": 10,
+     "value": 9
+    },
+    "method": "least squares on 11 complete periods, band at 2 residual standard deviations"
+   }
+  },
+  {
+   "id": "cal_sys_created_on",
+   "kind": "calendar",
+   "form": "calendar_heatmap",
+   "question": "Which days were busy?",
+   "reason": "73 days with records, drawn as a calendar so weekends, gaps and spikes are visible as position rather than as a dip in a line",
+   "dateField": "sys_created_on",
+   "byDay": {
+    "2019-04-05": 1,
+    "2012-02-18": 500,
+    "2025-11-19": 1,
+    "2012-10-02": 2,
+    "2012-11-17": 6,
+    "2026-07-31": 9,
+    "2026-06-18": 1,
+    "2026-07-30": 3,
+    "2025-03-06": 1,
+    "2025-06-02": 1,
+    "2007-01-22": 1,
+    "2009-03-17": 1,
+    "2026-06-15": 2,
+    "2026-06-11": 13,
+    "2013-07-24": 6,
+    "2026-06-12": 2,
+    "2021-09-22": 4,
+    "2013-07-26": 4,
+    "2019-02-09": 1,
+    "2025-03-07": 1,
+    "2026-03-12": 1,
+    "2018-10-04": 1,
+    "2018-09-16": 1,
+    "2025-10-08": 1,
+    "2021-09-23": 5,
+    "2007-08-12": 15,
+    "2006-02-07": 12,
+    "2006-02-08": 1,
+    "2031-08-14": 4,
+    "2018-10-08": 2,
+    "2004-05-02": 2,
+    "2005-02-23": 1,
+    "2008-03-30": 1,
+    "2026-08-01": 2,
+    "2017-08-02": 1,
+    "2030-03-03": 4,
+    "2029-02-12": 1,
+    "2008-01-13": 1,
+    "2006-07-11": 4,
+    "2026-07-29": 2,
+    "2029-02-26": 1,
+    "2006-07-12": 2,
+    "2017-05-16": 1,
+    "2019-04-04": 1,
+    "2007-07-03": 3,
+    "2004-07-03": 2,
+    "2026-02-05": 1,
+    "2012-03-21": 1,
+    "2018-07-18": 3,
+    "2017-08-31": 1,
+    "2022-06-24": 1,
+    "2017-08-23": 2,
+    "2024-01-19": 1,
+    "2018-06-15": 1,
+    "2018-06-16": 1,
+    "2007-05-16": 1,
+    "2017-03-08": 1,
+    "2005-05-02": 1,
+    "2012-03-20": 2,
+    "2023-09-04": 1,
+    "2019-07-10": 1,
+    "2018-08-30": 2,
+    "2025-12-24": 1,
+    "2025-02-25": 1,
+    "2018-07-30": 1,
+    "2011-09-16": 1,
+    "2017-02-24": 1,
+    "2016-07-07": 1,
+    "2019-02-08": 1,
+    "2005-07-07": 1,
+    "2023-05-19": 1,
+    "2014-01-09": 1,
+    "2018-09-27": 1
+   },
+   "maxCell": 500,
+   "total": 664,
+   "endDay": "2031-08-14",
+   "days": 182,
+   "span": 2,
+   "caveats": []
+  },
+  {
+   "id": "dim_company",
+   "kind": "dimension",
+   "question": "Company, ranked",
+   "field": "company",
+   "fieldLabel": "Company",
+   "form": "ranked_bar",
+   "selectedForm": "ranked_bar",
+   "demoted": false,
+   "reason": "few enough categories to rank and draw in full",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "31bea3d53790200044e0bfc8bcbe5dec",
+      "label": "ACME North America",
+      "count": 143
+     },
+     {
+      "key": "",
+      "label": "",
+      "count": 108
+     },
+     {
+      "key": "a66b1fb03710200044e0bfc8bcbe5d08",
+      "label": "ACME UK",
+      "count": 87
+     },
+     {
+      "key": "81fca4cbac1d55eb355b4b6db0e3c80f",
+      "label": "ACME Germany",
+      "count": 86
+     },
+     {
+      "key": "81fbfe03ac1d55eb286d832de58ae1fd",
+      "label": "ACME France",
+      "count": 63
+     },
+     {
+      "key": "81fd65ecac1d55eb42a426568fc87a63",
+      "label": "ACME Japan",
+      "count": 42
+     },
+     {
+      "key": "227cdfb03710200044e0bfc8bcbe5d6b",
+      "label": "ACME South America",
+      "count": 37
+     },
+     {
+      "key": "df7d53303710200044e0bfc8bcbe5dac",
+      "label": "ACME Australia",
+      "count": 31
+     },
+     {
+      "key": "81fdf9ebac1d55eb4cb89f136a082555",
+      "label": "ACME China",
+      "count": 26
+     },
+     {
+      "key": "4b7d13f03710200044e0bfc8bcbe5db6",
+      "label": "ACME Czech Republic",
+      "count": 20
+     },
+     {
+      "key": "187d13f03710200044e0bfc8bcbe5df2",
+      "label": "ACME Italy",
+      "count": 19
+     },
+     {
+      "key": "820351a1c0a8018b67c73d51c074097c",
+      "label": "Acer",
+      "count": 1
+     },
+     {
+      "key": "93d4ecfac0a8000b6294d71b733977fb",
+      "label": "ServiceNow",
+      "count": 1
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 12,
+    "fill": 0.8373493975903614,
+    "topShare": 0.215,
+    "concentration": 0.509
+   },
+   "ordinal": false,
+   "span": 1
+  },
+  {
+   "id": "dim_internal_integration_user",
+   "kind": "dimension",
+   "question": "Share by internal integration user",
+   "field": "internal_integration_user",
+   "fieldLabel": "Internal Integration User",
+   "form": "stacked_proportion",
+   "selectedForm": "stacked_proportion",
+   "demoted": false,
+   "reason": "a boolean split, where the share matters and the absolute pair does not",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "false",
+      "label": "false",
+      "count": 558
+     },
+     {
+      "key": "false",
+      "label": "false",
+      "count": 100
+     },
+     {
+      "key": "true",
+      "label": "true",
+      "count": 6
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 3,
+    "fill": 1,
+    "topShare": 0.84,
+    "concentration": 0.84
+   },
+   "ordinal": false,
+   "span": 1
+  },
+  {
+   "id": "dim_notification",
+   "kind": "dimension",
+   "question": "Notification across the scale",
+   "field": "notification",
+   "fieldLabel": "Notification",
+   "form": "stacked_ordinal",
+   "selectedForm": "stacked_ordinal",
+   "demoted": false,
+   "reason": "an ordered scale, so the sequence is preserved and the parts are shown against the whole",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "2",
+      "label": "Enable",
+      "count": 630
+     },
+     {
+      "key": "1",
+      "label": "Disable",
+      "count": 32
+     },
+     {
+      "key": "",
+      "label": "",
+      "count": 2
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 2,
+    "fill": 0.9969879518072289,
+    "topShare": 0.949,
+    "concentration": 0.949
+   },
+   "ordinal": true,
+   "span": 1
+  },
+  {
+   "id": "dim_cost_center",
+   "kind": "dimension",
+   "question": "Cost center, ranked",
+   "field": "cost_center",
+   "fieldLabel": "Cost center",
+   "form": "ranked_bar",
+   "selectedForm": "ranked_bar",
+   "demoted": false,
+   "reason": "few enough categories to rank and draw in full",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "7fb1cc99c0a80a6d30c04574d14c0acf",
+      "label": "Sales",
+      "count": 172
+     },
+     {
+      "key": "91e8bbf43710200044e0bfc8bcbe5daa",
+      "label": "Customer Support",
+      "count": 145
+     },
+     {
+      "key": "d9d0a971c0a80a641c20b13d99a48576",
+      "label": "IT",
+      "count": 116
+     },
+     {
+      "key": "",
+      "label": "",
+      "count": 111
+     },
+     {
+      "key": "d9d07bddc0a80a647cf932056ed24652",
+      "label": "Engineering",
+      "count": 66
+     },
+     {
+      "key": "d9d01546c0a80a6403e18b82250c80a1",
+      "label": "Finance",
+      "count": 33
+     },
+     {
+      "key": "d9d04719c0a80a6426eb795cc87f5797",
+      "label": "Human Resources",
+      "count": 21
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 6,
+    "fill": 0.8328313253012049,
+    "topShare": 0.259,
+    "concentration": 0.477
+   },
+   "ordinal": false,
+   "span": 1
+  }
+ ],
+ "drill": {
+  "atMax": false,
+  "options": [
+   {
+    "field": "active",
+    "label": "Active",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": true,
+    "reason": "2 values, populated on 100%",
+    "fill": 1,
+    "distinct": 2,
+    "rows": 664
+   },
+   {
+    "field": "country",
+    "label": "Country code",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "Country code is empty on 100% of these records",
+    "fill": 0,
+    "distinct": 0,
+    "rows": 664
+   },
+   {
+    "field": "calendar_integration",
+    "label": "Calendar integration",
+    "isOrdinal": true,
+    "isRef": false,
+    "offer": false,
+    "reason": "every record here has the same calendar integration",
+    "fill": 0.9563253012048193,
+    "distinct": 1,
+    "rows": 664
+   },
+   {
+    "field": "building",
+    "label": "Building",
+    "isOrdinal": false,
+    "isRef": true,
+    "offer": false,
+    "reason": "Building is empty on 100% of these records",
+    "fill": 0,
+    "distinct": 0,
+    "rows": 664
+   },
+   {
+    "field": "failed_attempts",
+    "label": "Failed login attempts",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "Failed login attempts is empty on 96.7% of these records",
+    "fill": 0.03313253012048193,
+    "distinct": 1,
+    "rows": 664
+   },
+   {
+    "field": "date_format",
+    "label": "Date format",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "Date format is empty on 100% of these records",
+    "fill": 0.0030120481927710845,
+    "distinct": 1,
+    "rows": 664
+   }
+  ]
+ },
+ "notes": [],
+ "kpis": [
+  {
+   "id": "kpi_count",
+   "kind": "kpi",
+   "span": 1,
+   "question": "How many records, and is that more or fewer than before?",
+   "fieldLabel": "Records",
+   "value": 664,
+   "capped": false,
+   "form": "stat_tile_delta",
+   "reason": "compared with the previous month on sys_created_on",
+   "delta": {
+    "current": 2,
+    "previous": 14,
+    "currentLabel": "Aug '26",
+    "previousLabel": "Jul '26",
+    "elapsedFraction": 0.083,
+    "paceAdjusted": 24,
+    "delta": 10,
+    "change": 0.714,
+    "rawDelta": -12,
+    "rawChange": -0.857,
+    "partial": true,
+    "mode": "VERIFIED",
+    "capped": false
+   },
+   "caveats": [
+    {
+     "severity": "info",
+     "text": "This month is 8% elapsed, so the comparison is projected to a full month. Actual so far is 2 against 14 last month."
+    }
+   ]
+  },
+  {
+   "id": "kpi_duration",
+   "kind": "kpi",
+   "span": 1,
+   "form": "stat_tile",
+   "question": "How long does one take, from created to updated?",
+   "fieldLabel": "Mean hours, Created to Updated",
+   "value": 117202.1,
+   "unit": "h",
+   "median": 126631.6,
+   "n": 654,
+   "reason": "measured over 654 records where both dates are set",
+   "caveats": [
+    {
+     "severity": "warn",
+     "text": "10 records were excluded because the end date is before the start date, which is dirty data rather than a fast resolution."
+    }
+   ],
+   "capped": false
+  }
+ ],
+ "matrix": {
+  "id": "matrix_company",
+  "kind": "matrix",
+  "form": "matrix",
+  "question": "Company, in full",
+  "reason": "the dense read: every value with its share, its shape over time and its movement against the last complete period",
+  "field": "company",
+  "fieldLabel": "Company",
+  "rows": [
+   {
+    "key": "31bea3d53790200044e0bfc8bcbe5dec",
+    "label": "ACME North America",
+    "count": 143,
+    "share": 0.215,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "",
+    "label": "(not set)",
+    "count": 108,
+    "share": 0.163,
+    "spark": [
+     0,
+     1,
+     1,
+     1,
+     0,
+     1,
+     1,
+     0,
+     0,
+     18,
+     14,
+     2
+    ],
+    "delta": -4,
+    "change": -0.222
+   },
+   {
+    "key": "a66b1fb03710200044e0bfc8bcbe5d08",
+    "label": "ACME UK",
+    "count": 87,
+    "share": 0.131,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "81fca4cbac1d55eb355b4b6db0e3c80f",
+    "label": "ACME Germany",
+    "count": 86,
+    "share": 0.13,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "81fbfe03ac1d55eb286d832de58ae1fd",
+    "label": "ACME France",
+    "count": 63,
+    "share": 0.095,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "81fd65ecac1d55eb42a426568fc87a63",
+    "label": "ACME Japan",
+    "count": 42,
+    "share": 0.063,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "227cdfb03710200044e0bfc8bcbe5d6b",
+    "label": "ACME South America",
+    "count": 37,
+    "share": 0.056,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "df7d53303710200044e0bfc8bcbe5dac",
+    "label": "ACME Australia",
+    "count": 31,
+    "share": 0.047,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "81fdf9ebac1d55eb4cb89f136a082555",
+    "label": "ACME China",
+    "count": 26,
+    "share": 0.039,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "4b7d13f03710200044e0bfc8bcbe5db6",
+    "label": "ACME Czech Republic",
+    "count": 20,
+    "share": 0.03,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "187d13f03710200044e0bfc8bcbe5df2",
+    "label": "ACME Italy",
+    "count": 19,
+    "share": 0.029,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "820351a1c0a8018b67c73d51c074097c",
+    "label": "Acer",
+    "count": 1,
+    "share": 0.002,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "93d4ecfac0a8000b6294d71b733977fb",
+    "label": "ServiceNow",
+    "count": 1,
+    "share": 0.002,
+    "spark": null,
+    "delta": null,
+    "change": null
+   }
+  ],
+  "total": 664,
+  "periods": [
+   {
+    "period": "2025-09",
+    "label": "Sep '25",
+    "partial": false
+   },
+   {
+    "period": "2025-10",
+    "label": "Oct '25",
+    "partial": false
+   },
+   {
+    "period": "2025-11",
+    "label": "Nov '25",
+    "partial": false
+   },
+   {
+    "period": "2025-12",
+    "label": "Dec '25",
+    "partial": false
+   },
+   {
+    "period": "2026-01",
+    "label": "Jan '26",
+    "partial": false
+   },
+   {
+    "period": "2026-02",
+    "label": "Feb '26",
+    "partial": false
+   },
+   {
+    "period": "2026-03",
+    "label": "Mar '26",
+    "partial": false
+   },
+   {
+    "period": "2026-04",
+    "label": "Apr '26",
+    "partial": false
+   },
+   {
+    "period": "2026-05",
+    "label": "May '26",
+    "partial": false
+   },
+   {
+    "period": "2026-06",
+    "label": "Jun '26",
+    "partial": false
+   },
+   {
+    "period": "2026-07",
+    "label": "Jul '26",
+    "partial": false
+   },
+   {
+    "period": "2026-08",
+    "label": "Aug '26",
+    "partial": true
+   }
+  ],
+  "grain": "month",
+  "span": 2,
+  "caveats": []
+ },
+ "declared": [
+  {
+   "field": "department",
+   "label": "Department",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": true,
+   "reason": "7 values, populated on 85.8%",
+   "fill": 0.858433734939759,
+   "distinct": 7,
+   "rows": 664,
+   "declaredParent": "company",
+   "declaredParentLabel": "Company"
+  },
+  {
+   "field": "location",
+   "label": "Location",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": true,
+   "reason": "50 values, populated on 83.3%",
+   "fill": 0.8328313253012049,
+   "distinct": 50,
+   "rows": 664,
+   "declaredParent": "company",
+   "declaredParentLabel": "Company"
+  }
+ ],
+ "timingMs": 900
+}

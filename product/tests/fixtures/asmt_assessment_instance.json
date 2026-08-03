@@ -1,0 +1,652 @@
+{
+ "version": 1,
+ "generated": "2026-08-03 06:34:41",
+ "viewer": {
+  "name": "admin",
+  "display": "Santhan K"
+ },
+ "subject": {
+  "table": "asmt_assessment_instance",
+  "label": "Assessment Instance",
+  "query": "",
+  "rows": 86,
+  "listUrl": "/asmt_assessment_instance_list.do?sysparm_query=&sysparm_view="
+ },
+ "acl": {
+  "mode": "VERIFIED",
+  "aggregate": 86,
+  "secure": 86,
+  "delta": 0,
+  "capped": false
+ },
+ "path": [],
+ "panels": [
+  {
+   "id": "change_metric_type",
+   "kind": "change",
+   "form": "waterfall",
+   "question": "What moved the total between Jun '26 and Jul '26?",
+   "reason": "each bar is the contribution of one metric type value to the change, so the steps reconcile the two totals exactly rather than approximately",
+   "field": "metric_type",
+   "fieldLabel": "Metric type",
+   "startLabel": "Jun '26",
+   "endLabel": "Jul '26",
+   "start": 73,
+   "end": 1,
+   "steps": [
+    {
+     "key": "99471f319f0312006371f84bc42e70f1",
+     "label": "Short Customer Satisfaction Survey using Smiley Face",
+     "delta": -2,
+     "from": 3,
+     "to": 1
+    },
+    {
+     "key": "ee910ea7bf2201007a6d257b3f07398c",
+     "label": "Groups",
+     "delta": -4,
+     "from": 4,
+     "to": 0
+    },
+    {
+     "key": "502a2c44d7211100158ba6859e6103a3",
+     "label": "Service Desk Satisfaction Survey",
+     "delta": -16,
+     "from": 16,
+     "to": 0
+    },
+    {
+     "key": "4c9d5cfd9f610200736af84bc42e7020",
+     "label": "NPS Metric Type",
+     "delta": -50,
+     "from": 50,
+     "to": 0
+    }
+   ],
+   "span": 2,
+   "caveats": []
+  },
+  {
+   "id": "dim_metric_type",
+   "kind": "dimension",
+   "question": "Metric type, ranked",
+   "field": "metric_type",
+   "fieldLabel": "Metric type",
+   "form": "ranked_bar",
+   "selectedForm": "ranked_bar",
+   "demoted": false,
+   "reason": "few enough categories to rank and draw in full",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "4c9d5cfd9f610200736af84bc42e7020",
+      "label": "NPS Metric Type",
+      "count": 50
+     },
+     {
+      "key": "ee910ea7bf2201007a6d257b3f07398c",
+      "label": "Groups",
+      "count": 16
+     },
+     {
+      "key": "502a2c44d7211100158ba6859e6103a3",
+      "label": "Service Desk Satisfaction Survey",
+      "count": 16
+     },
+     {
+      "key": "99471f319f0312006371f84bc42e70f1",
+      "label": "Short Customer Satisfaction Survey using Smiley Face",
+      "count": 4
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 4,
+    "fill": 1,
+    "topShare": 0.581,
+    "concentration": 0.581
+   },
+   "ordinal": false,
+   "span": 1
+  },
+  {
+   "id": "dim_assessment_group",
+   "kind": "dimension",
+   "question": "Assessment group, ranked",
+   "field": "assessment_group",
+   "fieldLabel": "Assessment group",
+   "form": "ranked_bar_top_n",
+   "selectedForm": "ranked_bar_top_n",
+   "demoted": false,
+   "reason": "many categories with no dominant head, ranked and truncated with the remainder named",
+   "caveats": [
+    {
+     "code": "truncated",
+     "severity": "info",
+     "text": "Showing the top 12 of 29. The remaining 17 are grouped as Other."
+    }
+   ],
+   "rows": {
+    "series": [
+     {
+      "key": "e09d5cfd9f610200736af84bc42e704d",
+      "label": "ASG0000501",
+      "count": 10
+     },
+     {
+      "key": "ba9d5cfd9f610200736af84bc42e7089",
+      "label": "ASG0000502",
+      "count": 10
+     },
+     {
+      "key": "89ad5cfd9f610200736af84bc42e70c0",
+      "label": "ASG0000503",
+      "count": 10
+     },
+     {
+      "key": "43ad9cfd9f610200736af84bc42e7004",
+      "label": "ASG0000504",
+      "count": 10
+     },
+     {
+      "key": "41bd9cfd9f610200736af84bc42e703b",
+      "label": "ASG0000505",
+      "count": 10
+     },
+     {
+      "key": "7b306e38bf3201007a6d257b3f073918",
+      "label": "ASG0000801",
+      "count": 4
+     },
+     {
+      "key": "fc502278bf3201007a6d257b3f0739b2",
+      "label": "ASG0000802",
+      "count": 4
+     },
+     {
+      "key": "9350e638bf3201007a6d257b3f0739be",
+      "label": "ASG0000803",
+      "count": 4
+     },
+     {
+      "key": "44706278bf3201007a6d257b3f07392c",
+      "label": "ASG0000804",
+      "count": 4
+     },
+     {
+      "key": "182a2c44d7211100158ba6859e6103a4",
+      "label": "ASG0002000",
+      "count": 1
+     },
+     {
+      "key": "282a2c44d7211100158ba6859e6103aa",
+      "label": "ASG0002001",
+      "count": 1
+     },
+     {
+      "key": "782a2c44d7211100158ba6859e6103af",
+      "label": "ASG0002002",
+      "count": 1
+     }
+    ],
+    "other": {
+     "count": 17,
+     "groups": 17
+    }
+   },
+   "shape": {
+    "distinct": 29,
+    "fill": 1,
+    "topShare": 0.116,
+    "concentration": 0.628
+   },
+   "ordinal": false,
+   "span": 1
+  },
+  {
+   "id": "dim_user",
+   "kind": "dimension",
+   "question": "Where the volume sits, by assigned to",
+   "field": "user",
+   "fieldLabel": "Assigned to",
+   "form": "treemap",
+   "selectedForm": "treemap",
+   "demoted": false,
+   "reason": "many categories with the mass spread evenly, where area shows the whole and length would not fit",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "ca826bf03710200044e0bfc8bcbe5d89",
+      "label": "Alva Pennigton",
+      "count": 9
+     },
+     {
+      "key": "f298d2d2c611227b0106c6be7f154bc8",
+      "label": "Bow Ruggeri",
+      "count": 7
+     },
+     {
+      "key": "9ee1b13dc6112271007f9d0efdb69cd0",
+      "label": "Don Goodliffe",
+      "count": 7
+     },
+     {
+      "key": "a2826bf03710200044e0bfc8bcbe5ded",
+      "label": "Alejandro Mascall",
+      "count": 6
+     },
+     {
+      "key": "62826bf03710200044e0bfc8bcbe5df1",
+      "label": "Abel Tuter",
+      "count": 5
+     },
+     {
+      "key": "0a826bf03710200044e0bfc8bcbe5d7a",
+      "label": "Adela Cervantsz",
+      "count": 5
+     },
+     {
+      "key": "22826bf03710200044e0bfc8bcbe5dec",
+      "label": "Alejandra Prenatt",
+      "count": 5
+     },
+     {
+      "key": "be82abf03710200044e0bfc8bcbe5d1c",
+      "label": "Alene Rabeck",
+      "count": 5
+     },
+     {
+      "key": "12826bf03710200044e0bfc8bcbe5db1",
+      "label": "Alfonso Griglen",
+      "count": 5
+     },
+     {
+      "key": "aa826bf03710200044e0bfc8bcbe5de8",
+      "label": "Allie Pumphrey",
+      "count": 5
+     },
+     {
+      "key": "5137153cc611227c000bbd1bd8cd2006",
+      "label": "Rick Berzle",
+      "count": 5
+     },
+     {
+      "key": "9a826bf03710200044e0bfc8bcbe5dc8",
+      "label": "Bess Marso",
+      "count": 4
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d88",
+      "label": "Billie Cowley",
+      "count": 4
+     },
+     {
+      "key": "6e826bf03710200044e0bfc8bcbe5de5",
+      "label": "Cruz Roudabush",
+      "count": 4
+     },
+     {
+      "key": "681ccaf9c0a8016400b98a06818d57c7",
+      "label": "Joe Employee",
+      "count": 4
+     },
+     {
+      "key": "46d44a23a9fe19810012d100cca80666",
+      "label": "Beth Anglin",
+      "count": 1
+     },
+     {
+      "key": "46c1293aa9fe1981000dc753e75ebeee",
+      "label": "Carol Coughlin",
+      "count": 1
+     },
+     {
+      "key": "5137153cc611227c000bbd1bd8cd2007",
+      "label": "David Loo",
+      "count": 1
+     },
+     {
+      "key": "77ad8176731313005754660c4cf6a7de",
+      "label": "David Miller",
+      "count": 1
+     },
+     {
+      "key": "5137153cc611227c000bbd1bd8cd2005",
+      "label": "Fred Luddy",
+      "count": 1
+     },
+     {
+      "key": "46c5bf6ca9fe1981010713e3ac7d3384",
+      "label": "Natasha Ingram",
+      "count": 1
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 21,
+    "fill": 1,
+    "topShare": 0.105,
+    "concentration": 0.395
+   },
+   "ordinal": false,
+   "span": 2
+  },
+  {
+   "id": "dim_state",
+   "kind": "dimension",
+   "question": "State as a share of the whole",
+   "field": "state",
+   "fieldLabel": "State",
+   "form": "semi_donut",
+   "selectedForm": "semi_donut",
+   "demoted": false,
+   "reason": "a part-to-whole with very few slices, where a half arc reads cleaner and leaves room for the total",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "complete",
+      "label": "Complete",
+      "count": 78
+     },
+     {
+      "key": "canceled",
+      "label": "Cancelled",
+      "count": 7
+     },
+     {
+      "key": "ready",
+      "label": "Ready to take",
+      "count": 1
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 3,
+    "fill": 1,
+    "topShare": 0.907,
+    "concentration": 0.907
+   },
+   "ordinal": false,
+   "span": 1
+  }
+ ],
+ "drill": {
+  "atMax": false,
+  "options": [
+   {
+    "field": "assessment_group",
+    "label": "Assessment group",
+    "isOrdinal": false,
+    "isRef": true,
+    "offer": true,
+    "reason": "29 values, populated on 100%",
+    "fill": 1,
+    "distinct": 29,
+    "rows": 86
+   },
+   {
+    "field": "preview",
+    "label": "Preview",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": true,
+    "reason": "2 values, populated on 100%",
+    "fill": 1,
+    "distinct": 2,
+    "rows": 86
+   },
+   {
+    "field": "state",
+    "label": "State",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": true,
+    "reason": "3 values, populated on 100%",
+    "fill": 1,
+    "distinct": 3,
+    "rows": 86
+   },
+   {
+    "field": "user",
+    "label": "Assigned to",
+    "isOrdinal": false,
+    "isRef": true,
+    "offer": true,
+    "reason": "21 values, populated on 100%",
+    "fill": 1,
+    "distinct": 21,
+    "rows": 86
+   },
+   {
+    "field": "channel",
+    "label": "Channel",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "Channel is empty on 100% of these records",
+    "fill": 0,
+    "distinct": 0,
+    "rows": 86
+   },
+   {
+    "field": "percent_answered",
+    "label": "Percent answered",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "every record here has the same percent answered",
+    "fill": 0.627906976744186,
+    "distinct": 1,
+    "rows": 86
+   }
+  ]
+ },
+ "notes": [],
+ "kpis": [
+  {
+   "id": "kpi_count",
+   "kind": "kpi",
+   "span": 1,
+   "question": "How many records, and is that more or fewer than before?",
+   "fieldLabel": "Records",
+   "value": 86,
+   "capped": false,
+   "form": "stat_tile_delta",
+   "reason": "compared with the previous month on sys_created_on",
+   "delta": {
+    "current": 0,
+    "previous": 1,
+    "currentLabel": "Aug '26",
+    "previousLabel": "Jul '26",
+    "elapsedFraction": 0.083,
+    "paceAdjusted": 0,
+    "delta": -1,
+    "change": -1,
+    "rawDelta": -1,
+    "rawChange": -1,
+    "partial": true,
+    "mode": "VERIFIED",
+    "capped": false
+   },
+   "caveats": [
+    {
+     "severity": "info",
+     "text": "This month is 8% elapsed, so the comparison is projected to a full month. Actual so far is 0 against 1 last month."
+    }
+   ]
+  }
+ ],
+ "matrix": {
+  "id": "matrix_metric_type",
+  "kind": "matrix",
+  "form": "matrix",
+  "question": "Metric type, in full",
+  "reason": "the dense read: every value with its share, its shape over time and its movement against the last complete period",
+  "field": "metric_type",
+  "fieldLabel": "Metric type",
+  "rows": [
+   {
+    "key": "4c9d5cfd9f610200736af84bc42e7020",
+    "label": "NPS Metric Type",
+    "count": 50,
+    "share": 0.581,
+    "spark": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     50,
+     0,
+     0
+    ],
+    "delta": -50,
+    "change": -1
+   },
+   {
+    "key": "ee910ea7bf2201007a6d257b3f07398c",
+    "label": "Groups",
+    "count": 16,
+    "share": 0.186,
+    "spark": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     4,
+     0,
+     0
+    ],
+    "delta": -4,
+    "change": -1
+   },
+   {
+    "key": "502a2c44d7211100158ba6859e6103a3",
+    "label": "Service Desk Satisfaction Survey",
+    "count": 16,
+    "share": 0.186,
+    "spark": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     16,
+     0,
+     0
+    ],
+    "delta": -16,
+    "change": -1
+   },
+   {
+    "key": "99471f319f0312006371f84bc42e70f1",
+    "label": "Short Customer Satisfaction Survey using Smiley Face",
+    "count": 4,
+    "share": 0.047,
+    "spark": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     3,
+     1,
+     0
+    ],
+    "delta": -2,
+    "change": -0.667
+   }
+  ],
+  "total": 86,
+  "periods": [
+   {
+    "period": "2025-09",
+    "label": "Sep '25",
+    "partial": false
+   },
+   {
+    "period": "2025-10",
+    "label": "Oct '25",
+    "partial": false
+   },
+   {
+    "period": "2025-11",
+    "label": "Nov '25",
+    "partial": false
+   },
+   {
+    "period": "2025-12",
+    "label": "Dec '25",
+    "partial": false
+   },
+   {
+    "period": "2026-01",
+    "label": "Jan '26",
+    "partial": false
+   },
+   {
+    "period": "2026-02",
+    "label": "Feb '26",
+    "partial": false
+   },
+   {
+    "period": "2026-03",
+    "label": "Mar '26",
+    "partial": false
+   },
+   {
+    "period": "2026-04",
+    "label": "Apr '26",
+    "partial": false
+   },
+   {
+    "period": "2026-05",
+    "label": "May '26",
+    "partial": false
+   },
+   {
+    "period": "2026-06",
+    "label": "Jun '26",
+    "partial": false
+   },
+   {
+    "period": "2026-07",
+    "label": "Jul '26",
+    "partial": false
+   },
+   {
+    "period": "2026-08",
+    "label": "Aug '26",
+    "partial": true
+   }
+  ],
+  "grain": "month",
+  "span": 2,
+  "caveats": []
+ },
+ "declared": [],
+ "timingMs": 727
+}

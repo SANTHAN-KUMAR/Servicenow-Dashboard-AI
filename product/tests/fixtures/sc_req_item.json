@@ -1,0 +1,391 @@
+{
+ "version": 1,
+ "generated": "2026-08-03 06:34:39",
+ "viewer": {
+  "name": "admin",
+  "display": "Santhan K"
+ },
+ "subject": {
+  "table": "sc_req_item",
+  "label": "Requested Item",
+  "query": "",
+  "rows": 5,
+  "listUrl": "/sc_req_item_list.do?sysparm_query=&sysparm_view="
+ },
+ "acl": {
+  "mode": "VERIFIED",
+  "aggregate": 5,
+  "secure": 5,
+  "delta": 0,
+  "capped": false
+ },
+ "path": [],
+ "panels": [
+  {
+   "id": "heat_approval_price",
+   "kind": "cross",
+   "form": "heatmap",
+   "question": "Where do approval and price concentrate together?",
+   "reason": "a 2 by 2 grid, small enough that every cell is readable, so brightness carries the count",
+   "rowField": "approval",
+   "rowFieldLabel": "Approval",
+   "colField": "price",
+   "colFieldLabel": "Price",
+   "rowKeys": [
+    "requested",
+    "approved"
+   ],
+   "colKeys": [
+    "0",
+    "600"
+   ],
+   "rowLabels": [
+    "Requested",
+    "Approved"
+   ],
+   "colLabels": [
+    "$0.00",
+    "$600.00"
+   ],
+   "rowTotals": [
+    4,
+    1
+   ],
+   "colTotals": [
+    4,
+    1
+   ],
+   "grid": [
+    [
+     4,
+     0
+    ],
+    [
+     0,
+     1
+    ]
+   ],
+   "maxCell": 4,
+   "grand": 5,
+   "span": 2,
+   "caveats": []
+  },
+  {
+   "id": "dim_approval",
+   "kind": "dimension",
+   "question": "Approval as a share of the whole",
+   "field": "approval",
+   "fieldLabel": "Approval",
+   "form": "semi_donut",
+   "selectedForm": "semi_donut",
+   "demoted": false,
+   "reason": "a part-to-whole with very few slices, where a half arc reads cleaner and leaves room for the total",
+   "caveats": [
+    {
+     "code": "low_n",
+     "severity": "info",
+     "text": "Only 5 records. Treat the shape as indicative."
+    }
+   ],
+   "rows": {
+    "series": [
+     {
+      "key": "requested",
+      "label": "Requested",
+      "count": 4
+     },
+     {
+      "key": "approved",
+      "label": "Approved",
+      "count": 1
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 2,
+    "fill": 1,
+    "topShare": 0.8,
+    "concentration": 0.8
+   },
+   "ordinal": false,
+   "span": 1
+  },
+  {
+   "id": "dim_price",
+   "kind": "dimension",
+   "question": "Price by value",
+   "field": "price",
+   "fieldLabel": "Price",
+   "form": "column",
+   "selectedForm": "column",
+   "demoted": false,
+   "reason": "a numeric field with few enough levels to treat as categorical",
+   "caveats": [
+    {
+     "code": "low_n",
+     "severity": "info",
+     "text": "Only 5 records. Treat the shape as indicative."
+    }
+   ],
+   "rows": {
+    "series": [
+     {
+      "key": "0",
+      "label": "$0.00",
+      "count": 4
+     },
+     {
+      "key": "600",
+      "label": "$600.00",
+      "count": 1
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 2,
+    "fill": 1,
+    "topShare": 0.8,
+    "concentration": 0.8
+   },
+   "ordinal": false,
+   "span": 1
+  }
+ ],
+ "drill": {
+  "atMax": false,
+  "options": [
+   {
+    "field": "approval",
+    "label": "Approval",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "only 5 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 5
+   },
+   {
+    "field": "escalation",
+    "label": "Escalation",
+    "isOrdinal": true,
+    "isRef": false,
+    "offer": false,
+    "reason": "only 5 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 5
+   },
+   {
+    "field": "additional_assignee_list",
+    "label": "Additional assignee list",
+    "isOrdinal": false,
+    "isRef": true,
+    "offer": false,
+    "reason": "only 5 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 5
+   },
+   {
+    "field": "active",
+    "label": "Active",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "only 5 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 5
+   },
+   {
+    "field": "price",
+    "label": "Price",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "only 5 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 5
+   },
+   {
+    "field": "contact_type",
+    "label": "Contact type",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "only 5 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 5
+   }
+  ]
+ },
+ "notes": [],
+ "kpis": [
+  {
+   "id": "kpi_count",
+   "kind": "kpi",
+   "span": 1,
+   "question": "How many records, and is that more or fewer than before?",
+   "fieldLabel": "Records",
+   "value": 5,
+   "capped": false,
+   "form": "stat_tile",
+   "reason": "the previous period holds no records, so a percentage change would divide by zero"
+  }
+ ],
+ "matrix": {
+  "id": "matrix_approval",
+  "kind": "matrix",
+  "form": "matrix",
+  "question": "Approval, in full",
+  "reason": "the dense read: every value with its share, its shape over time and its movement against the last complete period",
+  "field": "approval",
+  "fieldLabel": "Approval",
+  "rows": [
+   {
+    "key": "requested",
+    "label": "Requested",
+    "count": 4,
+    "share": 0.8,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "approved",
+    "label": "Approved",
+    "count": 1,
+    "share": 0.2,
+    "spark": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "delta": -1,
+    "change": -1
+   }
+  ],
+  "total": 5,
+  "periods": [
+   {
+    "period": "2025-09",
+    "label": "Sep '25",
+    "partial": false
+   },
+   {
+    "period": "2025-10",
+    "label": "Oct '25",
+    "partial": false
+   },
+   {
+    "period": "2025-11",
+    "label": "Nov '25",
+    "partial": false
+   },
+   {
+    "period": "2025-12",
+    "label": "Dec '25",
+    "partial": false
+   },
+   {
+    "period": "2026-01",
+    "label": "Jan '26",
+    "partial": false
+   },
+   {
+    "period": "2026-02",
+    "label": "Feb '26",
+    "partial": false
+   },
+   {
+    "period": "2026-03",
+    "label": "Mar '26",
+    "partial": false
+   },
+   {
+    "period": "2026-04",
+    "label": "Apr '26",
+    "partial": false
+   },
+   {
+    "period": "2026-05",
+    "label": "May '26",
+    "partial": false
+   },
+   {
+    "period": "2026-06",
+    "label": "Jun '26",
+    "partial": false
+   },
+   {
+    "period": "2026-07",
+    "label": "Jul '26",
+    "partial": false
+   },
+   {
+    "period": "2026-08",
+    "label": "Aug '26",
+    "partial": true
+   }
+  ],
+  "grain": "month",
+  "span": 2,
+  "caveats": []
+ },
+ "declared": [
+  {
+   "field": "assigned_to",
+   "label": "Assigned to",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": false,
+   "reason": "only 5 records left, too few to break down further",
+   "fill": null,
+   "distinct": null,
+   "rows": 5,
+   "declaredParent": "assignment_group",
+   "declaredParentLabel": "Assignment group"
+  },
+  {
+   "field": "cmdb_ci",
+   "label": "Configuration item",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": false,
+   "reason": "only 5 records left, too few to break down further",
+   "fill": null,
+   "distinct": null,
+   "rows": 5,
+   "declaredParent": "company",
+   "declaredParentLabel": "Company"
+  },
+  {
+   "field": "location",
+   "label": "Location",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": false,
+   "reason": "only 5 records left, too few to break down further",
+   "fill": null,
+   "distinct": null,
+   "rows": 5,
+   "declaredParent": "company",
+   "declaredParentLabel": "Company"
+  }
+ ],
+ "timingMs": 170
+}

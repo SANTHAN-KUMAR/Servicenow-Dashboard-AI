@@ -1,0 +1,152 @@
+{
+ "version": 1,
+ "generated": "2026-08-03 06:34:18",
+ "viewer": {
+  "name": "admin",
+  "display": "Santhan K"
+ },
+ "subject": {
+  "table": "sc_request",
+  "label": "Request",
+  "query": "",
+  "rows": 1,
+  "listUrl": "/sc_request_list.do?sysparm_query=&sysparm_view="
+ },
+ "acl": {
+  "mode": "VERIFIED",
+  "aggregate": 1,
+  "secure": 1,
+  "delta": 0,
+  "capped": false
+ },
+ "path": [],
+ "panels": [],
+ "drill": {
+  "atMax": false,
+  "options": [
+   {
+    "field": "approval",
+    "label": "Approval",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "only 1 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 1
+   },
+   {
+    "field": "escalation",
+    "label": "Escalation",
+    "isOrdinal": true,
+    "isRef": false,
+    "offer": false,
+    "reason": "only 1 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 1
+   },
+   {
+    "field": "additional_assignee_list",
+    "label": "Additional assignee list",
+    "isOrdinal": false,
+    "isRef": true,
+    "offer": false,
+    "reason": "only 1 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 1
+   },
+   {
+    "field": "active",
+    "label": "Active",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "only 1 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 1
+   },
+   {
+    "field": "price",
+    "label": "Price",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "only 1 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 1
+   },
+   {
+    "field": "contact_type",
+    "label": "Contact type",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "only 1 records left, too few to break down further",
+    "fill": null,
+    "distinct": null,
+    "rows": 1
+   }
+  ]
+ },
+ "notes": [],
+ "kpis": [
+  {
+   "id": "kpi_count",
+   "kind": "kpi",
+   "span": 1,
+   "question": "How many records, and is that more or fewer than before?",
+   "fieldLabel": "Records",
+   "value": 1,
+   "capped": false,
+   "form": "stat_tile",
+   "reason": "no date field with usable spread, so there is no previous period to compare against"
+  }
+ ],
+ "matrix": null,
+ "declared": [
+  {
+   "field": "assigned_to",
+   "label": "Assigned to",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": false,
+   "reason": "only 1 records left, too few to break down further",
+   "fill": null,
+   "distinct": null,
+   "rows": 1,
+   "declaredParent": "assignment_group",
+   "declaredParentLabel": "Assignment group"
+  },
+  {
+   "field": "cmdb_ci",
+   "label": "Configuration item",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": false,
+   "reason": "only 1 records left, too few to break down further",
+   "fill": null,
+   "distinct": null,
+   "rows": 1,
+   "declaredParent": "company",
+   "declaredParentLabel": "Company"
+  },
+  {
+   "field": "location",
+   "label": "Location",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": false,
+   "reason": "only 1 records left, too few to break down further",
+   "fill": null,
+   "distinct": null,
+   "rows": 1,
+   "declaredParent": "company",
+   "declaredParentLabel": "Company"
+  }
+ ],
+ "timingMs": 323
+}

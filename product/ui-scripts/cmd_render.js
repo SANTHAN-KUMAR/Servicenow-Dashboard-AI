@@ -301,6 +301,7 @@
   /** Horizontal ranked bars. Length is the encoding, so it starts at zero. */
   function drawRankedBar(panel) {
     var rows = withOther(panel);
+    var total = sum(rows);
     var barH = 22, gap = 8, padT = 6, padL = 136, padR = 58;
     var h = padT + rows.length * (barH + gap);
     var s = svgRoot(W, Math.max(h, 60));
@@ -312,10 +313,14 @@
       var w = Math.max(2, (rows[i].count / max) * iw);
       s.appendChild(text(padL - 10, yy + barH / 2 + 4, truncate(label(rows[i]), 18),
         'ct', 'end'));
-      s.appendChild(svgEl('rect', {
+      var rb = svgEl('rect', {
         x: padL, y: yy, width: w, height: barH, rx: 4,
         fill: rows[i].isOther ? v(OTHER) : v('--c1')
-      }));
+      });
+      tip(rb, [label(rows[i]), fmt(rows[i].count) + ' records',
+               pct(rows[i].count / (total || 1)) + ' of the total']);
+      if (!rows[i].isOther) drillable(rb, panel.field, rows[i].key);
+      s.appendChild(rb);
       var lx = padL + w + 8;
       s.appendChild(lx > W - 44
         ? text(W - 3, yy + barH / 2 + 4, fmt(rows[i].count), 'vl', 'end')
@@ -328,6 +333,7 @@
   /** Vertical columns, drawn in the data's own order rather than ranked. */
   function drawColumn(panel) {
     var rows = withOther(panel);
+    var colTotal = sum(rows);
     var h = 200, padL = 40, padR = 10, padT = 18, padB = 30;
     var s = svgRoot(W, h);
     var max = niceMax(Math.max.apply(null, rows.map(function (r) { return r.count; })));
@@ -342,8 +348,12 @@
     for (var i = 0; i < rows.length; i++) {
       var cx = padL + slot * i + slot / 2;
       var bh = Math.max(2, (rows[i].count / max) * ih);
-      s.appendChild(svgEl('rect', { x: cx - bw / 2, y: padT + ih - bh, width: bw,
-        height: bh, rx: 4, fill: rows[i].isOther ? v(OTHER) : v('--c1') }));
+      var cb = svgEl('rect', { x: cx - bw / 2, y: padT + ih - bh, width: bw,
+        height: bh, rx: 4, fill: rows[i].isOther ? v(OTHER) : v('--c1') });
+      tip(cb, [label(rows[i]), fmt(rows[i].count) + ' records',
+               pct(rows[i].count / (colTotal || 1)) + ' of the total']);
+      if (!rows[i].isOther) drillable(cb, panel.field, rows[i].key);
+      s.appendChild(cb);
       s.appendChild(valueLabel(cx, padT + ih - bh - 6, fmt(rows[i].count), 'vl'));
       s.appendChild(valueLabel(cx, h - 10, truncate(label(rows[i]), 10), 'tk'));
     }
@@ -374,8 +384,12 @@
                  : ordinal ? v(SEQ[Math.min(SEQ.length - 1,
                      2 + Math.floor(i * (SEQ.length - 3) / Math.max(1, rows.length - 1)))])
                  : catColour(i);
-      s.appendChild(svgEl('rect', { x: x, y: barY, width: seg, height: barH,
-        rx: i === 0 || i === rows.length - 1 ? 4 : 0, fill: colour }));
+      var sg = svgEl('rect', { x: x, y: barY, width: seg, height: barH,
+        rx: i === 0 || i === rows.length - 1 ? 4 : 0, fill: colour });
+      tip(sg, [label(rows[i]), fmt(rows[i].count) + ' records',
+               pct(rows[i].count / total) + ' of the total']);
+      if (!rows[i].isOther) drillable(sg, panel.field, rows[i].key);
+      s.appendChild(sg);
       // Only label a segment wide enough to hold the text.
       if (w > 46) {
         s.appendChild(text(x + seg / 2, barY + barH / 2 + 4,
@@ -423,10 +437,14 @@
       var a1 = start + (acc + frac) * sweep;
       // 2px surface gap between adjacent arcs
       var gapA = Math.min((a1 - a0) * 0.18, 0.035);
-      s.appendChild(svgEl('path', {
+      var sl = svgEl('path', {
         d: arc(cx, cy, r, r - thick, a0, Math.max(a0, a1 - gapA)),
         fill: rows[i].isOther ? v(OTHER) : catColour(i)
-      }));
+      });
+      tip(sl, [label(rows[i]), fmt(rows[i].count) + ' records',
+               pct(rows[i].count / total) + ' of ' + fmt(total)]);
+      if (!rows[i].isOther) drillable(sl, panel.field, rows[i].key);
+      s.appendChild(sl);
       acc += frac;
     }
 
@@ -479,12 +497,16 @@
       var c = cells[i];
       var step = Math.min(SEQ.length - 1,
         1 + Math.floor((1 - i / Math.max(1, cells.length - 1)) * (SEQ.length - 2)));
-      s.appendChild(svgEl('rect', {
+      var tm = svgEl('rect', {
         x: c.x + 1, y: c.y + 1,
         width: Math.max(0, c.w - 2), height: Math.max(0, c.h - 2),
         rx: 3,
         fill: c.item.row.isOther ? v(OTHER) : v(SEQ[step])
-      }));
+      });
+      tip(tm, [label(c.item.row), fmt(c.item.value) + ' records',
+               pct(c.item.value / total) + ' of the total']);
+      if (!c.item.row.isOther) drillable(tm, panel.field, c.item.row.key);
+      s.appendChild(tm);
       // Label only where it fits. A clipped label is worse than none.
       if (c.w > 62 && c.h > 34) {
         var onDark = step >= 4;
@@ -577,8 +599,11 @@
     for (var k = 0; k < bins; k++) {
       var bh = buckets[k] === 0 ? 0 : Math.max(2, (buckets[k] / max) * ih);
       // Histogram bars touch, with a 1px surface gap, because the axis is continuous.
-      s.appendChild(svgEl('rect', { x: padL + slot * k + 0.5, y: padT + ih - bh,
-        width: Math.max(1, slot - 1), height: bh, rx: 2, fill: v('--c1') }));
+      var hb = svgEl('rect', { x: padL + slot * k + 0.5, y: padT + ih - bh,
+        width: Math.max(1, slot - 1), height: bh, rx: 2, fill: v('--c1') });
+      tip(hb, [num(lo + k * width) + ' to ' + num(lo + (k + 1) * width),
+               fmt(buckets[k]) + ' records']);
+      s.appendChild(hb);
     }
     s.appendChild(text(padL, h - 10, compact(lo), 'tk', 'start'));
     s.appendChild(text(W - padR, h - 10, compact(hi), 'tk', 'end'));

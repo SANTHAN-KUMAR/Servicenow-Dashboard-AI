@@ -1,0 +1,1490 @@
+{
+ "version": 1,
+ "generated": "2026-08-03 06:34:07",
+ "viewer": {
+  "name": "admin",
+  "display": "Santhan K"
+ },
+ "subject": {
+  "table": "problem",
+  "label": "Problem",
+  "query": "",
+  "rows": 544,
+  "listUrl": "/problem_list.do?sysparm_query=&sysparm_view="
+ },
+ "acl": {
+  "mode": "VERIFIED",
+  "aggregate": 544,
+  "secure": 544,
+  "delta": 0,
+  "capped": false
+ },
+ "path": [],
+ "panels": [
+  {
+   "id": "series",
+   "kind": "series",
+   "question": "Volume by created, per month",
+   "field": "sys_created_on",
+   "fieldLabel": "Created",
+   "grain": "month",
+   "form": "line",
+   "reason": "one series of events per period, where the line is the mark and area would overstate it",
+   "caveats": [
+    {
+     "code": "partial_tail",
+     "severity": "info",
+     "text": "The final month is still in progress and is drawn dashed."
+    }
+   ],
+   "points": [
+    {
+     "period": "2025-09",
+     "label": "Sep '25",
+     "count": 25,
+     "partial": false
+    },
+    {
+     "period": "2025-10",
+     "label": "Oct '25",
+     "count": 22,
+     "partial": false
+    },
+    {
+     "period": "2025-11",
+     "label": "Nov '25",
+     "count": 25,
+     "partial": false
+    },
+    {
+     "period": "2025-12",
+     "label": "Dec '25",
+     "count": 33,
+     "partial": false
+    },
+    {
+     "period": "2026-01",
+     "label": "Jan '26",
+     "count": 28,
+     "partial": false
+    },
+    {
+     "period": "2026-02",
+     "label": "Feb '26",
+     "count": 44,
+     "partial": false
+    },
+    {
+     "period": "2026-03",
+     "label": "Mar '26",
+     "count": 49,
+     "partial": false
+    },
+    {
+     "period": "2026-04",
+     "label": "Apr '26",
+     "count": 64,
+     "partial": false
+    },
+    {
+     "period": "2026-05",
+     "label": "May '26",
+     "count": 49,
+     "partial": false
+    },
+    {
+     "period": "2026-06",
+     "label": "Jun '26",
+     "count": 59,
+     "partial": false
+    },
+    {
+     "period": "2026-07",
+     "label": "Jul '26",
+     "count": 71,
+     "partial": false
+    },
+    {
+     "period": "2026-08",
+     "label": "Aug '26",
+     "count": 64,
+     "partial": true
+    }
+   ],
+   "story": "The last three periods run 65% above the average of the 8 before them.",
+   "span": 2,
+   "annotation": {
+    "slope": 4.85,
+    "intercept": 18.41,
+    "sigma": 6.53,
+    "direction": "rising",
+    "perPeriod": 4.8,
+    "anomalies": [],
+    "forecast": [
+     {
+      "index": 12,
+      "value": 77,
+      "lo": 63,
+      "hi": 90
+     },
+     {
+      "index": 13,
+      "value": 81,
+      "lo": 67,
+      "hi": 96
+     },
+     {
+      "index": 14,
+      "value": 86,
+      "lo": 72,
+      "hi": 101
+     }
+    ],
+    "fitFrom": {
+     "index": 0,
+     "value": 18
+    },
+    "fitTo": {
+     "index": 10,
+     "value": 67
+    },
+    "method": "least squares on 11 complete periods, band at 2 residual standard deviations"
+   }
+  },
+  {
+   "id": "trend_by_priority",
+   "kind": "trend_group",
+   "form": "line_multi",
+   "question": "How has priority moved over time?",
+   "reason": "5 categories, few enough that separate lines stay legible and each keeps its own baseline",
+   "field": "priority",
+   "fieldLabel": "Priority",
+   "dateField": "sys_created_on",
+   "grain": "month",
+   "periods": [
+    {
+     "period": "2025-09",
+     "label": "Sep '25",
+     "partial": false
+    },
+    {
+     "period": "2025-10",
+     "label": "Oct '25",
+     "partial": false
+    },
+    {
+     "period": "2025-11",
+     "label": "Nov '25",
+     "partial": false
+    },
+    {
+     "period": "2025-12",
+     "label": "Dec '25",
+     "partial": false
+    },
+    {
+     "period": "2026-01",
+     "label": "Jan '26",
+     "partial": false
+    },
+    {
+     "period": "2026-02",
+     "label": "Feb '26",
+     "partial": false
+    },
+    {
+     "period": "2026-03",
+     "label": "Mar '26",
+     "partial": false
+    },
+    {
+     "period": "2026-04",
+     "label": "Apr '26",
+     "partial": false
+    },
+    {
+     "period": "2026-05",
+     "label": "May '26",
+     "partial": false
+    },
+    {
+     "period": "2026-06",
+     "label": "Jun '26",
+     "partial": false
+    },
+    {
+     "period": "2026-07",
+     "label": "Jul '26",
+     "partial": false
+    },
+    {
+     "period": "2026-08",
+     "label": "Aug '26",
+     "partial": true
+    }
+   ],
+   "series": [
+    {
+     "key": "3",
+     "label": "3 - Moderate",
+     "counts": [
+      16,
+      10,
+      14,
+      13,
+      17,
+      21,
+      19,
+      29,
+      22,
+      27,
+      41,
+      31
+     ],
+     "total": 260
+    },
+    {
+     "key": "4",
+     "label": "4 - Low",
+     "counts": [
+      4,
+      7,
+      6,
+      11,
+      7,
+      4,
+      16,
+      13,
+      12,
+      19,
+      20,
+      14
+     ],
+     "total": 133
+    },
+    {
+     "key": "2",
+     "label": "2 - High",
+     "counts": [
+      2,
+      3,
+      0,
+      7,
+      2,
+      9,
+      5,
+      12,
+      11,
+      10,
+      3,
+      14
+     ],
+     "total": 78
+    },
+    {
+     "key": "5",
+     "label": "5 - Planning",
+     "counts": [
+      2,
+      0,
+      2,
+      1,
+      2,
+      7,
+      8,
+      9,
+      2,
+      2,
+      3,
+      3
+     ],
+     "total": 41
+    },
+    {
+     "key": "1",
+     "label": "1 - Critical",
+     "counts": [
+      1,
+      2,
+      3,
+      1,
+      0,
+      3,
+      1,
+      1,
+      2,
+      1,
+      4,
+      2
+     ],
+     "total": 21
+    }
+   ],
+   "other": null,
+   "span": 2,
+   "caveats": [
+    {
+     "severity": "info",
+     "text": "11 records fall outside the window shown."
+    }
+   ]
+  },
+  {
+   "id": "change_priority",
+   "kind": "change",
+   "form": "waterfall",
+   "question": "What moved the total between Jun '26 and Jul '26?",
+   "reason": "each bar is the contribution of one priority value to the change, so the steps reconcile the two totals exactly rather than approximately",
+   "field": "priority",
+   "fieldLabel": "Priority",
+   "startLabel": "Jun '26",
+   "endLabel": "Jul '26",
+   "start": 59,
+   "end": 71,
+   "steps": [
+    {
+     "key": "3",
+     "label": "3 - Moderate",
+     "delta": 14,
+     "from": 27,
+     "to": 41
+    },
+    {
+     "key": "1",
+     "label": "1 - Critical",
+     "delta": 3,
+     "from": 1,
+     "to": 4
+    },
+    {
+     "key": "4",
+     "label": "4 - Low",
+     "delta": 1,
+     "from": 19,
+     "to": 20
+    },
+    {
+     "key": "5",
+     "label": "5 - Planning",
+     "delta": 1,
+     "from": 2,
+     "to": 3
+    },
+    {
+     "key": "2",
+     "label": "2 - High",
+     "delta": -7,
+     "from": 10,
+     "to": 3
+    }
+   ],
+   "span": 2,
+   "caveats": []
+  },
+  {
+   "id": "heat_priority_assignment_group",
+   "kind": "cross",
+   "form": "heatmap",
+   "question": "Where do priority and assignment group concentrate together?",
+   "reason": "a 5 by 10 grid, small enough that every cell is readable, so brightness carries the count",
+   "rowField": "priority",
+   "rowFieldLabel": "Priority",
+   "colField": "assignment_group",
+   "colFieldLabel": "Assignment group",
+   "rowKeys": [
+    "3",
+    "4",
+    "2",
+    "5",
+    "1"
+   ],
+   "colKeys": [
+    "0762d92db72422103a858bbb4e11a928",
+    "12a586cd0bb23200ecfd818393673a30",
+    "019ad92ec7230010393d265c95c260dd",
+    "0c4e7b573b331300ad3cc9bb34efc461",
+    "10e39a5673500010c2e7660c4cf6a7ef",
+    "1be289a1eb32010045e1a5115206fea1",
+    "0c5e2a7ce4001410f877ce457cda6b98",
+    "0a52d3dcd7011200f2d224837e6103f2",
+    "",
+    "6fcd3b573b331300ad3cc9bb34efc447"
+   ],
+   "rowLabels": [
+    "3 - Moderate",
+    "4 - Low",
+    "2 - High",
+    "5 - Planning",
+    "1 - Critical"
+   ],
+   "colLabels": [
+    "MIF Admins",
+    "Incident Management",
+    "Analytics Settings Managers",
+    "Problem Analyzers",
+    "Nimsoft desk",
+    "US Presidents Group 2",
+    "Business Application Registration Approval Group",
+    "Application Development",
+    "(empty)",
+    "Problem Solving"
+   ],
+   "rowTotals": [
+    260,
+    133,
+    78,
+    52,
+    21
+   ],
+   "colTotals": [
+    75,
+    71,
+    70,
+    67,
+    64,
+    63,
+    62,
+    48,
+    18,
+    6
+   ],
+   "grid": [
+    [
+     37,
+     37,
+     30,
+     30,
+     34,
+     34,
+     36,
+     22,
+     0,
+     0
+    ],
+    [
+     18,
+     24,
+     21,
+     18,
+     13,
+     17,
+     11,
+     10,
+     0,
+     1
+    ],
+    [
+     12,
+     5,
+     10,
+     14,
+     10,
+     7,
+     11,
+     8,
+     1,
+     0
+    ],
+    [
+     6,
+     3,
+     6,
+     2,
+     5,
+     2,
+     2,
+     5,
+     17,
+     4
+    ],
+    [
+     2,
+     2,
+     3,
+     3,
+     2,
+     3,
+     2,
+     3,
+     0,
+     1
+    ]
+   ],
+   "maxCell": 37,
+   "grand": 544,
+   "span": 2,
+   "caveats": []
+  },
+  {
+   "id": "dist_related_incidents",
+   "kind": "distribution",
+   "form": "histogram",
+   "question": "How is related incidents distributed?",
+   "reason": "11 equal-width bins over 533 values, sized by the interquartile range rather than by a fixed count",
+   "field": "related_incidents",
+   "fieldLabel": "Related Incidents",
+   "bins": [
+    {
+     "from": 0,
+     "to": 0.455,
+     "count": 527
+    },
+    {
+     "from": 0.455,
+     "to": 0.909,
+     "count": 0
+    },
+    {
+     "from": 0.909,
+     "to": 1.364,
+     "count": 3
+    },
+    {
+     "from": 1.364,
+     "to": 1.818,
+     "count": 0
+    },
+    {
+     "from": 1.818,
+     "to": 2.273,
+     "count": 2
+    },
+    {
+     "from": 2.273,
+     "to": 2.727,
+     "count": 0
+    },
+    {
+     "from": 2.727,
+     "to": 3.182,
+     "count": 0
+    },
+    {
+     "from": 3.182,
+     "to": 3.636,
+     "count": 0
+    },
+    {
+     "from": 3.636,
+     "to": 4.091,
+     "count": 0
+    },
+    {
+     "from": 4.091,
+     "to": 4.545,
+     "count": 0
+    },
+    {
+     "from": 4.545,
+     "to": 5,
+     "count": 1
+    }
+   ],
+   "lo": 0,
+   "hi": 5,
+   "n": 533,
+   "mean": 0.023,
+   "median": 0,
+   "q1": 0,
+   "q3": 0,
+   "span": 1,
+   "caveats": []
+  },
+  {
+   "id": "cycle_sys_created_on",
+   "kind": "cycle",
+   "form": "heatmap",
+   "question": "When in the week does this happen?",
+   "reason": "a repeating cycle rather than a trend, so the honest form is a grid of day against hour, not a line",
+   "dateField": "sys_created_on",
+   "grid": [
+    [
+     0,
+     2,
+     0,
+     0,
+     1,
+     1,
+     1,
+     2,
+     5,
+     11,
+     12,
+     6,
+     2,
+     6,
+     10,
+     20,
+     4,
+     8,
+     6,
+     3,
+     0,
+     1,
+     3,
+     2
+    ],
+    [
+     2,
+     1,
+     0,
+     0,
+     1,
+     3,
+     4,
+     6,
+     8,
+     9,
+     6,
+     10,
+     4,
+     13,
+     3,
+     8,
+     9,
+     5,
+     1,
+     5,
+     2,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     6,
+     3,
+     15,
+     8,
+     16,
+     8,
+     7,
+     8,
+     8,
+     4,
+     4,
+     5,
+     0,
+     1,
+     1,
+     0,
+     2
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     2,
+     1,
+     5,
+     5,
+     8,
+     6,
+     11,
+     12,
+     6,
+     6,
+     3,
+     10,
+     10,
+     3,
+     6,
+     0,
+     0,
+     2,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     2,
+     2,
+     5,
+     5,
+     7,
+     10,
+     8,
+     9,
+     6,
+     7,
+     10,
+     7,
+     9,
+     7,
+     2,
+     2,
+     1,
+     1,
+     3,
+     1
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     2,
+     1,
+     0,
+     3,
+     0,
+     1,
+     3,
+     2,
+     2,
+     3,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     2,
+     3,
+     0,
+     0,
+     0,
+     2,
+     2,
+     2,
+     3,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0
+    ]
+   ],
+   "maxCell": 20,
+   "total": 544,
+   "rowLabels": [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
+   ],
+   "span": 2,
+   "caveats": [
+    {
+     "severity": "info",
+     "text": "Hours are UTC as stored on the record, not your local time."
+    }
+   ]
+  },
+  {
+   "id": "dim_priority",
+   "kind": "dimension",
+   "question": "Priority across the scale",
+   "field": "priority",
+   "fieldLabel": "Priority",
+   "form": "stacked_ordinal",
+   "selectedForm": "stacked_ordinal",
+   "demoted": false,
+   "reason": "an ordered scale, so the sequence is preserved and the parts are shown against the whole",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "3",
+      "label": "3 - Moderate",
+      "count": 260
+     },
+     {
+      "key": "4",
+      "label": "4 - Low",
+      "count": 133
+     },
+     {
+      "key": "2",
+      "label": "2 - High",
+      "count": 78
+     },
+     {
+      "key": "5",
+      "label": "5 - Planning",
+      "count": 52
+     },
+     {
+      "key": "1",
+      "label": "1 - Critical",
+      "count": 21
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 5,
+    "fill": 1,
+    "topShare": 0.478,
+    "concentration": 0.478
+   },
+   "ordinal": true,
+   "span": 1
+  },
+  {
+   "id": "dim_assignment_group",
+   "kind": "dimension",
+   "question": "Assignment group, ranked",
+   "field": "assignment_group",
+   "fieldLabel": "Assignment group",
+   "form": "ranked_bar",
+   "selectedForm": "ranked_bar",
+   "demoted": false,
+   "reason": "few enough categories to rank and draw in full",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "0762d92db72422103a858bbb4e11a928",
+      "label": "MIF Admins",
+      "count": 75
+     },
+     {
+      "key": "12a586cd0bb23200ecfd818393673a30",
+      "label": "Incident Management",
+      "count": 71
+     },
+     {
+      "key": "019ad92ec7230010393d265c95c260dd",
+      "label": "Analytics Settings Managers",
+      "count": 70
+     },
+     {
+      "key": "0c4e7b573b331300ad3cc9bb34efc461",
+      "label": "Problem Analyzers",
+      "count": 67
+     },
+     {
+      "key": "10e39a5673500010c2e7660c4cf6a7ef",
+      "label": "Nimsoft desk",
+      "count": 64
+     },
+     {
+      "key": "1be289a1eb32010045e1a5115206fea1",
+      "label": "US Presidents Group 2",
+      "count": 63
+     },
+     {
+      "key": "0c5e2a7ce4001410f877ce457cda6b98",
+      "label": "Business Application Registration Approval Group",
+      "count": 62
+     },
+     {
+      "key": "0a52d3dcd7011200f2d224837e6103f2",
+      "label": "Application Development",
+      "count": 48
+     },
+     {
+      "key": "",
+      "label": "",
+      "count": 18
+     },
+     {
+      "key": "6fcd3b573b331300ad3cc9bb34efc447",
+      "label": "Problem Solving",
+      "count": 6
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 9,
+    "fill": 0.9669117647058824,
+    "topShare": 0.138,
+    "concentration": 0.268
+   },
+   "ordinal": false,
+   "span": 1
+  },
+  {
+   "id": "dim_assigned_to",
+   "kind": "dimension",
+   "question": "Where the volume sits, by assigned to",
+   "field": "assigned_to",
+   "fieldLabel": "Assigned to",
+   "form": "treemap",
+   "selectedForm": "treemap",
+   "demoted": false,
+   "reason": "many categories with the mass spread evenly, where area shows the whole and length would not fit",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "",
+      "label": "",
+      "count": 90
+     },
+     {
+      "key": "06826bf03710200044e0bfc8bcbe5d57",
+      "label": "Cherie Fuhri",
+      "count": 39
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d76",
+      "label": "Jacinto Gawron",
+      "count": 38
+     },
+     {
+      "key": "0382abf03710200044e0bfc8bcbe5d42",
+      "label": "Naomi Greenly",
+      "count": 37
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d5e",
+      "label": "Melinda Carleton",
+      "count": 33
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d88",
+      "label": "Billie Cowley",
+      "count": 32
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d3f",
+      "label": "Lucius Bagnoli",
+      "count": 32
+     },
+     {
+      "key": "005d500b536073005e0addeeff7b12f4",
+      "label": "survey user",
+      "count": 32
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d55",
+      "label": "Jimmie Barninger",
+      "count": 30
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d64",
+      "label": "Jewel Agresta",
+      "count": 29
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d91",
+      "label": "Christian Marnell",
+      "count": 28
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d7f",
+      "label": "Krystle Stika",
+      "count": 26
+     },
+     {
+      "key": "02826bf03710200044e0bfc8bcbe5d6d",
+      "label": "Sean Bonnet",
+      "count": 26
+     },
+     {
+      "key": "06826bf03710200044e0bfc8bcbe5d41",
+      "label": "Jess Assad",
+      "count": 25
+     },
+     {
+      "key": "04d8edbdb7517210693cfeb0be11a9ca",
+      "label": "Tom Diggins-Barnes",
+      "count": 23
+     },
+     {
+      "key": "73ab3f173b331300ad3cc9bb34efc4df",
+      "label": "Problem Coordinator A",
+      "count": 11
+     },
+     {
+      "key": "38cb3f173b331300ad3cc9bb34efc4d6",
+      "label": "Problem Coordinator B",
+      "count": 11
+     },
+     {
+      "key": "d3dbbf173b331300ad3cc9bb34efc466",
+      "label": "Problem Manager",
+      "count": 2
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 17,
+    "fill": 0.8345588235294118,
+    "topShare": 0.165,
+    "concentration": 0.375
+   },
+   "ordinal": false,
+   "span": 2
+  },
+  {
+   "id": "dim_related_incidents",
+   "kind": "dimension",
+   "question": "Related Incidents by value",
+   "field": "related_incidents",
+   "fieldLabel": "Related Incidents",
+   "form": "column",
+   "selectedForm": "column",
+   "demoted": false,
+   "reason": "a numeric field with few enough levels to treat as categorical",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "0",
+      "label": "0",
+      "count": 527
+     },
+     {
+      "key": "",
+      "label": "",
+      "count": 11
+     },
+     {
+      "key": "1",
+      "label": "1",
+      "count": 3
+     },
+     {
+      "key": "2",
+      "label": "2",
+      "count": 2
+     },
+     {
+      "key": "5",
+      "label": "5",
+      "count": 1
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 4,
+    "fill": 0.9797794117647058,
+    "topShare": 0.969,
+    "concentration": 0.969
+   },
+   "ordinal": false,
+   "span": 1
+  }
+ ],
+ "drill": {
+  "atMax": false,
+  "options": [
+   {
+    "field": "escalation",
+    "label": "Escalation",
+    "isOrdinal": true,
+    "isRef": false,
+    "offer": true,
+    "reason": "3 values, populated on 100%",
+    "fill": 1,
+    "distinct": 3,
+    "rows": 544
+   },
+   {
+    "field": "active",
+    "label": "Active",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": true,
+    "reason": "2 values, populated on 100%",
+    "fill": 1,
+    "distinct": 2,
+    "rows": 544
+   },
+   {
+    "field": "reassignment_count",
+    "label": "Reassignment count",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": true,
+    "reason": "2 values, populated on 97.8%",
+    "fill": 0.9779411764705882,
+    "distinct": 2,
+    "rows": 544
+   },
+   {
+    "field": "approval",
+    "label": "Approval",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "every record here has the same approval",
+    "fill": 0.9944852941176471,
+    "distinct": 1,
+    "rows": 544
+   },
+   {
+    "field": "additional_assignee_list",
+    "label": "Additional assignee list",
+    "isOrdinal": false,
+    "isRef": true,
+    "offer": false,
+    "reason": "Additional assignee list is empty on 100% of these records",
+    "fill": 0,
+    "distinct": 0,
+    "rows": 544
+   },
+   {
+    "field": "category",
+    "label": "Category",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "Category is empty on 95.6% of these records",
+    "fill": 0.04411764705882353,
+    "distinct": 4,
+    "rows": 544
+   }
+  ]
+ },
+ "notes": [
+  "2 further analysis panels were not built, because the page already holds as many as it can read well."
+ ],
+ "kpis": [
+  {
+   "id": "kpi_count",
+   "kind": "kpi",
+   "span": 1,
+   "question": "How many records, and is that more or fewer than before?",
+   "fieldLabel": "Records",
+   "value": 544,
+   "capped": false,
+   "form": "stat_tile_delta",
+   "reason": "compared with the previous month on sys_created_on",
+   "delta": {
+    "current": 64,
+    "previous": 71,
+    "currentLabel": "Aug '26",
+    "previousLabel": "Jul '26",
+    "elapsedFraction": 0.083,
+    "paceAdjusted": 773,
+    "delta": 702,
+    "change": 9.887,
+    "rawDelta": -7,
+    "rawChange": -0.099,
+    "partial": true,
+    "mode": "VERIFIED",
+    "capped": false
+   },
+   "caveats": [
+    {
+     "severity": "info",
+     "text": "This month is 8% elapsed, so the comparison is projected to a full month. Actual so far is 64 against 71 last month."
+    }
+   ]
+  },
+  {
+   "id": "kpi_gauge_related_incidents",
+   "kind": "kpi",
+   "span": 1,
+   "form": "gauge",
+   "question": "Where does related incidents sit against complete?",
+   "fieldLabel": "Related Incidents",
+   "field": "related_incidents",
+   "value": 0.023,
+   "target": 100,
+   "median": 0,
+   "n": 533,
+   "reason": "measured range is 0 to 5 across 533 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
+   "capped": false
+  },
+  {
+   "id": "kpi_duration",
+   "kind": "kpi",
+   "span": 1,
+   "form": "stat_tile",
+   "question": "How long does one take, from opened to created?",
+   "fieldLabel": "Mean hours, Opened to Created",
+   "value": 0,
+   "unit": "h",
+   "median": 0,
+   "n": 544,
+   "reason": "measured over 544 records where both dates are set",
+   "caveats": [],
+   "capped": false
+  },
+  {
+   "id": "kpi_sum_reassignment_count",
+   "kind": "kpi",
+   "span": 1,
+   "form": "stat_tile",
+   "question": "What does reassignment count total?",
+   "fieldLabel": "Total reassignment count",
+   "field": "reassignment_count",
+   "value": 5,
+   "mean": 0.009,
+   "median": 0,
+   "n": 532,
+   "reason": "summed over 532 records where the field is set",
+   "capped": false
+  }
+ ],
+ "matrix": {
+  "id": "matrix_priority",
+  "kind": "matrix",
+  "form": "matrix",
+  "question": "Priority, in full",
+  "reason": "the dense read: every value with its share, its shape over time and its movement against the last complete period",
+  "field": "priority",
+  "fieldLabel": "Priority",
+  "rows": [
+   {
+    "key": "3",
+    "label": "3 - Moderate",
+    "count": 260,
+    "share": 0.478,
+    "spark": [
+     16,
+     10,
+     14,
+     13,
+     17,
+     21,
+     19,
+     29,
+     22,
+     27,
+     41,
+     31
+    ],
+    "delta": 14,
+    "change": 0.519
+   },
+   {
+    "key": "4",
+    "label": "4 - Low",
+    "count": 133,
+    "share": 0.244,
+    "spark": [
+     4,
+     7,
+     6,
+     11,
+     7,
+     4,
+     16,
+     13,
+     12,
+     19,
+     20,
+     14
+    ],
+    "delta": 1,
+    "change": 0.053
+   },
+   {
+    "key": "2",
+    "label": "2 - High",
+    "count": 78,
+    "share": 0.143,
+    "spark": [
+     2,
+     3,
+     0,
+     7,
+     2,
+     9,
+     5,
+     12,
+     11,
+     10,
+     3,
+     14
+    ],
+    "delta": -7,
+    "change": -0.7
+   },
+   {
+    "key": "5",
+    "label": "5 - Planning",
+    "count": 52,
+    "share": 0.096,
+    "spark": [
+     2,
+     0,
+     2,
+     1,
+     2,
+     7,
+     8,
+     9,
+     2,
+     2,
+     3,
+     3
+    ],
+    "delta": 1,
+    "change": 0.5
+   },
+   {
+    "key": "1",
+    "label": "1 - Critical",
+    "count": 21,
+    "share": 0.039,
+    "spark": [
+     1,
+     2,
+     3,
+     1,
+     0,
+     3,
+     1,
+     1,
+     2,
+     1,
+     4,
+     2
+    ],
+    "delta": 3,
+    "change": 3
+   }
+  ],
+  "total": 544,
+  "periods": [
+   {
+    "period": "2025-09",
+    "label": "Sep '25",
+    "partial": false
+   },
+   {
+    "period": "2025-10",
+    "label": "Oct '25",
+    "partial": false
+   },
+   {
+    "period": "2025-11",
+    "label": "Nov '25",
+    "partial": false
+   },
+   {
+    "period": "2025-12",
+    "label": "Dec '25",
+    "partial": false
+   },
+   {
+    "period": "2026-01",
+    "label": "Jan '26",
+    "partial": false
+   },
+   {
+    "period": "2026-02",
+    "label": "Feb '26",
+    "partial": false
+   },
+   {
+    "period": "2026-03",
+    "label": "Mar '26",
+    "partial": false
+   },
+   {
+    "period": "2026-04",
+    "label": "Apr '26",
+    "partial": false
+   },
+   {
+    "period": "2026-05",
+    "label": "May '26",
+    "partial": false
+   },
+   {
+    "period": "2026-06",
+    "label": "Jun '26",
+    "partial": false
+   },
+   {
+    "period": "2026-07",
+    "label": "Jul '26",
+    "partial": false
+   },
+   {
+    "period": "2026-08",
+    "label": "Aug '26",
+    "partial": true
+   }
+  ],
+  "grain": "month",
+  "span": 2,
+  "caveats": []
+ },
+ "declared": [
+  {
+   "field": "assigned_to",
+   "label": "Assigned to",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": true,
+   "reason": "17 values, populated on 83.5%",
+   "fill": 0.8345588235294118,
+   "distinct": 17,
+   "rows": 544,
+   "declaredParent": "assignment_group",
+   "declaredParentLabel": "Assignment group"
+  },
+  {
+   "field": "cmdb_ci",
+   "label": "Configuration item",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": true,
+   "reason": "covers the 54.8% of records that have a configuration item",
+   "fill": 0.5477941176470589,
+   "distinct": 29,
+   "rows": 544,
+   "partial": true,
+   "declaredParent": "company",
+   "declaredParentLabel": "Company"
+  },
+  {
+   "field": "location",
+   "label": "Location",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": false,
+   "reason": "Location is empty on 100% of these records",
+   "fill": 0,
+   "distinct": 0,
+   "rows": 544,
+   "declaredParent": "company",
+   "declaredParentLabel": "Company"
+  },
+  {
+   "field": "subcategory",
+   "label": "Subcategory",
+   "isOrdinal": false,
+   "isRef": false,
+   "offer": false,
+   "reason": "Subcategory is empty on 98.3% of these records",
+   "fill": 0.016544117647058824,
+   "distinct": 4,
+   "rows": 544,
+   "declaredParent": "category",
+   "declaredParentLabel": "Category"
+  }
+ ],
+ "timingMs": 1339
+}
