@@ -1,12 +1,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>COMMAND / Analytics Design System</title>
-<meta name="description" content="COMMAND: a dark-first analytics design system for ServiceNow. Validated palettes, 25 chart specimens, a data-shape-driven form engine and a report matrix.">
-<meta name="color-scheme" content="dark light">
-<meta name="theme-color" content="#06080B" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#ECEFF3" media="(prefers-color-scheme: light)">
+<meta name="description" content="COMMAND: an analytics design system for ServiceNow. Light by default to match the platform, with a fully specified dark counterpart. Validated palettes, 25 chart specimens, a data-shape-driven form engine and a report matrix.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#ECEFF3" id="themeColor">
 <meta property="og:title" content="COMMAND / Analytics Design System">
-<meta property="og:description" content="A dark-first analytics design system for ServiceNow. Validated palettes, 25 chart specimens, a data-shape-driven form engine and a report matrix.">
+<meta property="og:description" content="An analytics design system for ServiceNow. Light by default to match the platform, with a fully specified dark counterpart. Validated palettes, 25 chart specimens, a data-shape-driven form engine and a report matrix.">
 <meta property="og:type" content="website">
 
 <!-- Fonts are self-hosted and subsetted. There is no preconnect and no external
@@ -20,14 +19,22 @@
 
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
-   COMMAND. A dark-first analytics design system for ServiceNow.
+   COMMAND. An analytics design system for ServiceNow. Light is the default,
+   because the platform runs light; dark is specified to the same standard.
    Categorical, sequential and status palettes were validated with an OKLab/CVD
    validator against the real #0D1117 chart surface. Figures quoted in the colour
    section are measured output.
    ═══════════════════════════════════════════════════════════════════════════ */
-/* ═══ Dark is the flagship theme. Light is a selected counterpart: its own steps
-   from the same hues, validated against its own #FFFFFF surface, never an
-   automatic inversion of the dark values. Toggle with data-theme on the root. ═══ */
+/* ═══ The light tokens are keyed on :not([data-theme="dark"]) rather than on
+   [data-theme="light"], so light is the real default: it applies with no attribute
+   set at all, which is what a reader with scripting blocked gets. Specificity is
+   0,2,0 against :root's 0,1,0, so it wins without !important.
+
+   Two themes, each selected rather than derived. Light is the default, to sit
+   inside a platform that runs light. Each has its own steps from the same hues,
+   validated against its own surface, #FFFFFF and #0D1117 respectively. Neither is
+   an automatic inversion of the other; see the ramp and emphasis notes below for
+   the three things that genuinely invert. Toggle with data-theme on the root. ═══ */
 :root{
   --on-hi:#04161A;           /* text on a high sequential step (bright, on dark) */
   --fill-a:.82; --fill-b:.30;  /* ribbon gradient stops */
@@ -70,7 +77,7 @@
   --ease-out:cubic-bezier(.16,1,.3,1);
 }
 
-:root[data-theme="light"]{
+:root:not([data-theme="dark"]){
   color-scheme:light;
   --on-hi:#FFFFFF;           /* on light, the high steps are DARK, so this flips */
   --fill-a:.9; --fill-b:.42;   /* a wash that reads on black is invisible on white */
@@ -108,43 +115,43 @@
 }
 /* Panels invert their material: on light, the hairline and shadow do the work
    that the top highlight does on dark. */
-:root[data-theme="light"] .panel{
+:root:not([data-theme="dark"]) .panel{
   background:linear-gradient(180deg,#FFFFFF,#FCFDFE);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(16,22,32,.05),
              0 12px 28px -18px rgba(16,22,32,.22)}
-:root[data-theme="light"] .panel::before{
+:root:not([data-theme="dark"]) .panel::before{
   background:linear-gradient(180deg, rgba(16,22,32,.13), rgba(16,22,32,.08) 40%, rgba(16,22,32,.06))}
-:root[data-theme="light"] .panel.lit{
+:root:not([data-theme="dark"]) .panel.lit{
   box-shadow:0 1px 2px rgba(16,22,32,.06), 0 0 0 1px rgba(16,22,32,.05),
              0 18px 40px -20px rgba(16,22,32,.3)}
-:root[data-theme="light"] .tile{background:linear-gradient(180deg,#FFFFFF,#FBFCFE)}
-:root[data-theme="light"] .tile:hover{background:#F7F9FC}
-:root[data-theme="light"] .card{background:linear-gradient(180deg,#FFFFFF,#FBFCFE)}
-:root[data-theme="light"] .card-t{background:#F7F9FC}
-:root[data-theme="light"] .mock-bar{background:linear-gradient(180deg,#FBFCFE,#F1F4F8)}
-:root[data-theme="light"] .mock-dots i{background:rgba(16,22,32,.14)}
-:root[data-theme="light"] .nav{background:#F1F4F8}
-:root[data-theme="light"] .btn{background:linear-gradient(180deg,#FFFFFF,#F5F7FA)}
-:root[data-theme="light"] .btn:hover{background:linear-gradient(180deg,#FFFFFF,#EDF1F6)}
-:root[data-theme="light"] .btn-sig{color:#FFFFFF; background:linear-gradient(180deg,#2B3444,#10161F)}
-:root[data-theme="light"] .btn-sig:hover{background:linear-gradient(180deg,#3A4557,#1B2432)}
-:root[data-theme="light"] .seg{background:#EDF0F5}
-:root[data-theme="light"] .seg button[aria-selected="true"]{background:#FFFFFF;
+:root:not([data-theme="dark"]) .tile{background:linear-gradient(180deg,#FFFFFF,#FBFCFE)}
+:root:not([data-theme="dark"]) .tile:hover{background:#F7F9FC}
+:root:not([data-theme="dark"]) .card{background:linear-gradient(180deg,#FFFFFF,#FBFCFE)}
+:root:not([data-theme="dark"]) .card-t{background:#F7F9FC}
+:root:not([data-theme="dark"]) .mock-bar{background:linear-gradient(180deg,#FBFCFE,#F1F4F8)}
+:root:not([data-theme="dark"]) .mock-dots i{background:rgba(16,22,32,.14)}
+:root:not([data-theme="dark"]) .nav{background:#F1F4F8}
+:root:not([data-theme="dark"]) .btn{background:linear-gradient(180deg,#FFFFFF,#F5F7FA)}
+:root:not([data-theme="dark"]) .btn:hover{background:linear-gradient(180deg,#FFFFFF,#EDF1F6)}
+:root:not([data-theme="dark"]) .btn-sig{color:#FFFFFF; background:linear-gradient(180deg,#2B3444,#10161F)}
+:root:not([data-theme="dark"]) .btn-sig:hover{background:linear-gradient(180deg,#3A4557,#1B2432)}
+:root:not([data-theme="dark"]) .seg{background:#EDF0F5}
+:root:not([data-theme="dark"]) .seg button[aria-selected="true"]{background:#FFFFFF;
   box-shadow:0 1px 2px rgba(16,22,32,.12)}
-:root[data-theme="light"] .field{background:#FFFFFF}
-:root[data-theme="light"] .rule{background:linear-gradient(180deg,#FFFFFF,#FAFBFD)}
-:root[data-theme="light"] .note{background:#FFFFFF}
-:root[data-theme="light"] .sw{background:#FFFFFF}
-:root[data-theme="light"] .tip{background:#FFFFFF}
-:root[data-theme="light"] .kpi{background:linear-gradient(180deg,#FFFFFF,#FAFBFD)}
-:root[data-theme="light"] pre{background:#10161F; color:#E4E9F0}
-:root[data-theme="light"] .meter{background:rgba(16,22,32,.09)}
-:root[data-theme="light"] body::before{opacity:.028}
-:root[data-theme="light"] .mock{box-shadow:0 2px 4px rgba(16,22,32,.06),
+:root:not([data-theme="dark"]) .field{background:#FFFFFF}
+:root:not([data-theme="dark"]) .rule{background:linear-gradient(180deg,#FFFFFF,#FAFBFD)}
+:root:not([data-theme="dark"]) .note{background:#FFFFFF}
+:root:not([data-theme="dark"]) .sw{background:#FFFFFF}
+:root:not([data-theme="dark"]) .tip{background:#FFFFFF}
+:root:not([data-theme="dark"]) .kpi{background:linear-gradient(180deg,#FFFFFF,#FAFBFD)}
+:root:not([data-theme="dark"]) pre{background:#10161F; color:#E4E9F0}
+:root:not([data-theme="dark"]) .meter{background:rgba(16,22,32,.09)}
+:root:not([data-theme="dark"]) body::before{opacity:.028}
+:root:not([data-theme="dark"]) .mock{box-shadow:0 2px 4px rgba(16,22,32,.06),
   0 30px 64px -34px rgba(16,22,32,.34)}
-:root[data-theme="light"] .dbar i{background:rgba(0,140,158,.22)}
-:root[data-theme="light"] .chip{background:rgba(16,22,32,.03)}
-:root[data-theme="light"] .chip.sig{background:rgba(16,22,32,.05)}
+:root:not([data-theme="dark"]) .dbar i{background:rgba(0,140,158,.22)}
+:root:not([data-theme="dark"]) .chip{background:rgba(16,22,32,.03)}
+:root:not([data-theme="dark"]) .chip.sig{background:rgba(16,22,32,.05)}
 
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -626,7 +633,19 @@ footer{padding:60px 0 84px; border-top:1px solid var(--edge); color:var(--ink-3)
 }
 </style>
 
-<script>document.documentElement.classList.add('js')</script>
+<script>
+/* Theme is resolved here, before any content parses, so the page never paints one
+   theme and then repaints in the other. Light is the default because ServiceNow
+   itself runs light and this has to sit inside the platform without looking like a
+   visitor. The stored preference wins if there is one. */
+(function () {
+  var t = null;
+  try { t = localStorage.getItem('cmd-theme'); } catch (e) {}
+  var r = document.documentElement;
+  r.classList.add('js');
+  r.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+})();
+</script>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
@@ -680,8 +699,8 @@ footer{padding:60px 0 84px; border-top:1px solid var(--edge); color:var(--ink-3)
       <a href="#stack">Stack</a>
     </div>
     <div class="seg" style="flex:none" id="themeSeg" role="group" aria-label="Theme">
-      <button type="button" data-t="dark" aria-selected="true">Dark</button>
-      <button type="button" data-t="light" aria-selected="false">Light</button>
+      <button type="button" data-t="light" aria-selected="true">Light</button>
+      <button type="button" data-t="dark" aria-selected="false">Dark</button>
     </div>
   </div>
 </nav>
@@ -701,9 +720,11 @@ footer{padding:60px 0 84px; border-top:1px solid var(--edge); color:var(--ink-3)
     <h1 class="d1" style="max-width:17ch">A production design system for ServiceNow analytics.</h1>
 
     <p class="lede" style="margin-top:26px">
-      A dark-first design system for ServiceNow dashboards and reports, built to clear the bar the
-      client set in their own words: beautiful, impressive, attractive. Every design decision below
-      is anchored to something measured, either on the live instance or by a colour validator.
+      A design system for ServiceNow dashboards and reports, built to clear the bar the
+      client set in their own words: beautiful, impressive, attractive. Light is the default,
+      because the platform runs light and this has to belong inside it rather than visit it. Dark
+      is specified to the same standard, not derived from it. Every design decision below is
+      anchored to something measured, either on the live instance or by a colour validator.
     </p>
 
     <div class="row" style="margin-top:30px">
@@ -2831,8 +2852,8 @@ footer{padding:60px 0 84px; border-top:1px solid var(--edge); color:var(--ink-3)
       accessibility conformance report covering custom UI Builder pages or custom UXF components as
       a category, so that responsibility sits with whoever builds them. The table-view toggle, focus
       order and per-mark labelling above are the mitigation and they get built alongside the charts.
-      A dark-first system also needs its light counterpart specified before UAT rather than
-      discovered in it.
+      And the theme that is not the default still needs specifying before UAT rather than
+      being discovered in it.
     </div>
   </div>
 </section>
@@ -3053,20 +3074,23 @@ footer{padding:60px 0 84px; border-top:1px solid var(--edge); color:var(--ink-3)
 
   /* Remember each row's authored column template before touching it, so the
      narrow-viewport collapse can be undone without losing the original value. */
-  /* Theme. Dark is the default; the choice persists across reloads. */
+  /* Theme. Light is the default, set in the head so there is no repaint. This
+     only syncs the control and the browser chrome, and persists a change. */
   var seg = document.getElementById('themeSeg');
+  var themeColor = document.getElementById('themeColor');
+  var CHROME = { light: '#ECEFF3', dark: '#06080B' };
   function setTheme(t){
     document.documentElement.setAttribute('data-theme', t);
     seg.querySelectorAll('button').forEach(function(b){
       b.setAttribute('aria-selected', String(b.dataset.t === t));
     });
+    if (themeColor) themeColor.setAttribute('content', CHROME[t] || CHROME.light);
     try{ localStorage.setItem('cmd-theme', t); }catch(e){}
   }
   seg.addEventListener('click', function(e){
     var b = e.target.closest('button'); if (b) setTheme(b.dataset.t);
   });
-  var saved = null; try{ saved = localStorage.getItem('cmd-theme'); }catch(e){}
-  setTheme(saved || 'dark');
+  setTheme(document.documentElement.getAttribute('data-theme') || 'light');
 
   var mq = window.matchMedia('(max-width: 980px)');
   document.querySelectorAll('.hero-row').forEach(function (el) {

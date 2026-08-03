@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 built.html
 .payload.json
+
+# Instance credentials. Never committed.
+product/deploy/credentials.json
+product/deploy/.token
