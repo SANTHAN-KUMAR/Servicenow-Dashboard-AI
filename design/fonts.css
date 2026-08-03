@@ -1,0 +1,97 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Self-hosted webfonts. No runtime dependency on any external host: nothing
+   about a reader of this page is reported to Google, or to anyone else.
+
+   All three families are licensed under the SIL Open Font License 1.1, which
+   permits embedding, self-hosting, redistribution inside a larger work, and
+   commercial use, with no royalty and no per-seat fee. Full licence texts and
+   the required attributions are in LICENSES/.
+
+     Space Grotesk    Copyright 2020 The Space Grotesk Project Authors
+     Inter Tight      Copyright 2022 The Inter Project Authors
+     JetBrains Mono   Copyright 2020 The JetBrains Mono Project Authors
+
+   Each file is subsetted to the glyph coverage this document actually uses,
+   which is basic Latin plus a short list of typographic and geometric marks.
+   Ten files, 188 KB on disk, and the browser fetches only the weights it needs.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Inter Tight';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/inter-tight-400-latin.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter Tight';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/inter-tight-500-latin.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter Tight';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/inter-tight-600-latin.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/jetbrains-mono-400-latin.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/jetbrains-mono-500-latin.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/jetbrains-mono-700-latin.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/space-grotesk-400-latin.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/space-grotesk-500-latin.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(fonts/space-grotesk-600-latin.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(fonts/space-grotesk-700-latin.woff2) format('woff2');
+}

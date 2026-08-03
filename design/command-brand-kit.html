@@ -1,9 +1,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>COMMAND / Analytics Design System</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<meta name="description" content="COMMAND: a dark-first analytics design system for ServiceNow. Validated palettes, 25 chart specimens, a data-shape-driven form engine and a report matrix.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#06080B" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ECEFF3" media="(prefers-color-scheme: light)">
+<meta property="og:title" content="COMMAND / Analytics Design System">
+<meta property="og:description" content="A dark-first analytics design system for ServiceNow. Validated palettes, 25 chart specimens, a data-shape-driven form engine and a report matrix.">
+<meta property="og:type" content="website">
+
+<!-- Fonts are self-hosted and subsetted. There is no preconnect and no external
+     request of any kind: this page loads identically on an air-gapped network,
+     and nothing about a reader of it is reported to a third party. All three
+     families are SIL OFL 1.1. See fonts.css and LICENSES/. -->
+<link rel="preload" href="fonts/inter-tight-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/space-grotesk-600-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/jetbrains-mono-500-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts.css">
 
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -180,7 +193,10 @@ section + section{border-top:1px solid var(--edge)}
 .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
-@media(max-width:1000px){.g2,.g3,.g4{grid-template-columns:1fr}}
+/* minmax(0,1fr), not 1fr. A bare 1fr is minmax(auto,1fr), so the track floors at
+   the item's min-content width, and one wide table inside a collapsed column is
+   then enough to push the whole page wider than the viewport. */
+@media(max-width:1000px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}}
 .row{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
 .scroll-x{overflow-x:auto}
 
@@ -464,6 +480,138 @@ pre .k{color:var(--c1-lit)} pre .v{color:var(--c5-lit)} pre .c{color:var(--ink-4
 .js .in .cell{animation:fade .45s var(--ease-out) forwards}
 
 footer{padding:60px 0 84px; border-top:1px solid var(--edge); color:var(--ink-3); font-size:12.5px}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Responsive. Three moves, in order of importance.
+
+   1. The vertical rhythm scales as a system. Section padding, gutters and panel
+      padding all step down together, so a phone reads as the same document at a
+      smaller size rather than as a cramped desktop layout.
+   2. Wide charts scroll, they do not shrink. An SVG with a 700-unit viewBox
+      rendered into 300px of width is at 0.43 scale, which takes a 9.5px axis
+      label to 4px and makes the chart worse than useless. Each wide chart keeps
+      a floor width and its panel body scrolls horizontally instead, so the marks
+      and the type stay at the size they were specified at.
+   3. Nothing has a fixed width that can exceed the viewport.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Tablet and below ─── */
+@media(max-width:860px){
+  section{padding:80px 0}
+  .wrap,.nav-in{padding:0 24px}
+  .mast{padding:64px 0 48px}
+  .horizon{margin-top:34px}
+  .mast-meta{gap:24px 30px; margin-top:22px}
+  .pad{padding:20px}
+  .mock-body{padding:18px}
+  .app-h{gap:16px; margin-bottom:20px}
+  .grid{gap:13px}
+  .cards,.rules,.sws{gap:13px}
+}
+
+/* ─── Phone ─── */
+@media(max-width:600px){
+  section{padding:60px 0}
+  section + section{border-top-width:1px}
+  .wrap,.nav-in{padding:0 18px}
+  .nav-in{height:48px; gap:12px}
+  .mast{padding:44px 0 40px}
+  .mark{margin-bottom:26px}
+  .mark-n{font-size:11px; letter-spacing:.34em}
+  .horizon{margin-top:28px}
+  .mast-meta{gap:18px 24px}
+  .sec-h{gap:9px; margin-bottom:16px}
+  .lede{font-size:15.5px; line-height:1.68}
+
+  .pad{padding:16px}
+  .cp{padding:16px 16px 14px}
+  .cp-b{margin-top:18px}
+  .cp-h{gap:10px}
+  .cp-m{font-size:9px}
+  .mock-body{padding:13px}
+  .mock-bar{padding:9px 12px}
+  .grid,.cards,.rules{gap:12px}
+  .sws{gap:10px}
+  .rule{padding:15px 16px}
+  .note{padding:16px 18px; font-size:13px}
+  .kpi{padding:15px 16px}
+  pre{padding:15px 16px; font-size:10.5px}
+  footer{padding:44px 0 56px}
+
+  /* Stat tiles stay two-up. One-up would let the hero's `span 2` open an
+     implicit third column and knock the whole strip out of alignment. */
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tile{padding:15px 15px 13px; gap:7px}
+  .tile-v{font-size:25px}
+  .tile.hero{grid-column:span 2; padding:18px 18px 16px}
+  .tile.hero .tile-v{font-size:38px}
+  .kpi-v{font-size:28px}
+
+  /* Nothing fixed-width wider than the viewport. */
+  .field{min-width:0; width:100%}
+  .tip{width:100%; max-width:250px}
+  .ramp div b{height:42px}
+  .sw-c{height:50px}
+
+  /* Tab strips and legends swipe rather than wrap into a tall stack. */
+  .tabs{gap:18px; overflow-x:auto; scrollbar-width:none; margin-bottom:16px}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{flex:none}
+  .lg{gap:11px}
+}
+
+/* ─── Charts and tables: scroll at their authored scale ───
+   Applied a little wider than the phone breakpoint, because a chart specified
+   for a two-column desktop panel runs out of readable width before the page
+   layout does. */
+@media(max-width:760px){
+  .cp-b,.scroll-x{overflow-x:auto; -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin; scrollbar-color:var(--edge-2) transparent}
+  .cp-b{overflow-y:hidden; padding-bottom:2px}
+  .cp-b::-webkit-scrollbar,.scroll-x::-webkit-scrollbar{height:4px}
+  .cp-b::-webkit-scrollbar-thumb,.scroll-x::-webkit-scrollbar-thumb{
+    background:var(--edge-2); border-radius:2px}
+
+  /* Floor widths, keyed off each chart's own viewBox so no markup changes and
+     no chart is missed. Roughly 0.8 of the authored width: enough compression
+     to avoid a long swipe, not enough to make 9.5px type illegible. */
+  svg.ch[viewBox^="0 0 700"],
+  svg.ch[viewBox^="0 0 664"],
+  svg.ch[viewBox^="0 0 584"]{min-width:540px}
+  svg.ch[viewBox^="0 0 520"]{min-width:430px}
+  svg.ch[viewBox^="0 0 412"]{min-width:360px}
+  svg.ch[viewBox^="0 0 340"],
+  svg.ch[viewBox^="0 0 330"],
+  svg.ch[viewBox^="0 0 328"],
+  svg.ch[viewBox^="0 0 320"]{min-width:296px}
+
+  /* A clipped chart has to read as swipeable, not as broken. The class is set by
+     script only when the content genuinely overflows, and each edge veil appears
+     only when there is something in that direction, so a chart that happens to
+     fit gets no decoration at all. The mask is on the element box rather than
+     the scrolled content, so it stays pinned to the edge while the chart moves
+     underneath it. */
+  .cp-b.ov-r{-webkit-mask-image:linear-gradient(to right,#000 0,#000 calc(100% - 34px),transparent 100%);
+             mask-image:linear-gradient(to right,#000 0,#000 calc(100% - 34px),transparent 100%)}
+  .cp-b.ov-l{-webkit-mask-image:linear-gradient(to left,#000 0,#000 calc(100% - 34px),transparent 100%);
+             mask-image:linear-gradient(to left,#000 0,#000 calc(100% - 34px),transparent 100%)}
+  .cp-b.ov-l.ov-r{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 34px,#000 calc(100% - 34px),transparent 100%);
+                  mask-image:linear-gradient(to right,transparent 0,#000 34px,#000 calc(100% - 34px),transparent 100%)}
+
+  /* The tables that were authored inside a .scroll-x already swipe. These are
+     the ones sitting directly in a panel, which only run out of room here. */
+  :not(.scroll-x) > table.sp,
+  :not(.scroll-x) > table.mx{display:block; overflow-x:auto;
+    -webkit-overflow-scrolling:touch; scrollbar-width:thin}
+  table.sp th{padding-right:14px}
+  table.sp td{padding:11px 14px 11px 0}
+  .mx thead th,.mx td{padding-right:10px}
+}
+
+/* Coarse pointers get no hover-only affordances, and no lift on tap. */
+@media(hover:none){
+  .card:hover{transform:none}
+}
 
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important; transition:none !important}
@@ -2930,5 +3078,25 @@ footer{padding:60px 0 84px; border-top:1px solid var(--edge); color:var(--ink-3)
     });
   }
   mq.addEventListener('change', sync); sync();
+
+  /* Narrow viewports: a wide chart keeps its authored scale and its panel body
+     scrolls instead, because shrinking a 700-unit viewBox into 400px takes a
+     9.5px axis label to 5px. These classes put a veil on whichever edge still
+     has chart beyond it, so the swipe is discoverable and a chart that fits is
+     left undecorated. Passive listener, and no work at all on wide screens. */
+  var bodies = [].slice.call(document.querySelectorAll('.cp-b'));
+  function edges(el) {
+    var over = el.scrollWidth - el.clientWidth;
+    if (over < 3) { el.classList.remove('ov-l', 'ov-r'); return; }
+    el.classList.toggle('ov-l', el.scrollLeft > 2);
+    el.classList.toggle('ov-r', el.scrollLeft < over - 2);
+  }
+  bodies.forEach(function (el) {
+    el.addEventListener('scroll', function () { edges(el); }, { passive: true });
+  });
+  function edgesAll() { bodies.forEach(edges); }
+  edgesAll();
+  window.addEventListener('resize', edgesAll, { passive: true });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(edgesAll);
 })();
 </script>
