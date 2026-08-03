@@ -194,6 +194,120 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
   margin-top:auto; padding-top:8px; font-family:var(--mono); font-size:9px;
   letter-spacing:.1em; text-transform:uppercase; color:var(--ink-4)}
 
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Dark. A selected counterpart, not an inversion.
+   Its own steps from the same hues, validated against its own #0D1117 surface.
+   Three things genuinely flip and are therefore defined twice rather than
+   computed: the sequential ramp direction, because on dark brightness is
+   magnitude and on light darkness is; the emphasis step per hue, which goes
+   lighter on dark and darker on light; and text sitting on a high sequential
+   step. Getting the first of those backwards is the commonest dark-mode
+   heatmap bug.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root[data-cmd-theme="dark"]{
+  color-scheme:dark;
+  --void:#06080B; --ground:#0A0D12; --surface:#0D1117;
+  --surface-2:#121924; --surface-3:#18202D;
+  --edge:rgba(255,255,255,.08); --edge-2:rgba(255,255,255,.14); --edge-lit:rgba(255,255,255,.22);
+  --ink-1:#E8EDF5; --ink-2:#98A5BA; --ink-3:#606E86; --ink-4:#3B4657;
+  --grid:rgba(255,255,255,.06); --baseline:rgba(255,255,255,.13);
+
+  --c1:#16A5BA; --c2:#B8842A; --c3:#7A6DE0;
+  --c4:#D8544A; --c5:#2AA47E; --c6:#B25FA8; --c-other:#5A6472;
+
+  /* sequential runs dark to bright here, the inverse of the light theme */
+  --q1:#0E252C; --q2:#103A46; --q3:#125264;
+  --q4:#146D82; --q5:#16A5BA; --q6:#2AC8DC; --q7:#5EE4F2;
+
+  --ok:#2FBF7F; --warn:#D9A62E; --crit:#FF4C5B;
+  --ok-wash:rgba(47,191,127,.13); --warn-wash:rgba(217,166,46,.13);
+  --crit-wash:rgba(255,76,91,.13);
+
+  --fill-area:.38;
+}
+/* Panels invert their material: on dark the top highlight does the work that the
+   hairline and shadow do on light. */
+:root[data-cmd-theme="dark"] .panel{
+  background:linear-gradient(180deg,#141C27 0%, #0C1118 58%, #0A0E14 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.065), 0 1px 2px rgba(0,0,0,.55),
+             0 16px 40px -20px rgba(0,0,0,.85)}
+:root[data-cmd-theme="dark"] .panel::before{
+  background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.03))}
+:root[data-cmd-theme="dark"] .btn{
+  background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.012))}
+:root[data-cmd-theme="dark"] .btn:hover{
+  background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.025))}
+:root[data-cmd-theme="dark"] .chip{background:rgba(255,255,255,.03)}
+:root[data-cmd-theme="dark"] .card{
+  background:linear-gradient(180deg,#131B26 0%, #0A0E14 100%);
+  box-shadow:0 1px 2px rgba(0,0,0,.5)}
+:root[data-cmd-theme="dark"] .card:hover{box-shadow:0 18px 40px -20px rgba(0,0,0,1)}
+:root[data-cmd-theme="dark"] .cav{background:var(--surface-3)}
+:root[data-cmd-theme="dark"] .drill-row{background:var(--surface)}
+:root[data-cmd-theme="dark"] .drill-row:hover{background:var(--surface-2)}
+:root[data-cmd-theme="dark"] .drill-row.off{background:var(--surface-3)}
+:root[data-cmd-theme="dark"] .note{background:var(--surface)}
+:root[data-cmd-theme="dark"] .field{background:rgba(0,0,0,.3)}
+:root[data-cmd-theme="dark"] .tbl tr:hover td{background:rgba(255,255,255,.022)}
+:root[data-cmd-theme="dark"] svg.ch .ctOn,
+:root[data-cmd-theme="dark"] svg.ch .vlOn{fill:#04161A}
+
+/* ── theme toggle ── */
+.seg{display:inline-flex; border:1px solid var(--edge); border-radius:8px; padding:2px;
+  background:var(--surface-3); gap:2px}
+.seg button{font-family:var(--mono); font-size:9.5px; letter-spacing:.09em; padding:5px 10px;
+  border:0; border-radius:6px; background:transparent; color:var(--ink-3); cursor:pointer;
+  text-transform:uppercase}
+.seg button[aria-selected="true"]{color:var(--ink-1); background:var(--surface);
+  font-weight:600; box-shadow:0 1px 2px rgba(16,22,32,.12)}
+:root[data-cmd-theme="dark"] .seg button[aria-selected="true"]{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+
+/* ── catalog controls ── */
+.cat-bar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:20px 0 6px}
+.field{display:flex; align-items:center; gap:8px; border:1px solid var(--edge-2);
+  border-radius:8px; padding:7px 11px; background:var(--surface); min-width:230px}
+.field input{border:0; outline:0; background:transparent; color:var(--ink-1);
+  font-family:var(--sans); font-size:13px; width:100%}
+.field input::placeholder{color:var(--ink-4)}
+.filters{display:flex; gap:6px; flex-wrap:wrap}
+.fchip{font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
+  padding:6px 10px; border-radius:6px; border:1px solid var(--edge); cursor:pointer;
+  color:var(--ink-2); background:var(--surface); white-space:nowrap;
+  transition:border-color .16s var(--ease-out), color .16s var(--ease-out)}
+.fchip:hover{border-color:var(--edge-lit); color:var(--ink-1)}
+.fchip[aria-pressed="true"]{color:var(--ink-1); border-color:var(--edge-lit);
+  background:var(--surface-3); font-weight:600}
+.cat-count{font-size:12.5px; color:var(--ink-3); margin-left:auto; white-space:nowrap}
+
+/* ── card, restyled: scannable, with a real distribution preview ── */
+.card-h{padding:15px 16px 0}
+.card-n{font-family:var(--display); font-size:15.5px; font-weight:600;
+  letter-spacing:-.016em; line-height:1.25}
+.card-sub{font-family:var(--mono); font-size:9px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-4); margin-top:4px}
+.card-stats{display:flex; gap:16px; padding:12px 16px 0; flex-wrap:wrap}
+.cs{display:flex; flex-direction:column; gap:1px}
+.cs-v{font-family:var(--display); font-size:17px; font-weight:600; letter-spacing:-.02em;
+  line-height:1.1; font-variant-numeric:lining-nums}
+.cs-l{font-family:var(--mono); font-size:8.5px; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--ink-4)}
+.card-prev{padding:13px 16px 0}
+.card-prev-l{font-size:11px; color:var(--ink-3); margin-bottom:6px}
+.prev-bar{display:flex; height:7px; border-radius:4px; overflow:hidden; gap:2px;
+  background:var(--surface-3)}
+.prev-bar i{display:block; height:100%; border-radius:2px}
+.prev-keys{display:flex; gap:12px; margin-top:8px; flex-wrap:wrap}
+.pk{display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--ink-2)}
+.pk i{width:7px; height:7px; border-radius:2px; flex:none}
+.card-f{display:flex; align-items:center; justify-content:space-between; gap:9px;
+  margin-top:auto; padding:13px 16px 14px; font-family:var(--mono); font-size:9px;
+  letter-spacing:.1em; text-transform:uppercase; color:var(--ink-4)}
+.card-go{color:var(--c1); font-weight:600}
+.cards{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.empty{padding:26px; text-align:center; color:var(--ink-3); font-size:13px}
+
 /* ── responsive: the panel grid collapses, and wide charts keep their scale ── */
 @media(max-width:1000px){
   .grid-panels{grid-template-columns:minmax(0,1fr)}

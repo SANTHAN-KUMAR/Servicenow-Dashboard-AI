@@ -48,7 +48,10 @@ SCRIPT_INCLUDES = [
     "CmdPayload.js",
 ]
 
+# Order is load order, and it matters: the theme must be on the root element
+# before the stylesheet can apply it, or the page paints light and repaints dark.
 UI_SCRIPTS = [
+    "cmd_theme.js",
     "cmd_fonts.js",
     "cmd_render.js",
 ]

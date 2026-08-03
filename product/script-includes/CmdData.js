@@ -32,6 +32,25 @@ CmdData.SECURE_SCAN_CAP = 20000;
    decision, not a data one. */
 CmdData.MAX_GROUPS = 200;
 
+/* Wall-clock budget for the permission-check proof, and how often the clock is
+   consulted during it. Time, not rows, because the cost per row varies by two
+   orders of magnitude across the tables on this instance. */
+CmdData.PROOF_MS = 2500;
+/* How often the clock is consulted inside a bounded scan.
+ *
+ * This was 250 and that made every time-box ineffective on exactly the tables that
+ * needed one. A row on kb_knowledge costs 40 to 86ms to permission-check, so 250
+ * rows is 10 to 20 seconds before the budget is even looked at: the box was set to
+ * 1.2s and the scan ran for 9. Ten rows bounds the overshoot to under a second in
+ * the worst case, and a getTime() call every ten rows is immeasurable next to an ACL
+ * evaluation that costs milliseconds. */
+CmdData.CHECK_EVERY = 10;
+
+/* Wall-clock budget for one secure group-by, the per-panel fallback when the ACL
+   verdict is not trusted. Smaller than the proof budget because a page runs several
+   of these where it runs one proof. */
+CmdData.GROUP_MS = 1200;
+
 CmdData.prototype = {
 
     initialize: function () {
@@ -43,6 +62,7 @@ CmdData.prototype = {
         this._verdict = {};
         this._counts = {};
         this._profiles = {};
+        this._meta = null;
     },
 
     /**
@@ -72,21 +92,84 @@ CmdData.prototype = {
         var v;
         if (!this.canRead(table)) {
             v = { trusted: false, denied: true, aggregate: 0, secure: 0,
-                  delta: 0, capped: false };
-        } else {
-            var fast = this.fastCount(table, query);
-            var proof = this.secureCount(table, query);
-            v = {
-                trusted: (!proof.capped && proof.count === fast),
-                denied: false,
-                aggregate: fast,
-                secure: proof.count,
-                delta: fast - proof.count,
-                capped: proof.capped
-            };
+                  delta: 0, capped: false, timedOut: false, proof: 'no read access' };
+            this._verdict[key] = v;
+            return v;
         }
+
+        var fast = this.fastCount(table, query);
+
+        /* The proof is a row scan, time-boxed.
+         *
+         * A structural shortcut was tried and abandoned: check whether any read ACL
+         * carries a condition or a script, and skip the scan when none does.
+         * Measured, it clears almost nothing. Every interesting table here has one
+         * or two row-filtering read ACLs of its own, and the `*` wildcard adds three
+         * more that cannot safely be ignored, because a wildcard ACL with a script
+         * filters as effectively as a table-specific one. A check that clears two
+         * tables out of six is not worth the code or the risk of being wrong.
+         *
+         * So the scan stays, and its cost is bounded by wall clock rather than by a
+         * row count. A row count is the wrong bound because the cost per row varies
+         * by two orders of magnitude: this instance logs Slow ACL at 40 to 86ms per
+         * evaluation on kb_knowledge and sys_flow_context and under 1ms on incident,
+         * so a 4,000-row cap is instant on one table and eight seconds on another.
+         * Time-boxing spends the same budget everywhere and degrades to a labelled
+         * floor rather than to a slow page. */
+        var proof = this.secureCountBoxed(table, query, CmdData.PROOF_MS);
+
+        v = {
+            trusted: (!proof.capped && !proof.timedOut && proof.count === fast),
+            denied: false,
+            aggregate: fast,
+            secure: proof.count,
+            delta: fast - proof.count,
+            capped: proof.capped || proof.timedOut,
+            timedOut: proof.timedOut,
+            proof: proof.timedOut
+                ? 'permission check stopped after ' + CmdData.PROOF_MS + 'ms at ' +
+                  proof.count + ' rows, so counts are a floor'
+                : proof.capped
+                ? 'permission check stopped at the ' + CmdData.SECURE_SCAN_CAP + ' row cap'
+                : 'every permitted row was permission-checked'
+        };
         this._verdict[key] = v;
         return v;
+    },
+
+    /**
+     * ACL-correct count with a wall-clock budget.
+     *
+     * The clock is consulted every CHECK_EVERY rows rather than every row, because
+     * getTime() in the inner loop of a 20,000-row scan is itself measurable.
+     */
+    secureCountBoxed: function (table, query, budgetMs) {
+        var ck = table + '|' + (query || '') + '|boxed';
+        if (this._counts[ck]) return this._counts[ck];
+
+        var t0 = new Date().getTime();
+        var gr = new GlideRecordSecure(table);
+        if (query) gr.addEncodedQuery(query);
+        gr.setLimit(CmdData.SECURE_SCAN_CAP + 1);
+        gr.query();
+
+        var n = 0, capped = false, timedOut = false;
+        while (gr.next()) {
+            if (n >= CmdData.SECURE_SCAN_CAP) { capped = true; break; }
+            n++;
+            if (n % CmdData.CHECK_EVERY === 0 &&
+                (new Date().getTime() - t0) > budgetMs) { timedOut = true; break; }
+        }
+
+        this._counts[ck] = { count: n, capped: capped, timedOut: timedOut,
+                             ms: new Date().getTime() - t0 };
+        return this._counts[ck];
+    },
+
+    /** Lazily shared CmdMeta, so the table chain is looked up once. */
+    meta: function () {
+        if (!this._meta) this._meta = new CmdMeta();
+        return this._meta;
     },
 
     /** The row count to show, and where it came from. Cheap after the first call. */
@@ -210,11 +293,29 @@ CmdData.prototype = {
      * ACL-correct group-by. Iterates securely and counts in memory, which is the
      * only correct option the platform offers and is slow by construction.
      */
-    secureGroupBy: function (table, field, query) {
-        var counts = {}, labels = {}, scanned = 0, capped = false;
+    /**
+     * ACL-correct group-by. Iterates securely and counts in memory, which is the
+     * only correct option the platform offers and is slow by construction.
+     *
+     * Time-boxed, and this matters more than it looks. This is the fallback taken
+     * whenever the ACL verdict is not trusted, and it runs once per panel. Measured
+     * unbounded on kb_knowledge, a table whose read ACL costs 40 to 86ms per row:
+     * three panels took 39 seconds between them. Bounding the scan turns that into a
+     * page that loads with counts honestly labelled as a floor, which is the right
+     * trade. An exact number nobody waits for is worth less than an approximate one
+     * that says so.
+     */
+    secureGroupBy: function (table, field, query, budgetMs) {
+        var ck = 'sgb|' + table + '|' + field + '|' + (query || '');
+        if (this._counts[ck]) return this._counts[ck];
+
+        budgetMs = budgetMs || CmdData.GROUP_MS;
+        var counts = {}, labels = {}, scanned = 0, capped = false, timedOut = false;
+        var t0 = new Date().getTime();
 
         var gr = new GlideRecordSecure(table);
         if (query) gr.addEncodedQuery(query);
+        gr.setLimit(CmdData.SECURE_SCAN_CAP + 1);
         gr.query();
         while (gr.next()) {
             if (scanned >= CmdData.SECURE_SCAN_CAP) { capped = true; break; }
@@ -225,6 +326,8 @@ CmdData.prototype = {
             if (labels[k] === undefined) {
                 labels[k] = k === '' ? '' : (gr.getDisplayValue(field) || k);
             }
+            if (scanned % CmdData.CHECK_EVERY === 0 &&
+                (new Date().getTime() - t0) > budgetMs) { timedOut = true; break; }
         }
 
         var rows = [];
@@ -234,7 +337,70 @@ CmdData.prototype = {
             }
         }
         rows.sort(function (a, b) { return b.count - a.count; });
-        return { rows: rows, scanned: scanned, capped: capped };
+
+        this._counts[ck] = { rows: rows, scanned: scanned,
+                             capped: capped || timedOut, timedOut: timedOut };
+        return this._counts[ck];
+    },
+
+    /**
+     * Group by several fields in one permission-checked pass.
+     *
+     * The point is that the expensive part of a secure scan is the ACL evaluation
+     * per row, not the field reads. Once a row has been admitted, pulling three more
+     * values off it is nearly free. So a catalog card can measure three candidate
+     * dimensions for the price of one, and then choose the most informative
+     * afterwards instead of having to guess which field to group by before the scan
+     * begins. Guessing produced cards previewing `approval` at 91% in one value,
+     * which is a bar with nothing in it.
+     *
+     * Returns {byField: {field: rows[]}, scanned, capped}.
+     */
+    secureMultiGroupBy: function (table, fields, query, budgetMs) {
+        var ck = 'mgb|' + table + '|' + fields.join(',') + '|' + (query || '');
+        if (this._counts[ck]) return this._counts[ck];
+
+        budgetMs = budgetMs || CmdData.GROUP_MS;
+        var t0 = new Date().getTime();
+        var counts = {}, labels = {}, i;
+        for (i = 0; i < fields.length; i++) { counts[fields[i]] = {}; labels[fields[i]] = {}; }
+
+        var scanned = 0, capped = false, timedOut = false;
+        var gr = new GlideRecordSecure(table);
+        if (query) gr.addEncodedQuery(query);
+        gr.setLimit(CmdData.SECURE_SCAN_CAP + 1);
+        gr.query();
+        while (gr.next()) {
+            if (scanned >= CmdData.SECURE_SCAN_CAP) { capped = true; break; }
+            scanned++;
+            for (i = 0; i < fields.length; i++) {
+                var f = fields[i];
+                var raw = gr.getValue(f);
+                var k = (raw === null || raw === '') ? '' : String(raw);
+                counts[f][k] = (counts[f][k] || 0) + 1;
+                if (labels[f][k] === undefined) {
+                    labels[f][k] = k === '' ? '' : (gr.getDisplayValue(f) || k);
+                }
+            }
+            if (scanned % CmdData.CHECK_EVERY === 0 &&
+                (new Date().getTime() - t0) > budgetMs) { timedOut = true; break; }
+        }
+
+        var byField = {};
+        for (i = 0; i < fields.length; i++) {
+            var fld = fields[i], rows = [];
+            for (var key in counts[fld]) {
+                if (counts[fld].hasOwnProperty(key)) {
+                    rows.push({ key: key, label: labels[fld][key], count: counts[fld][key] });
+                }
+            }
+            rows.sort(function (a, b) { return b.count - a.count; });
+            byField[fld] = rows;
+        }
+
+        this._counts[ck] = { byField: byField, scanned: scanned,
+                             capped: capped || timedOut, timedOut: timedOut };
+        return this._counts[ck];
     },
 
     /**
@@ -469,6 +635,88 @@ CmdData.prototype = {
             });
         }
         return series;
+    },
+
+    /**
+     * How far a date field actually spreads, in one query.
+     *
+     * MIN and MAX plus a non-empty count is enough to know whether a field is worth
+     * drawing a trend from, and it costs one grouped query. The obvious alternative,
+     * bucketing the field and counting how many buckets are occupied, costs one
+     * query per bucket: trying five candidate date fields over a twelve-month window
+     * that way is sixty queries, which measured out slower than the page it was
+     * meant to improve.
+     *
+     * Returns {nonEmpty, min, max, monthsSpanned}.
+     */
+    dateSpread: function (table, field, query) {
+        var ck = 'spread|' + table + '|' + field + '|' + (query || '');
+        if (this._counts[ck]) return this._counts[ck];
+
+        var q = field + 'ISNOTEMPTY';
+        if (query) q = query + '^' + q;
+
+        /* Two ordered single-row reads, not GlideAggregate.
+         *
+         * GlideAggregate cannot be trusted for MIN and MAX on a datetime on this
+         * release. Measured on incident.opened_at, whose real range is 2015-08-12 to
+         * 2026-08-28:
+         *
+         *   addAggregate('COUNT') + MIN + MAX   -> count=1, min==max, silently
+         *                                          behaves as a group-by
+         *   addAggregate('MIN', f) alone        -> 2015-08-12   correct
+         *   addAggregate('MAX', f) alone        -> 2015-08-12   WRONG, returns the min
+         *   orderBy(f).setLimit(1)              -> 2015-08-12   correct
+         *   orderByDesc(f).setLimit(1)          -> 2026-08-28   correct
+         *
+         * So MAX is quietly wrong and the combined form is quietly a group-by. Two
+         * ordered reads of one row each are indexed, cheap, and right.
+         *
+         * Secure rather than raw, because this decides what the viewer is shown and
+         * the range of rows they cannot read is not theirs to influence.
+         */
+        var out = { nonEmpty: 0, min: '', max: '', monthsSpanned: 0,
+                    monthsSinceMax: 9999 };
+
+        var lo = new GlideRecordSecure(table);
+        lo.addEncodedQuery(q);
+        lo.orderBy(field);
+        lo.setLimit(1);
+        lo.query();
+        if (lo.next()) out.min = lo.getValue(field) || '';
+
+        if (out.min) {
+            var hi = new GlideRecordSecure(table);
+            hi.addEncodedQuery(q);
+            hi.orderByDesc(field);
+            hi.setLimit(1);
+            hi.query();
+            if (hi.next()) out.max = hi.getValue(field) || '';
+
+            out.nonEmpty = this.fastCount(table, q);
+
+            if (out.max && out.min.length >= 7 && out.max.length >= 7) {
+                var y0 = parseInt(out.min.substr(0, 4), 10);
+                var m0 = parseInt(out.min.substr(5, 2), 10);
+                var y1 = parseInt(out.max.substr(0, 4), 10);
+                var m1 = parseInt(out.max.substr(5, 2), 10);
+                if (!isNaN(y0) && !isNaN(y1)) {
+                    out.monthsSpanned = ((y1 - y0) * 12 + (m1 - m0)) + 1;
+                    /* Span alone is not enough. A field can span fifteen years and
+                       stop in 2019, in which case a twelve-month trend drawn from it
+                       is twelve empty buckets. How recent the newest value is decides
+                       whether the window has anything in it at all. */
+                    var nowV = new GlideDateTime().getValue();
+                    var ny = parseInt(nowV.substr(0, 4), 10);
+                    var nm = parseInt(nowV.substr(5, 2), 10);
+                    out.monthsSinceMax = (ny - y1) * 12 + (nm - m1);
+                    if (out.monthsSinceMax < 0) out.monthsSinceMax = 0;
+                }
+            }
+        }
+
+        this._counts[ck] = out;
+        return out;
     },
 
     /**

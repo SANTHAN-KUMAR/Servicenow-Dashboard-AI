@@ -34,6 +34,48 @@ CmdPayload.MAX_PANELS = 6;
    and costs more; each rejected candidate still costs its profile. */
 CmdPayload.MAX_CANDIDATES = 14;
 
+/* Date fields tried when looking for one with usable spread. Each costs `buckets`
+   bounded counts, so this is the trade between finding a good trend and paying to
+   look for one. */
+CmdPayload.DATE_CANDIDATES = 5;
+
+/* Buckets of the window that must be occupied for a trend to be drawn at all. A
+   single bar beside nine empty slots reads as an outage, not as a distribution. */
+CmdPayload.MIN_OCCUPIED_BUCKETS = 5;
+
+/* Wall-clock budget for building a whole page.
+ *
+ * Every individual query here is already bounded, and that turned out not to be
+ * enough: bounding each of fourteen drill-gate profiles at 1.2s still permits a
+ * seventeen-second page. Measured on kb_knowledge and task, both of which carry
+ * expensive read ACLs, pages ran to 28s with every single query inside its own
+ * limit.
+ *
+ * So the page gets a deadline of its own. Panels and drill gates are optional work,
+ * added while there is budget and skipped when there is not, and what was skipped is
+ * reported in `notes` rather than silently dropped. The header, the total and the
+ * ACL verdict are not optional and always run. */
+CmdPayload.BUDGET_MS = 6000;
+
+/* Panels that are built regardless of the budget.
+ *
+ * A pure deadline produced a worse failure than the one it fixed: on kb_knowledge
+ * the permission proof plus one grouped query consumed the budget and the page came
+ * back with zero panels. An empty dashboard is not a faster dashboard, it is a
+ * broken one. So a floor of panels is always attempted and the deadline governs
+ * everything after it. */
+CmdPayload.MIN_PANELS = 3;
+
+/* Candidates the page will attempt past its deadline, chasing that floor.
+ *
+ * The floor cannot be expressed as "three successful panels", which is what it was
+ * first written as. On kb_knowledge most candidates are rejected for having a single
+ * distinct value, so the loop kept paying 1.25s per rejected candidate while the
+ * success count stayed at zero: thirteen attempts, 18.7 seconds, every individual
+ * query inside its own limit. Bounding attempts rather than successes makes the
+ * worst case arithmetic instead of data-dependent. */
+CmdPayload.MAX_ATTEMPTS_PAST_DEADLINE = 5;
+
 CmdPayload.prototype = {
 
     initialize: function () {
@@ -127,25 +169,43 @@ CmdPayload.prototype = {
          * six times. */
         var candidates = [];
         var dims = this.meta.dimensions(table);
+        var examined = 0;
         for (i = 0; i < dims.length && i < CmdPayload.MAX_CANDIDATES; i++) {
             if (this._contains(used, dims[i].name)) continue;
+            /* The floor is attempted whatever the clock says; the deadline only
+               governs work beyond it. */
+            if (this._overBudget(t0) &&
+                (candidates.length >= CmdPayload.MIN_PANELS ||
+                 examined >= CmdPayload.MAX_ATTEMPTS_PAST_DEADLINE)) break;
+            examined++;
             var cand = this._dimPanel(table, query, dims[i], total);
             if (cand) candidates.push(cand);
+        }
+        if (examined < dims.length && this._overBudget(t0)) {
+            payload.notes.push(
+                'Stopped after examining ' + examined + ' of ' + dims.length +
+                ' fields, to keep this page inside its time budget. This table is ' +
+                'expensive to permission-check.');
         }
         payload.panels = payload.panels.concat(
             this._diversify(candidates, CmdPayload.MAX_PANELS));
 
         /* ── drill options for the slice we are looking at ── */
-        if (!payload.drill.atMax) {
-            payload.drill.options = this.drill.candidates(table, query, used, 6);
-        } else {
+        if (payload.drill.atMax) {
             payload.notes.push(
                 'Maximum drill depth reached. Open the record list to go further.');
+        } else if (this._overBudget(t0)) {
+            payload.notes.push('Drill options were not computed, to keep this page ' +
+                               'inside its time budget.');
+        } else {
+            payload.drill.options = this.drill.candidates(table, query, used, 6);
         }
 
         /* ── the declared-hierarchy comparison. This is the product's argument,
               rendered: what the schema claims against what the data supports. ── */
-        payload.declared = this.drill.declaredPath(table, query);
+        payload.declared = this._overBudget(t0)
+            ? []
+            : this.drill.declaredPath(table, query);
 
         payload.timingMs = new Date().getTime() - t0;
         return payload;
@@ -153,21 +213,69 @@ CmdPayload.prototype = {
 
     /* ── panels ─────────────────────────────────────────────────────────── */
 
+    /**
+     * Picks the date field with the best measured spread, then draws it.
+     *
+     * The first version took the highest-ranked date field by name, preferring
+     * `opened_at` then `sys_created_on`. On seeded tables that is right. On eleven
+     * of seventeen real subjects it was badly wrong, because out-of-the-box demo
+     * rows were all created when the instance was provisioned: `sys_created_on` has
+     * one to three months of spread and the trend renders as a spike with nine
+     * empty buckets. A viewer reads that as a data outage.
+     *
+     * The fix is the same principle as everything else here. Do not choose a field
+     * by its name, measure the candidates and choose the one the data supports. A
+     * table whose creation dates are bunched usually has another date that is not:
+     * an install date, a discovery date, a due date. And where no date field has
+     * spread, there is no trend to draw and the panel is dropped rather than faked.
+     */
     _seriesPanel: function (table, query, total, opts) {
         var dates = this.meta.dates(table);
         if (!dates.length) return null;
 
-        var field = opts.dateField || dates[0].name;
         var grain = opts.grain || 'month';
         var buckets = opts.months || 12;
 
-        var pts = this.data.periodSeries(table, field, grain, buckets, query);
+        var field = opts.dateField || null;
+        var pts = null;
+        var i;
 
-        /* Is there anything in it? A series of twelve zeroes is worse than no
-           panel, because it reads as a data outage rather than as an empty field. */
-        var sum = 0, i;
+        if (!field) {
+            /* One MIN/MAX query per candidate decides which field to draw, and only
+               the winner pays for its buckets. Bucketing every candidate to count
+               occupancy was sixty queries and measurably slower than the problem it
+               solved. */
+            var bestSpan = 0;
+            for (i = 0; i < dates.length && i < CmdPayload.DATE_CANDIDATES; i++) {
+                var sp = this.data.dateSpread(table, dates[i].name, query);
+                if (sp.nonEmpty === 0) continue;
+                /* The newest value has to be inside the window, or the trend is
+                   drawn entirely in the past and every bucket is empty. */
+                if (sp.monthsSinceMax >= buckets) continue;
+                /* Capped at the window: a field spanning eight years is not better
+                   than one spanning twelve months when the window is twelve months.
+                   Ties break toward the earlier candidate, which is the better name. */
+                var span = Math.min(sp.monthsSpanned, buckets);
+                if (span > bestSpan) { bestSpan = span; field = dates[i].name; }
+                if (bestSpan >= buckets) break;
+            }
+            if (bestSpan < CmdPayload.MIN_OCCUPIED_BUCKETS) return null;
+        }
+
+        pts = this.data.periodSeries(table, field, grain, buckets, query);
+
+        if (!field || !pts) return null;
+
+        var sum = 0;
         for (i = 0; i < pts.length; i++) sum += pts[i].count;
         if (sum === 0) return null;
+
+        /* Final occupancy check on the field actually drawn. The spread measurement
+           bounds min to max; this catches the case where the data sits at the two
+           ends of the window with a hole in the middle. */
+        var occupied = 0;
+        for (i = 0; i < pts.length; i++) if (pts[i].count > 0) occupied++;
+        if (occupied < CmdPayload.MIN_OCCUPIED_BUCKETS) return null;
 
         var label = field;
         var fm = this.meta.field(table, field);
@@ -423,6 +531,11 @@ CmdPayload.prototype = {
     },
 
     /* ── helpers ──────────────────────────────────────────────────────── */
+
+    /** Has the page spent its wall-clock budget? Optional work checks this. */
+    _overBudget: function (t0) {
+        return (new Date().getTime() - t0) > CmdPayload.BUDGET_MS;
+    },
 
     _pathOut: function (table, path) {
         var out = [];

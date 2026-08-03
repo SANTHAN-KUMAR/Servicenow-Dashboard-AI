@@ -108,7 +108,10 @@
   }
 
   function truncate(s, n) {
-    s = String(s);
+    /* Collapse whitespace first. Values coming off the instance can carry
+       newlines and tabs, and a label with a line break in it breaks a legend
+       row's layout with no obvious cause. */
+    s = String(s).replace(/\s+/g, ' ').replace(/^ | $/g, '');
     return s.length > n ? s.substring(0, n - 1) + '…' : s;
   }
 
@@ -666,6 +669,41 @@
            (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '');
   }
 
+
+  /**
+   * The theme control. Present on both surfaces, because a viewer who switches on
+   * one page and finds the other has forgotten is worse served than one who was
+   * never offered the choice. cmd_theme.js resolves and persists; this only reflects
+   * and sets.
+   */
+  function themeToggle() {
+    var seg = el('div', 'seg');
+    seg.setAttribute('role', 'group');
+    seg.setAttribute('aria-label', 'Theme');
+
+    function paint() {
+      var cur = window.CmdTheme ? window.CmdTheme.get() : 'light';
+      var bs = seg.querySelectorAll('button');
+      for (var i = 0; i < bs.length; i++) {
+        bs[i].setAttribute('aria-selected',
+          String(bs[i].getAttribute('data-t') === cur));
+      }
+    }
+
+    ['light', 'dark'].forEach(function (t) {
+      var b = el('button', null, t === 'light' ? 'Light' : 'Dark');
+      b.type = 'button';
+      b.setAttribute('data-t', t);
+      b.addEventListener('click', function () {
+        if (window.CmdTheme) window.CmdTheme.set(t);
+        paint();
+      });
+      seg.appendChild(b);
+    });
+    paint();
+    return seg;
+  }
+
   function buildHeader(payload) {
     var h = el('div', 'app-h');
 
@@ -697,6 +735,7 @@
 
     var right = el('div', 'app-h-r');
     right.appendChild(aclChip(payload.acl));
+    right.appendChild(themeToggle());
     var lst = el('a', 'btn', 'Open record list');
     lst.href = payload.subject.listUrl;
     right.appendChild(lst);
@@ -882,61 +921,201 @@
 
   function renderCatalog(payload, mount) {
     mount.innerHTML = '';
+
     var h = el('div', 'app-h');
     var left = el('div');
     left.appendChild(el('div', 'crumb', 'Analytics'));
     left.appendChild(el('h1', 'd2', 'Dashboards'));
     var sub = el('div', 'sub');
     sub.appendChild(el('span', '', payload.stats.offered + ' subjects you can open'));
-    sub.appendChild(el('span', 'dot', '·'));
+    sub.appendChild(el('span', 'dot', '\u00b7'));
     sub.appendChild(el('span', '', 'as ' + payload.stats.user));
     left.appendChild(sub);
     h.appendChild(left);
+    var right = el('div', 'app-h-r');
+    right.appendChild(themeToggle());
+    h.appendChild(right);
     mount.appendChild(h);
 
-    if (!payload.areas.length) {
+    if (!payload.cards || !payload.cards.length) {
       mount.appendChild(el('div', 'note',
         'There are no subjects with enough readable records to chart.'));
       return;
     }
 
-    for (var a = 0; a < payload.areas.length; a++) {
-      var area = payload.areas[a];
-      var head = el('div', 'area-h');
-      head.appendChild(el('span', 'area-n', area.area));
-      head.appendChild(el('span', 'area-c', area.cards.length + ' subject' +
-        (area.cards.length === 1 ? '' : 's')));
-      mount.appendChild(head);
+    /* Controls. Everything filters client side over the payload already in the
+       page, so typing costs nothing and there is no request per keystroke. With a
+       dozen subjects that is enough; past a few hundred this becomes a server
+       concern and the note below says so. */
+    var bar = el('div', 'cat-bar');
 
-      var cards = el('div', 'cards');
-      for (var c = 0; c < area.cards.length; c++) {
-        var k = area.cards[c];
-        var card = el('a', 'card');
-        card.href = k.url;
-        var body = el('div', 'card-b');
-        body.appendChild(el('div', 'card-n', k.label));
-        var d = el('div', 'card-d');
-        d.textContent = (k.capped ? fmt(k.rows) + '+' : fmt(k.rows)) + ' records' +
-          (k.leadDimension ? ', leads with ' + k.leadDimension.toLowerCase() : '');
-        body.appendChild(d);
-        var f = el('div', 'card-f');
-        f.appendChild(el('span', 'mono', k.table));
-        f.appendChild(el('span', 'card-rep', k.reports + ' existing report' +
-          (k.reports === 1 ? '' : 's')));
-        body.appendChild(f);
-        card.appendChild(body);
-        cards.appendChild(card);
-      }
-      mount.appendChild(cards);
+    var fieldWrap = el('div', 'field');
+    var input = document.createElement('input');
+    input.type = 'search';
+    input.placeholder = 'Search subjects, tables or fields';
+    input.setAttribute('aria-label', 'Search subjects');
+    fieldWrap.appendChild(input);
+    bar.appendChild(fieldWrap);
+
+    var areas = [];
+    for (var a = 0; a < payload.areas.length; a++) areas.push(payload.areas[a].area);
+
+    var active = null;
+    var filters = el('div', 'filters');
+    var allChip = el('button', 'fchip', 'All');
+    allChip.type = 'button';
+    allChip.setAttribute('aria-pressed', 'true');
+    filters.appendChild(allChip);
+    var chips = [allChip];
+    areas.forEach(function (name) {
+      var c = el('button', 'fchip', name);
+      c.type = 'button';
+      c.setAttribute('aria-pressed', 'false');
+      c.setAttribute('data-area', name);
+      filters.appendChild(c);
+      chips.push(c);
+    });
+    bar.appendChild(filters);
+
+    var count = el('div', 'cat-count');
+    bar.appendChild(count);
+    mount.appendChild(bar);
+
+    var host = el('div');
+    mount.appendChild(host);
+
+    function matches(card, q) {
+      if (active && card.area !== active) return false;
+      if (!q) return true;
+      var hay = (card.label + ' ' + card.table + ' ' + card.area + ' ' +
+                 (card.leadDimension || '') + ' ' +
+                 (card.preview ? card.preview.fieldLabel : '')).toLowerCase();
+      return hay.indexOf(q) > -1;
     }
+
+    function draw() {
+      var q = input.value.toLowerCase().replace(/^\s+|\s+$/g, '');
+      host.innerHTML = '';
+      var shown = 0;
+
+      for (var i = 0; i < payload.areas.length; i++) {
+        var area = payload.areas[i];
+        var keep = [];
+        for (var j = 0; j < area.cards.length; j++) {
+          if (matches(area.cards[j], q)) keep.push(area.cards[j]);
+        }
+        if (!keep.length) continue;
+
+        var head = el('div', 'area-h');
+        head.appendChild(el('span', 'area-n', area.area));
+        head.appendChild(el('span', 'area-c', keep.length + ' subject' +
+          (keep.length === 1 ? '' : 's')));
+        host.appendChild(head);
+
+        var cards = el('div', 'cards');
+        for (var k = 0; k < keep.length; k++) cards.appendChild(catalogCard(keep[k]));
+        host.appendChild(cards);
+        shown += keep.length;
+      }
+
+      if (!shown) {
+        host.appendChild(el('div', 'panel empty',
+          'Nothing matches "' + input.value + '".'));
+      }
+      count.textContent = shown + ' of ' + payload.cards.length + ' shown';
+    }
+
+    input.addEventListener('input', draw);
+    chips.forEach(function (c) {
+      c.addEventListener('click', function () {
+        active = c.getAttribute('data-area') || null;
+        chips.forEach(function (o) {
+          o.setAttribute('aria-pressed', String(o === c));
+        });
+        draw();
+      });
+    });
+    draw();
 
     var s = el('div', 'note');
     s.textContent = 'Considered ' + payload.stats.considered + ' subjects. ' +
-      payload.stats.denied + ' hidden because you cannot read them, ' +
-      payload.stats.tooSmall + ' with too few records to chart. ' +
-      'The list is derived from where reporting demand already is on this instance, ' +
-      'not from a configured list.';
+      payload.stats.denied + ' are hidden because you cannot read them, ' +
+      payload.stats.tooSmall + ' have too few records to chart. The list is derived ' +
+      'from where reporting demand already is on this instance, not from a ' +
+      'configured list, so it changes as the instance does.';
     mount.appendChild(s);
+  }
+
+  /**
+   * One catalog card.
+   *
+   * Carries a real distribution rather than a decorative one: the top three values
+   * of the subject's leading dimension, measured through the same ACL-checked path
+   * as the dashboards. That is what makes the grid scannable, and it is why there is
+   * no sparkline here. A chart drawn from nothing would look better and mean less.
+   */
+  function catalogCard(k) {
+    var card = el('a', 'card');
+    card.href = k.url;
+
+    var head = el('div', 'card-h');
+    head.appendChild(el('div', 'card-n', k.label));
+    head.appendChild(el('div', 'card-sub', k.table));
+    card.appendChild(head);
+
+    var stats = el('div', 'card-stats');
+    stats.appendChild(stat(k.capped ? compact(k.rows) + '+' : compact(k.rows), 'records'));
+    stats.appendChild(stat(String(k.dimensions), 'dimensions'));
+    stats.appendChild(stat(String(k.reports), 'reports'));
+    card.appendChild(stats);
+
+    if (k.preview && k.preview.top.length) {
+      var prev = el('div', 'card-prev');
+      prev.appendChild(el('div', 'card-prev-l',
+        'by ' + k.preview.fieldLabel.toLowerCase() + ', ' +
+        k.preview.distinct + ' values'));
+
+      var bar = el('div', 'prev-bar');
+      for (var i = 0; i < k.preview.top.length; i++) {
+        var seg = el('i');
+        seg.style.width = Math.max(2, k.preview.top[i].share * 100) + '%';
+        seg.style.background = catColour(i);
+        bar.appendChild(seg);
+      }
+      if (k.preview.restShare > 0.005) {
+        var rest = el('i');
+        rest.style.width = (k.preview.restShare * 100) + '%';
+        rest.style.background = v(OTHER);
+        bar.appendChild(rest);
+      }
+      prev.appendChild(bar);
+
+      var keys = el('div', 'prev-keys');
+      for (var j = 0; j < k.preview.top.length; j++) {
+        var pk = el('span', 'pk');
+        var sw = el('i');
+        sw.style.background = catColour(j);
+        pk.appendChild(sw);
+        pk.appendChild(el('span', '',
+          truncate(k.preview.top[j].label, 16) + '  ' + pct(k.preview.top[j].share)));
+        keys.appendChild(pk);
+      }
+      prev.appendChild(keys);
+      card.appendChild(prev);
+    }
+
+    var f = el('div', 'card-f');
+    f.appendChild(el('span', '', k.leadDate ? 'trend on ' + k.leadDate.toLowerCase() : 'no date field'));
+    f.appendChild(el('span', 'card-go', 'Open \u2192'));
+    card.appendChild(f);
+    return card;
+  }
+
+  function stat(value, label) {
+    var d = el('div', 'cs');
+    d.appendChild(el('div', 'cs-v', value));
+    d.appendChild(el('div', 'cs-l', label));
+    return d;
   }
 
   window.CmdRender = {

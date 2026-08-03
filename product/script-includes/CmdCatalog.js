@@ -72,12 +72,49 @@ CmdCatalog.AREAS = [
 
 /* A subject needs enough rows to say anything. Below this a dashboard is a list
    with extra steps, so the card is not offered. */
-CmdCatalog.MIN_ROWS = 12;
+CmdCatalog.MIN_ROWS = 120;
+
+/* Prefixes that are platform plumbing rather than a subject anybody runs a
+   dashboard on. They are excluded from the catalog, and this is a curation
+   decision rather than a security one: a viewer who can read sys_flow_context can
+   still open its list view and build a report on it. What they cannot do is have it
+   presented as a leadership analytics subject alongside Incident and Contract.
+   Measured, these were half the catalog and the reason it read as noise: flow engine
+   contexts, API transaction stats, client transaction logs and usage counters. They
+   are also the slowest tables on the instance to permission-check. */
+CmdCatalog.EXCLUDE_PREFIX = [
+    'sys_', 'syslog', 'ua_', 'usageanalytics', 'v_', 'ts_', 'sn_devstudio',
+    'sysauto', 'sysevent', 'sysrule', 'clone_', 'ecc_', 'pa_', 'sa_taxonomy'
+];
 
 /* Ceiling on the per-card ACL-checked count. A card needs a magnitude, not a
-   total, and the count is the expensive part. Above this the card says "2,000+"
-   and the dashboard computes the exact figure when it is opened. */
-CmdCatalog.CARD_COUNT_CAP = 2000;
+   total, and the count is the expensive part: one ACL evaluation per row, per card.
+   Measured at 2,000 the catalog took 13.8s for twelve cards, and that cost is the
+   entry page, the first thing anybody sees. Above the cap the card reads "400+" and
+   the dashboard computes the exact ACL-checked figure when the subject is opened,
+   which is the only place an exact figure is worth paying for. */
+CmdCatalog.CARD_COUNT_CAP = 400;
+
+/* Dimensions tried per card when looking for a preview worth drawing. Each is a
+   grouped query, and there are a dozen cards, so this is the knob that decides
+   whether the entry page is fast or informative. Four is enough to get past a
+   single-valued leading field without turning the catalog into a dashboard. */
+/* Wall-clock budget for one card's scan. Twelve cards at this bound puts the entry
+   page comfortably inside its budget even when every table is expensive to
+   permission-check. */
+CmdCatalog.CARD_SCAN_MS = 320;
+
+/* Candidate dimensions measured per card. They share one scan, so this costs field
+   reads rather than ACL evaluations, and the winner is chosen after measuring
+   instead of guessed before. */
+CmdCatalog.PREVIEW_FIELDS = 4;
+
+/* How populated a field must be to preview a subject. A column that is mostly blank
+   describes the minority that filled it in, not the subject. */
+CmdCatalog.PREVIEW_MIN_FILL = 0.60;
+
+/* Above this many values a preview bar stops distinguishing anything. */
+CmdCatalog.PREVIEW_MAX_DISTINCT = 12;
 
 /* Cap on candidates examined. Each survivor costs a bounded secure count, so this
    bounds the catalog's cost. Ordered by report count first, so the cap drops the
@@ -99,6 +136,7 @@ CmdCatalog.prototype = {
      */
     build: function (limit) {
         limit = limit || CmdCatalog.MAX_CANDIDATES;
+        var t0 = new Date().getTime();
 
         var candidates = this._candidates(limit);
         var cards = [];
@@ -115,16 +153,33 @@ CmdCatalog.prototype = {
                viewer who fails it must not even learn the row count. */
             if (!d.canRead) { denied++; continue; }
 
-            /* Capped deliberately low. A card needs to say "worth opening" and a
-               magnitude, not an exact total, and an exact total is expensive: a
-               secure count is one ACL evaluation per row, and the platform logs
-               Slow ACL at 40 to 86ms per evaluation on tables with costly read
-               rules. Scanning every readable row of every candidate table to
-               populate a catalog would make the entry page the slowest thing in
-               the product. The dashboard pays for the exact number; the card does
-               not need to. When capped, the card renders "2,000+". */
-            var n = this.data.secureCount(t.table, '', CmdCatalog.CARD_COUNT_CAP);
-            if (n.count < CmdCatalog.MIN_ROWS) { tooSmall++; continue; }
+            /* One bounded, permission-checked scan per card, doing double duty.
+             *
+             * It returns both the count and the distribution of a chosen dimension,
+             * so a card costs one scan instead of a count plus a profile. Three
+             * earlier shapes were measured and discarded: an uncapped secure count
+             * per card, 13.8s for twelve cards; the same capped at 2,000, still
+             * 13.8s; and capped at 400 with the preview gated on the count being
+             * provably unfiltered, which was fast but left eleven of twelve cards
+             * with no preview and every count reading "400+".
+             *
+             * This is ACL-correct rather than provably-equal-to-unsafe: it iterates
+             * with GlideRecordSecure, so every row counted is a row this viewer can
+             * open. It is bounded, so on a large table it describes a prefix rather
+             * than the whole, and the card says so. A share of a labelled sample is
+             * an honest statement; a share of rows the viewer cannot see is not. */
+            /* Membership first, and cheaply. hasAtLeast stops at the threshold, so
+               it is bounded by rows rather than by time and a table with expensive
+               ACLs cannot disappear from the catalog just for being slow. Two
+               subjects vanished that way before this split. */
+            if (!this.data.hasAtLeast(t.table, '', CmdCatalog.MIN_ROWS).atLeast) {
+                tooSmall++; continue;
+            }
+
+            var fields = this._previewFields(t.table);
+            var probe = fields.length
+                ? this.data.secureMultiGroupBy(t.table, fields, '', CmdCatalog.CARD_SCAN_MS)
+                : { byField: {}, scanned: 0, capped: true };
 
             var dims = this.meta.dimensions(t.table);
             var dates = this.meta.dates(t.table);
@@ -133,8 +188,9 @@ CmdCatalog.prototype = {
                 table: t.table,
                 label: d.label,
                 area: this.area(t.table),
-                rows: n.count,
-                capped: n.capped,
+                rows: probe.scanned,
+                capped: probe.capped,
+                atLeast: CmdCatalog.MIN_ROWS,
                 reports: t.reports,
                 dimensions: dims.length,
                 dates: dates.length,
@@ -143,6 +199,9 @@ CmdCatalog.prototype = {
                    viewer is about to get. */
                 leadDimension: dims.length ? dims[0].label : null,
                 leadDate: dates.length ? dates[0].label : null,
+                /* Previews are the optional part of a card, so they are the part
+                   that gets dropped when the page runs out of time. */
+                preview: this._bestPreview(fields, probe, dims),
                 url: '/cmd_dashboard.do?table=' + encodeURIComponent(t.table)
             });
         }
@@ -156,6 +215,7 @@ CmdCatalog.prototype = {
             areas: this._group(cards),
             cards: cards,
             stats: {
+                ms: new Date().getTime() - t0,
                 user: gs.getUserDisplayName(),
                 userName: gs.getUserName(),
                 offered: cards.length,
@@ -182,9 +242,119 @@ CmdCatalog.prototype = {
             if (!name) continue;
             /* Report definitions pointed at a view or a deleted table are noise. */
             if (name.indexOf('_list') > -1) continue;
+            if (this._excluded(name)) continue;
             out.push({ table: name, reports: rows[i].count });
         }
         return out;
+    },
+
+    /**
+     * The dimensions worth measuring for a card preview, best guesses first.
+     *
+     * Several rather than one, because they are all measured in the same scan and
+     * the winner is chosen afterwards. Non-ordinal choice lists lead: a named
+     * category reads instantly, where an ordinal previews as a scale and a reference
+     * previews as a list of people.
+     */
+    _previewFields: function (table) {
+        var dims = this.meta.dimensions(table);
+        var out = [], i;
+        for (i = 0; i < dims.length && out.length < CmdCatalog.PREVIEW_FIELDS; i++) {
+            if (dims[i].isChoice && !dims[i].isOrdinal) out.push(dims[i].name);
+        }
+        for (i = 0; i < dims.length && out.length < CmdCatalog.PREVIEW_FIELDS; i++) {
+            if ((dims[i].isChoice || dims[i].isBool) &&
+                out.indexOf(dims[i].name) === -1) out.push(dims[i].name);
+        }
+        for (i = 0; i < dims.length && out.length < CmdCatalog.PREVIEW_FIELDS; i++) {
+            if (dims[i].isRef && out.indexOf(dims[i].name) === -1) out.push(dims[i].name);
+        }
+        /* Deliberately never free text. `task` previewed Short description, which is
+           one value per record and arrives with newlines in it. */
+        return out;
+    },
+
+    /**
+     * The most informative of the measured candidates.
+     *
+     * Least concentrated wins, because a bar where one value holds 91% shows nothing
+     * that the number alone would not. Anything single-valued is rejected outright:
+     * that is not a distribution.
+     */
+    _bestPreview: function (fields, probe, dims) {
+        var best = null, bestTop = 2, i;
+        for (i = 0; i < fields.length; i++) {
+            var cand = this._previewFrom(fields[i], probe.byField[fields[i]],
+                                         probe.capped, dims);
+            if (!cand) continue;
+            if (cand.top[0].share < bestTop) { bestTop = cand.top[0].share; best = cand; }
+        }
+        return best;
+    },
+
+    _previewFrom: function (field, rows, sampled, dims) {
+        if (!rows || !rows.length) return null;
+
+        var scanned = 0, empty = 0, i;
+        for (i = 0; i < rows.length; i++) {
+            scanned += rows[i].count;
+            if (rows[i].key === '') empty = rows[i].count;
+        }
+        if (scanned === 0) return null;
+
+        /* Shares are of the populated records, not of the scan.
+         *
+         * Dividing by the scan made an almost-empty field look like the most evenly
+         * spread one in the subject, because ninety-eight percent blank leaves every
+         * real value at a tiny share. The "least concentrated wins" rule then picked
+         * exactly the worst field on every card: Close code at two percent, which is
+         * two values scattered across a column nobody fills in. */
+        var populated = scanned - empty;
+        if (populated === 0) return null;
+
+        /* And a field this empty is not a preview of the subject at all, however
+           evenly the remainder happens to be spread. */
+        if ((populated / scanned) < CmdCatalog.PREVIEW_MIN_FILL) return null;
+
+        var distinct = empty > 0 ? rows.length - 1 : rows.length;
+        if (distinct < 2) return null;
+        /* Past a dozen values a three-segment bar shows a few percent each and the
+           legend is a list of near-identical numbers. One card previewed fifty
+           configuration items at one percent apiece. */
+        if (distinct > CmdCatalog.PREVIEW_MAX_DISTINCT) return null;
+
+        var top = [], shown = 0, covered = 0;
+        for (i = 0; i < rows.length && shown < 3; i++) {
+            if (rows[i].key === '') continue;
+            top.push({ label: rows[i].label || rows[i].key, count: rows[i].count,
+                       share: rows[i].count / populated });
+            covered += rows[i].count;
+            shown++;
+        }
+        if (!top.length) return null;
+
+        var label = field;
+        for (i = 0; i < dims.length; i++) {
+            if (dims[i].name === field) { label = dims[i].label; break; }
+        }
+
+        return {
+            field: field, fieldLabel: label, distinct: distinct, top: top,
+            restShare: Math.max(0, (populated - covered) / populated),
+            fill: populated / scanned,
+            /* True when the scan described a prefix rather than the whole subject, so
+               the card can say the shares are from a sample instead of implying they
+               are complete. */
+            sampled: !!sampled,
+            scanned: scanned
+        };
+    },
+
+    _excluded: function (table) {
+        for (var i = 0; i < CmdCatalog.EXCLUDE_PREFIX.length; i++) {
+            if (table.indexOf(CmdCatalog.EXCLUDE_PREFIX[i]) === 0) return true;
+        }
+        return false;
     },
 
     area: function (table) {

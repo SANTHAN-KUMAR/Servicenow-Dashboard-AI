@@ -307,6 +307,12 @@ CmdMeta.prototype = {
 
     /* ── internals ── */
 
+    /** Public name for the inheritance chain. CmdData needs it to find every ACL
+        and business rule that could apply to a table, including inherited ones. */
+    tableChain: function (table) {
+        return this._hierarchy(table);
+    },
+
     /**
      * The table and everything it extends, so inherited columns are found.
      * Without this, `sn_grc_issue` looks like it has six fields.
