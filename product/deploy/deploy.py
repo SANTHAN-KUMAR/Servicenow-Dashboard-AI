@@ -147,7 +147,11 @@ def build_ui_scripts():
         src = p.read_text()
         name = p.stem
         validate_script(name, src)
-        out.append((name, src, content_hash(src)))
+        h = content_hash(src)
+        # The deployed asset name carries the content hash, because that is the
+        # only part of a .jsdbx URL the browser cache respects. See the comment in
+        # the page templates for the two approaches that failed before this one.
+        out.append((name, src, h, f"{name}_{h}"))
     return out
 
 
@@ -172,8 +176,9 @@ def build_pages(script_hashes):
                 if bad in css:
                     raise InstanceError(f"{SHARED_CSS} contains {bad!r} ({why})")
             html = html.replace("@@CSS@@", css)
-        for name, h in script_hashes.items():
+        for name, (h, asset) in script_hashes.items():
             html = html.replace(f"@@{name.upper()}_V@@", h)
+            html = html.replace(f"@@{name.upper()}_ASSET@@", asset)
         left = re.findall(r"@@[A-Z_]+@@", html)
         if left:
             raise InstanceError(f"{p.name}: unsubstituted placeholders {set(left)}")
@@ -182,13 +187,42 @@ def build_pages(script_hashes):
     return out
 
 
+def prune_assets(inst, current):
+    """Removes content-hashed assets that no deployed page references any more.
+
+    Without this the instance accumulates one orphaned UI Script per edit, and a
+    reviewer opening sys_ui_script finds a dozen near-identical records with no way
+    to tell which one is live. The pages only ever reference the current hashes, so
+    anything else is dead weight -- but it is deleted only when it matches the
+    product's own naming, never on a broad pattern.
+    """
+    stems = tuple(Path(fn).stem for fn in UI_SCRIPTS)
+    stale = []
+    for row in inst.query("sys_ui_script", "nameSTARTSWITHcmd_", ["name", "sys_id"], limit=200):
+        name = row["name"]
+        if name in current:
+            continue
+        for stem in stems:
+            if name.startswith(stem + "_") and len(name) > len(stem) + 1:
+                stale.append(row)
+                break
+    for row in stale:
+        try:
+            inst._call("DELETE", f"/api/now/table/sys_ui_script/{row['sys_id']}")
+            print(f"  removed  sys_ui_script          {row['name']}  (superseded)")
+        except Exception as exc:                       # noqa: BLE001
+            print(f"  NOTE: could not remove {row['name']}: {exc}")
+
+
 # ── main ────────────────────────────────────────────────────────────────────
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true",
                     help="build and validate, write nothing")
-    ap.add_argument("--only", choices=["si", "ui", "pages"], default=None)
+    ap.add_argument("--only", choices=["si", "ui", "pages"], default=None,
+                    help="si = script includes; ui = client assets AND the pages "
+                         "that carry their hashes, which cannot be separated")
     ap.add_argument("--credentials", default=None)
     args = ap.parse_args()
 
@@ -207,7 +241,7 @@ def main():
         includes.append((p.stem, src))
 
     scripts = build_ui_scripts()
-    pages = build_pages({n: h for n, _, h in scripts})
+    pages = build_pages({n: (h, asset) for n, _, h, asset in scripts})
 
     print(f"  validated {len(includes)} script includes, {len(scripts)} ui scripts, "
           f"{len(pages)} pages")
@@ -215,7 +249,7 @@ def main():
     if args.dry_run:
         for n, s in includes:
             print(f"    si    {n:20s} {len(s):>8,}b")
-        for n, s, h in scripts:
+        for n, s, h, asset in scripts:
             print(f"    uis   {n:20s} {len(s):>8,}b  v={h}")
         for n, s in pages:
             print(f"    page  {n:20s} {len(s):>8,}b")
@@ -236,14 +270,20 @@ def main():
                 verify_field="script")
 
     if args.only in (None, "ui"):
-        for name, src, h in scripts:
+        current = set()
+        for name, src, h, asset in scripts:
+            current.add(asset)
             inst.upsert_verified(
-                "sys_ui_script", "name", name,
+                "sys_ui_script", "name", asset,
                 {"script": src, "active": "true", "sys_scope": GLOBAL_SCOPE,
                  "description": f"COMMAND dashboards client asset. content hash {h}"},
                 verify_field="script")
+        prune_assets(inst, current)
 
-    if args.only in (None, "pages"):
+    # Pages carry the content hashes of the client assets, so a UI script can
+    # never be deployed without them. Separating the two is what let a correct
+    # renderer sit on the instance while every browser kept running the old one.
+    if args.only in (None, "ui", "pages"):
         for name, html in pages:
             inst.upsert_verified(
                 "sys_ui_page", "name", name,

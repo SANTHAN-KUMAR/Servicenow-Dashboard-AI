@@ -64,8 +64,24 @@
   <div id="cmd-root"></div>
 </div>
 
-<g:requires name="cmd_theme.jsdbx" includes="true" />
-<g:requires name="cmd_fonts.jsdbx" includes="true" />
-<g:requires name="cmd_render.jsdbx" includes="true" />
+<!-- Client JavaScript, loaded by g:requires under a content-hashed NAME.
+     Two things were tried first and both failed silently, so the reasoning is
+     recorded here rather than rediscovered.
+     A plain script tag with src and a hash query does not survive: the platform
+     sanitises script elements in a UI Page and stores them as an empty pair, so
+     the page deploys with no client code at all.
+     A fixed name via g:requires does not bust cache: the URL it emits carries the
+     platform release stamp, which is identical before and after a deploy, and
+     .jsdbx is cached hard. Every browser that had loaded the page once kept
+     running the old renderer while the instance served the new one, so the record
+     read back byte for byte correct and the screen still showed old code. The
+     symptom was panels reporting "no renderer for waterfall yet" against a
+     renderer that had already shipped.
+     Hashing the asset name changes the path itself, which is the one thing the
+     cache cannot ignore. Names are substituted at deploy time and old ones are
+     removed. -->
+<g:requires name="@@CMD_THEME_ASSET@@.jsdbx" includes="true" />
+<g:requires name="@@CMD_FONTS_ASSET@@.jsdbx" includes="true" />
+<g:requires name="@@CMD_RENDER_ASSET@@.jsdbx" includes="true" />
 
 </j:jelly>

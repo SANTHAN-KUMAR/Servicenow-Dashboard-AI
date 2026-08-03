@@ -46,6 +46,14 @@ CmdData.PROOF_MS = 2500;
  * evaluation that costs milliseconds. */
 CmdData.CHECK_EVERY = 10;
 
+/* Rows to observe before extrapolating what a full permission proof would cost.
+ *
+ * Low enough to bail out of a hopeless proof quickly, high enough that the
+ * estimate is not dominated by the first few rows, which are always the slowest
+ * while caches warm. Fifty rows costs incident about 10ms and kb_knowledge about
+ * 250ms, and either is enough to tell the two apart by an order of magnitude. */
+CmdData.PREDICT_AFTER = 50;
+
 /* Wall-clock budget for one secure group-by, the per-panel fallback when the ACL
    verdict is not trusted. Smaller than the proof budget because a page runs several
    of these where it runs one proof. */
@@ -63,6 +71,33 @@ CmdData.GROUP_MS = 1200;
  * is bounded by SECURE_SCAN_CAP anyway; it is named here so the memory cost of a
  * box plot is a stated number rather than an accident. */
 CmdData.REDUCE_MS = 3000;
+
+/* Cumulative scan time one request may spend, across every reduction it runs.
+ *
+ * The ceiling that actually bounds a page. Per-scan budgets bound a scan; only
+ * this bounds the page, because the number of scans is decided by the data and
+ * not by the code. When it is exhausted, further reductions do not run and the
+ * page reports fewer panels rather than taking longer. */
+CmdData.SCAN_ALLOWANCE_MS = 5000;
+
+/* Distinct display values resolved per field before falling back to the stored
+ * value.
+ *
+ * getDisplayValue on a reference field is a join. Caching by raw value already
+ * collapses it to one lookup per distinct value, which is the right first move,
+ * but on a high-cardinality reference -- an assignee, a caller, a configuration
+ * item -- "one per distinct value" is still hundreds of joins spread through the
+ * scan.
+ *
+ * Measured, this is now the dominant cost, not the ACL: on incident, whose raw
+ * cursor runs at 0.11ms per row, a sixteen-accumulator scan ran at 2.25ms per row.
+ * The permission check was not what made it slow.
+ *
+ * Sixty is far past anything a chart displays -- the widest form here shows twelve
+ * categories and folds the rest into Other -- so the cap costs nothing visible.
+ * Past it the stored value is used as the label, which is correct if less pretty,
+ * and only ever for values already deep in a tail nobody is reading. */
+CmdData.LABEL_CAP = 60;
 CmdData.VALUE_CAP = 20000;
 
 /* Cap on scatter points carried to the browser.
@@ -94,6 +129,13 @@ CmdData.prototype = {
         this._counts = {};
         this._profiles = {};
         this._meta = null;
+        this._planned = null;
+        /* Request-level scan accounting, so a page can report what it spent and
+           what it went without, rather than either being invisible. */
+        this._scanSpent = 0;
+        this._scans = 0;
+        this._starved = 0;
+        this._scanLog = [];
     },
 
     /**
@@ -158,8 +200,13 @@ CmdData.prototype = {
             capped: proof.capped || proof.timedOut,
             timedOut: proof.timedOut,
             proof: proof.timedOut
-                ? 'permission check stopped after ' + CmdData.PROOF_MS + 'ms at ' +
-                  proof.count + ' rows, so counts are a floor'
+                ? (proof.predictedMs > 0
+                    ? 'a full permission check of ' + proof.target + ' rows was ' +
+                      'measured at about ' + Math.round(proof.predictedMs / 100) / 10 +
+                      's from the first ' + proof.count + ', which does not fit the ' +
+                      'budget, so counts are a floor'
+                    : 'permission check stopped after ' + CmdData.PROOF_MS + 'ms at ' +
+                      proof.count + ' rows, so counts are a floor')
                 : proof.capped
                 ? 'permission check stopped at the ' + CmdData.SECURE_SCAN_CAP + ' row cap'
                 : 'every permitted row was permission-checked'
@@ -178,22 +225,60 @@ CmdData.prototype = {
         var ck = table + '|' + (query || '') + '|boxed';
         if (this._counts[ck]) return this._counts[ck];
 
+        /* How many rows a complete proof would have to admit. Known up front and
+           cheaply, because the unchecked count is an indexed aggregate. */
+        var target = this.fastCount(table, query);
+
         var t0 = new Date().getTime();
         var gr = new GlideRecordSecure(table);
         if (query) gr.addEncodedQuery(query);
         gr.setLimit(CmdData.SECURE_SCAN_CAP + 1);
         gr.query();
 
-        var n = 0, capped = false, timedOut = false;
+        var n = 0, capped = false, timedOut = false, predicted = 0;
         while (gr.next()) {
             if (n >= CmdData.SECURE_SCAN_CAP) { capped = true; break; }
             n++;
-            if (n % CmdData.CHECK_EVERY === 0 &&
-                (new Date().getTime() - t0) > budgetMs) { timedOut = true; break; }
+
+            if (n % CmdData.CHECK_EVERY === 0) {
+                var spent = new Date().getTime() - t0;
+                if (spent > budgetMs) { timedOut = true; break; }
+
+                /* Don't start what you cannot finish.
+                 *
+                 * The proof either completes, and the table is trusted, or it does
+                 * not, and the answer is "cannot tell" -- a partial proof is worth
+                 * exactly nothing, because a scan that stopped early cannot show
+                 * that the rows it never reached were readable.
+                 *
+                 * So once enough rows have gone by to estimate the per-row cost,
+                 * extrapolate to the full count. If finishing is not possible within
+                 * the budget, stop immediately rather than spending the whole budget
+                 * to arrive at the same "cannot tell". Measured on task and
+                 * kb_knowledge, whose ACLs cost 2.9ms and 5.0ms per row against
+                 * incident's 0.2ms, this turns 2.5 wasted seconds into about 0.15
+                 * and reaches an identical verdict.
+                 *
+                 * It can only ever cause an earlier BOUNDED, never a wrong VERIFIED,
+                 * so the correctness claim is untouched. */
+                if (n >= CmdData.PREDICT_AFTER && target > n) {
+                    predicted = (spent / n) * target;
+                    if (predicted > budgetMs) { timedOut = true; break; }
+                }
+            }
         }
 
+        /* Charged against the request allowance like any other scan. It reads rows
+           and pays the per-row ACL cost, so leaving it out of the accounting would
+           understate exactly the pages that need the accounting most. */
+        var took = new Date().getTime() - t0;
+        this._scanSpent += took;
+        this._scans++;
+        this._scanLog.push({ via: 'proof', ms: took, rows: n, budget: budgetMs });
+
         this._counts[ck] = { count: n, capped: capped, timedOut: timedOut,
-                             ms: new Date().getTime() - t0 };
+                             predictedMs: Math.round(predicted),
+                             target: target, ms: took };
         return this._counts[ck];
     },
 
@@ -467,15 +552,26 @@ CmdData.prototype = {
             };
         }
 
-        /* Not trusted, so pay for the correct answer. */
-        var secure = this.secureGroupBy(table, field, query);
+        /* Not trusted, so pay for the correct answer -- through reduce(), so that
+         * this scan is subject to the same request-level allowance as every other
+         * one and can be satisfied by the page scan if it already covered the field.
+         *
+         * It used to call secureGroupBy directly, which put it outside the
+         * accounting entirely. That was the missing five seconds on `task`: the page
+         * scan honoured its allowance and reported two scans, while the drill gates
+         * quietly opened six more group-bys of their own, each inside its own 1.2s
+         * budget and none of them counted. Every individual query was bounded and
+         * the page still took ten seconds, which is the same failure this budget has
+         * now been rewritten three times to catch. */
+        var g = this._one(table, query, this.specs.group(field), CmdData.GROUP_MS);
+        var rows = g.rows || [];
         var total = 0;
-        for (var i = 0; i < secure.rows.length; i++) total += secure.rows[i].count;
+        for (var i = 0; i < rows.length; i++) total += rows[i].count;
         return {
-            rows: secure.rows,
-            acl: { mode: secure.capped ? 'BOUNDED' : 'FILTERED',
+            rows: rows,
+            acl: { mode: g.capped ? 'BOUNDED' : 'FILTERED',
                    aggregate: v.aggregate, secure: total,
-                   delta: v.aggregate - total, capped: secure.capped }
+                   delta: v.aggregate - total, capped: !!g.capped }
         };
     },
 
@@ -564,17 +660,21 @@ CmdData.prototype = {
         }
         if (todo.length < 2) return;            /* one field is not worth batching */
 
-        var g = this.secureMultiGroupBy(table, todo, query,
-                                        budgetMs || CmdData.GROUP_MS);
+        /* Through the group accumulator rather than secureMultiGroupBy, so that a
+           planScan covering these fields has already computed them and this becomes
+           free. Going through a second, parallel batching path would re-scan the
+           table to recompute numbers the page scan already holds. */
         for (i = 0; i < todo.length; i++) {
-            var rows = g.byField[todo[i]] || [];
+            var g = this._one(table, query, this.specs.group(todo[i]),
+                              budgetMs || CmdData.GROUP_MS);
+            var rows = g.rows || [];
             var total = 0, j;
             for (j = 0; j < rows.length; j++) total += rows[j].count;
             this._profiles[table + '|' + todo[i] + '|' + (query || '')] =
                 this._shape(table, todo[i], rows, total, {
                     mode: g.capped ? 'BOUNDED' : 'FILTERED',
                     aggregate: v.aggregate, secure: total,
-                    delta: v.aggregate - total, capped: g.capped
+                    delta: v.aggregate - total, capped: !!g.capped
                 });
         }
     },
@@ -651,10 +751,7 @@ CmdData.prototype = {
      * to assemble a spec list to get it.
      */
     crossTab: function (table, fieldA, fieldB, query, budgetMs) {
-        var r = this.reduce(table, query, [
-            { id: 'x', kind: 'cross', fieldA: fieldA, fieldB: fieldB }
-        ], budgetMs);
-        return this._withScan(r.results.x, r);
+        return this._one(table, query, this.specs.cross(fieldA, fieldB), budgetMs);
     },
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -722,8 +819,34 @@ CmdData.prototype = {
         var ck = 'red|' + table + '|' + (query || '') + '|' + this._specKey(specs);
         if (this._counts[ck]) return this._counts[ck];
 
-        budgetMs = budgetMs || CmdData.REDUCE_MS;
+        /* The request-level scan allowance.
+         *
+         * Every individual scan being bounded is not the same as the page being
+         * bounded, and this is the third time that distinction has cost a rewrite.
+         * Bounding each query still allowed a 17s page; bounding each panel still
+         * allowed a 28s one; and after the shared scan was introduced, two planned
+         * scans plus a handful of unplanned ones still reached 12.8s on `task`,
+         * because the ceiling was per scan and the number of scans was not fixed.
+         *
+         * So the budget that matters is cumulative and belongs to the request. Once
+         * it is gone, further scans do not run at all: they return empty and say so,
+         * which degrades a page to fewer panels rather than to a slower one. That
+         * makes the worst case arithmetic instead of data-dependent, which is the
+         * same reasoning behind MAX_ATTEMPTS_PAST_DEADLINE.
+         *
+         * Note this deliberately cannot make a number wrong. A starved reduction
+         * yields no panel; it never yields a panel computed from fewer rows without
+         * saying so. */
+        var remaining = CmdData.SCAN_ALLOWANCE_MS - this._scanSpent;
+        if (remaining <= 0) {
+            this._starved++;
+            return { results: {}, scanned: 0, capped: true, timedOut: true,
+                     starved: true, path: 'not run', ms: 0 };
+        }
+
+        budgetMs = Math.min(budgetMs || CmdData.REDUCE_MS, remaining);
         var t0 = new Date().getTime();
+        this._scans++;
 
         /* Fields to read per row, deduplicated. Reading the same column twice
            because two accumulators both want it is free-ish but pointless, and the
@@ -754,8 +877,11 @@ CmdData.prototype = {
          * getDisplayValue on a reference field is a join, so resolving it per row on
          * a 20,000-row scan is 20,000 joins to learn a few dozen labels. Caching by
          * raw value collapses that to one lookup per distinct value. */
-        var labelCache = {};
-        for (i = 0; i < displayFields.length; i++) labelCache[displayFields[i]] = {};
+        var labelCache = {}, labelCount = {};
+        for (i = 0; i < displayFields.length; i++) {
+            labelCache[displayFields[i]] = {};
+            labelCount[displayFields[i]] = 0;
+        }
 
         /* The cursor, and the single biggest cost decision in this method.
          *
@@ -791,8 +917,15 @@ CmdData.prototype = {
             for (i = 0; i < displayFields.length; i++) {
                 var df = displayFields[i], rv = row[df];
                 if (labelCache[df][rv] === undefined) {
-                    labelCache[df][rv] = rv === ''
-                        ? '' : (gr.getDisplayValue(df) || rv);
+                    if (rv === '') {
+                        labelCache[df][rv] = '';
+                    } else if (labelCount[df] < CmdData.LABEL_CAP) {
+                        labelCache[df][rv] = gr.getDisplayValue(df) || rv;
+                        labelCount[df]++;
+                    } else {
+                        /* Past the cap the stored value stands in for the label. */
+                        labelCache[df][rv] = rv;
+                    }
                 }
             }
 
@@ -816,8 +949,23 @@ CmdData.prototype = {
             path: trusted ? 'proven-safe' : 'permission-checked',
             ms: new Date().getTime() - t0
         };
+        this._scanSpent += out.ms;
+        this._scanLog.push({ via: 'reduce', ms: out.ms, rows: out.scanned,
+                             n: specs.length, budget: budgetMs });
         this._counts[ck] = out;
         return out;
+    },
+
+    /** What this request spent scanning, and what it therefore went without. */
+    scanBudget: function () {
+        return {
+            spentMs: this._scanSpent,
+            allowanceMs: CmdData.SCAN_ALLOWANCE_MS,
+            scans: this._scans,
+            starved: this._starved,
+            exhausted: this._scanSpent >= CmdData.SCAN_ALLOWANCE_MS,
+            log: this._scanLog
+        };
     },
 
     /**
@@ -856,6 +1004,177 @@ CmdData.prototype = {
         }
         return false;
     },
+
+    /* ══════════════════════════════════════════════════════════════════════
+       The shared page scan
+
+       One pass for a whole page, rather than one pass per panel.
+
+       reduce() already collapses N accumulators into one scan, but only for
+       callers that ask for them together, and the panel builders each ask
+       separately. Measured on `task`: the ACL proof scanned ~880 rows, the trend
+       re-scanned from row zero, the profiles re-scanned again, the matrix once
+       more. Four passes over identical rows, each paying the 2.85ms-per-row ACL
+       cost, each timing out somewhere different.
+
+       That last part is not just slow, it is incoherent. A page whose trend
+       stopped at 420 rows and whose profiles stopped at 880 is showing panels
+       computed over different subsets of the same table, and their totals do not
+       agree. Nothing reported this, because each scan was individually correct and
+       individually labelled bounded.
+
+       planScan fixes both. Everything a page needs is declared up front, one scan
+       fills all of it, and every panel is therefore derived from exactly the same
+       rows -- so when the scan is truncated, the whole page is truncated together
+       and consistently.
+       ══════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * Spec factories.
+     *
+     * Shared so that a panel builder asking for a reduction on its own, and
+     * planScan asking for the same reduction as part of a page, produce a byte
+     * identical spec and therefore hit the same memo entry. If these were written
+     * out twice the sharing would silently stop working the moment one copy gained
+     * a parameter, and the only symptom would be that pages got slower again.
+     */
+    specs: {
+        group: function (field) {
+            return { id: 'g', kind: 'group', field: field };
+        },
+        cross: function (a, b) {
+            return { id: 'x', kind: 'cross', fieldA: a, fieldB: b };
+        },
+        series: function (dateField, groupField, grain, buckets) {
+            return { id: 's', kind: 'timegroup', dateField: dateField,
+                     groupField: groupField || null, grain: grain || 'month',
+                     buckets: buckets || 12 };
+        },
+        numeric: function (field) {
+            return { id: 'n', kind: 'numeric', field: field };
+        },
+        measure: function (field, groupField) {
+            return { id: 'm', kind: 'measure', field: field,
+                     groupField: groupField || null };
+        },
+        pair: function (x, y, groupField) {
+            return { id: 'p', kind: 'pair', xField: x, yField: y,
+                     groupField: groupField || null };
+        },
+        duration: function (start, end, groupField) {
+            return { id: 'd', kind: 'duration', startField: start, endField: end,
+                     groupField: groupField || null };
+        },
+        dow: function (dateField) {
+            return { id: 'h', kind: 'dow', dateField: dateField };
+        },
+        day: function (dateField, days) {
+            return { id: 'd', kind: 'day', dateField: dateField, days: days || 182 };
+        }
+    },
+
+    /** One reduction, memoised, and satisfied by a prior planScan if there was one. */
+    _one: function (table, query, spec, budgetMs) {
+        var r = this.reduce(table, query, [spec], budgetMs);
+        /* A starved scan has no results at all, and the caller must still get the
+           shape it expects. Returning a bare {} here meant every builder that
+           reached for `.periods[2]` or `.points[0]` threw instead of simply having
+           nothing to draw -- which turned "we ran out of scan budget", a condition
+           this design deliberately allows, into an error note on the page. */
+        var out = r.results[spec.id];
+        if (!out) {
+            out = this._emptyFor(spec);
+            out.starved = true;
+        }
+        return this._withScan(out, r);
+    },
+
+    /**
+     * The well-formed empty result for a spec.
+     *
+     * Shapes, not values: every array a builder might index into exists and is
+     * empty, so the builder's own guards do their job and it declines to draw a
+     * panel rather than failing to build one.
+     */
+    _emptyFor: function (spec) {
+        switch (spec.kind) {
+        case 'group':
+            return { rows: [] };
+        case 'cross':
+            return { rowKeys: [], colKeys: [], rowLabels: [], colLabels: [],
+                     rowTotals: [], colTotals: [], grid: [], maxCell: 0, grand: 0 };
+        case 'timegroup':
+            return { periods: [], series: [], outside: 0, grain: spec.grain };
+        case 'measure':
+            return { rows: [], signed: false, truncatedValues: false };
+        case 'numeric':
+            return { values: [], n: 0, sum: 0, mean: 0, signed: false,
+                     min: 0, max: 0, q1: 0, median: 0, q3: 0, lo: 0, hi: 0,
+                     outliers: [], outlierCount: 0,
+                     bins: { bins: [], lo: 0, hi: 0, width: 0 } };
+        case 'pair':
+            return { points: [], dropped: 0, corr: null };
+        case 'duration':
+            return { rows: [], skipped: 0 };
+        case 'dow':
+            return { grid: [], maxCell: 0, total: 0 };
+        case 'day':
+            return { byDay: {}, days: spec.days || 0, maxCell: 0, total: 0 };
+        default:
+            return {};
+        }
+    },
+
+    /**
+     * Run every reduction a page needs in a single pass.
+     *
+     * Each spec's result is written to the memo under the key a lone reduce() call
+     * for that spec would have produced, so the panel builders need no knowledge of
+     * this at all: they call seriesByGroup() or crossTab() exactly as before and
+     * find the answer already computed.
+     *
+     * @return the raw reduction, whose `scanned` and `capped` describe the whole
+     *         page rather than any one panel
+     */
+    planScan: function (table, query, specs, budgetMs) {
+        if (!specs || !specs.length) return null;
+
+        var temp = [], i, k;
+        for (i = 0; i < specs.length; i++) {
+            var copy = {};
+            for (k in specs[i]) {
+                if (specs[i].hasOwnProperty(k)) copy[k] = specs[i][k];
+            }
+            /* Unique within this scan; the original id is restored when the result
+               is filed, because that is the id the lone caller will look under. */
+            copy.id = 'p' + i;
+            temp.push(copy);
+        }
+
+        var r = this.reduce(table, query, temp, budgetMs);
+
+        for (i = 0; i < specs.length; i++) {
+            this._file(table, query, specs[i], r, 'p' + i);
+        }
+        this._planned = { table: table, query: query || '', scanned: r.scanned,
+                          capped: r.capped, path: r.path, ms: r.ms,
+                          reductions: specs.length };
+        return r;
+    },
+
+    /** Files one result from a shared scan under its lone-call memo key. */
+    _file: function (table, query, spec, r, tempId) {
+        var results = {};
+        results[spec.id] = r.results[tempId];
+        var ck = 'red|' + table + '|' + (query || '') + '|' + this._specKey([spec]);
+        this._counts[ck] = {
+            results: results, scanned: r.scanned, capped: r.capped,
+            timedOut: r.timedOut, path: r.path, ms: r.ms, shared: true
+        };
+    },
+
+    /** What the shared scan did, for the page to report honestly. */
+    plannedScan: function () { return this._planned || null; },
 
     /**
      * Builds one accumulator. Each returns {id, valueFields, displayFields, row, done}.
@@ -1402,25 +1721,14 @@ CmdData.prototype = {
      * says so rather than implying local business hours.
      */
     hourOfWeek: function (table, dateField, query, budgetMs) {
-        var q = dateField + 'ISNOTEMPTY';
-        if (query) q = query + '^' + q;
-        var r = this.reduce(table, q, [
-            { id: 'h', kind: 'dow', dateField: dateField }
-        ], budgetMs);
-        return this._withScan(r.results.h, r);
+        return this._one(table, query, this.specs.dow(dateField), budgetMs);
     },
 
     /**
      * Counts per calendar day, for a calendar heatmap.
      */
     dayGrid: function (table, dateField, query, days, budgetMs) {
-        days = days || 182;
-        var q = dateField + 'ISNOTEMPTY';
-        if (query) q = query + '^' + q;
-        var r = this.reduce(table, q, [
-            { id: 'd', kind: 'day', dateField: dateField, days: days }
-        ], budgetMs);
-        return this._withScan(r.results.d, r);
+        return this._one(table, query, this.specs.day(dateField, days), budgetMs);
     },
 
     /**
@@ -1429,14 +1737,8 @@ CmdData.prototype = {
      * how the renderer draws it.
      */
     seriesByGroup: function (table, dateField, groupField, grain, buckets, query, budgetMs) {
-        var q = dateField + 'ISNOTEMPTY';
-        if (query) q = query + '^' + q;
-        var r = this.reduce(table, q, [
-            { id: 's', kind: 'timegroup', dateField: dateField,
-              groupField: groupField || null, grain: grain || 'month',
-              buckets: buckets || 12 }
-        ], budgetMs);
-        return this._withScan(r.results.s, r);
+        return this._one(table, query,
+            this.specs.series(dateField, groupField, grain, buckets), budgetMs);
     },
 
     /**
@@ -1444,12 +1746,7 @@ CmdData.prototype = {
      * Feeds a histogram or a box plot without a second pass.
      */
     numericProfile: function (table, field, query, budgetMs) {
-        var q = field + 'ISNOTEMPTY';
-        if (query) q = query + '^' + q;
-        var r = this.reduce(table, q, [
-            { id: 'n', kind: 'numeric', field: field }
-        ], budgetMs);
-        return this._withScan(r.results.n, r);
+        return this._one(table, query, this.specs.numeric(field), budgetMs);
     },
 
     /**
@@ -1461,14 +1758,10 @@ CmdData.prototype = {
      * worth drawing -- that has to be answered before any of them is drawn.
      */
     numericProfiles: function (table, fields, query, budgetMs) {
-        var specs = [], i;
+        var out = {}, i;
         for (i = 0; i < fields.length; i++) {
-            specs.push({ id: 'n' + i, kind: 'numeric', field: fields[i] });
-        }
-        var r = this.reduce(table, query, specs, budgetMs);
-        var out = {};
-        for (i = 0; i < fields.length; i++) {
-            out[fields[i]] = this._withScan(r.results['n' + i] || { n: 0 }, r);
+            out[fields[i]] = this._one(table, query,
+                this.specs.numeric(fields[i]), budgetMs);
         }
         return out;
     },
@@ -1477,13 +1770,8 @@ CmdData.prototype = {
      * Measure against measure, for a scatter.
      */
     pairSample: function (table, xField, yField, groupField, query, budgetMs) {
-        var q = xField + 'ISNOTEMPTY^' + yField + 'ISNOTEMPTY';
-        if (query) q = query + '^' + q;
-        var r = this.reduce(table, q, [
-            { id: 'p', kind: 'pair', xField: xField, yField: yField,
-              groupField: groupField || null }
-        ], budgetMs);
-        return this._withScan(r.results.p, r);
+        return this._one(table, query,
+            this.specs.pair(xField, yField, groupField), budgetMs);
     },
 
     /**
@@ -1551,13 +1839,8 @@ CmdData.prototype = {
      * the magnitude of data they have no access to.
      */
     measureByGroup: function (table, measureField, groupField, query, budgetMs) {
-        var q = measureField + 'ISNOTEMPTY';
-        if (query) q = query + '^' + q;
-        var r = this.reduce(table, q, [
-            { id: 'm', kind: 'measure', field: measureField,
-              groupField: groupField || null }
-        ], budgetMs);
-        return this._withScan(r.results.m, r);
+        return this._one(table, query,
+            this.specs.measure(measureField, groupField), budgetMs);
     },
 
     /**
@@ -1567,13 +1850,8 @@ CmdData.prototype = {
      * those measures duration between a different pair of columns.
      */
     durationHours: function (table, startField, endField, groupField, query, budgetMs) {
-        var q = startField + 'ISNOTEMPTY^' + endField + 'ISNOTEMPTY';
-        if (query) q = query + '^' + q;
-        var r = this.reduce(table, q, [
-            { id: 'd', kind: 'duration', startField: startField, endField: endField,
-              groupField: groupField || null }
-        ], budgetMs);
-        return this._withScan(r.results.d, r);
+        return this._one(table, query,
+            this.specs.duration(startField, endField, groupField), budgetMs);
     },
 
     /* ── internals ── */

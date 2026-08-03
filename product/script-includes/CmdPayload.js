@@ -37,6 +37,35 @@ CmdPayload.MAX_PANELS = 4;
  * and what was dropped is reported. */
 CmdPayload.MAX_ANALYSIS = 5;
 
+/* How wide the shared page scan guesses.
+ *
+ * These bound the number of accumulators the single pass carries, not the number
+ * of panels drawn. An accumulator that goes unused costs a few field reads per
+ * row, which is immeasurable beside the ACL evaluation that admitted the row, so
+ * the asymmetry strongly favours guessing wide: being wrong costs microseconds,
+ * being narrow costs a whole extra scan of the table. */
+CmdPayload.SCAN_DIMS = 8;
+CmdPayload.SCAN_LEADS = 3;
+CmdPayload.SCAN_MEASURES = 4;
+
+/* Budget for the shared page scan.
+ *
+ * It gets its own allowance rather than "whatever is left of the page budget",
+ * which is what it had first and which starved everything after it: the scan
+ * spent the entire budget, and the KPI row and half the panels were then skipped
+ * as over-budget even though their data was by then already computed and free.
+ * Bounding the one expensive thing, and letting the cheap assembly that follows
+ * run regardless, is the correct shape. */
+CmdPayload.SCAN_MS = 3200;
+
+/* The share the largest real value must hold before a wide dimension is drawn.
+ *
+ * Only applied past the bar limit, where a chart is already showing a head and a
+ * folded tail. Below this the head is not a head: cmdb_ci_computer.asset spreads
+ * 1,383 records over about 200 values whose largest holds 22, which draws as one
+ * "(none)" tile beside an "Other (176)" block and answers nothing. */
+CmdPayload.MIN_TOP_SHARE = 0.04;
+
 /* Candidate dimensions examined to fill those panels. Higher gives better panels
    and costs more; each rejected candidate still costs its profile. */
 CmdPayload.MAX_CANDIDATES = 14;
@@ -166,6 +195,24 @@ CmdPayload.prototype = {
               missing the one question every leader asks first. ── */
         var dateField = this._pickDateField(table, query, opts);
 
+        /* ── one scan for the whole page ──
+         *
+         * Declared before any panel is built, so every reduction this page could
+         * want is satisfied by a single pass over the rows. What this replaces was
+         * four or more independent passes over the identical rows -- the ACL proof,
+         * the trend, the profiles, the matrix -- each paying the full per-row ACL
+         * cost again.
+         *
+         * On a table with expensive ACLs that is the difference between a usable
+         * page and an unusable one, but the correctness argument matters more than
+         * the speed one. Those independent scans were each time-boxed separately
+         * and so each stopped at a different row, which meant a single page could
+         * show a trend computed over 420 rows beside a breakdown computed over 880.
+         * Both were individually correct and individually labelled, and their totals
+         * did not agree. One scan means one row set: when it is truncated, the whole
+         * page is truncated together and says so once. */
+        this._planScan(table, query, dateField, opts);
+
         var series = this._seriesPanel(table, query, total, opts);
         if (series) {
             /* The analytics pane, in the one place it belongs. A trend without a
@@ -240,13 +287,29 @@ CmdPayload.prototype = {
          * how much they add until either the panel cap or the clock stops it. What
          * was skipped is reported, never silently dropped.
          */
-        payload.kpis = this._overBudget(t0)
-            ? []
-            : this.analysis.kpiRow(table, query, total, dateField, CmdData.GROUP_MS);
+        /* Built regardless of the clock, because after the shared scan its inputs
+           are memoised and it is close to free. Gating it on the page deadline was
+           costing exactly the wrong thing: on cmdb_ci the scan finished, every
+           number the KPI row needed was already computed, and the row was dropped
+           anyway for being over budget. */
+        payload.kpis = this.analysis.kpiRow(table, query, total, dateField,
+                                            CmdData.GROUP_MS);
+
+        /* From here on the expensive work is done and everything left reads
+           memoised results, so the deadline that governs it starts now. Measuring
+           it from the top of the request charged the shared scan's cost against
+           every cheap step that followed and skipped them for no gain. */
+        var tAssembly = new Date().getTime();
 
         var lead = this._leadDims(candidates, dims, used);
+
+        /* The second declared scan, now that the lead dimension is known. */
+        this._planLeadScan(table, query, dateField, lead,
+                           this.analysis.rankMeasures(table, query, CmdData.GROUP_MS),
+                           opts);
+
         payload.panels = payload.panels.concat(
-            this._analysisGrid(table, query, dateField, lead, opts, t0, payload));
+            this._analysisGrid(table, query, dateField, lead, opts, tAssembly, payload));
 
         payload.panels = payload.panels.concat(dimPanels);
 
@@ -284,7 +347,7 @@ CmdPayload.prototype = {
         if (payload.drill.atMax) {
             payload.notes.push(
                 'Maximum drill depth reached. Open the record list to go further.');
-        } else if (this._overBudget(t0)) {
+        } else if (this._overBudget(tAssembly)) {
             payload.notes.push('Drill options were not computed, to keep this page ' +
                                'inside its time budget.');
         } else {
@@ -297,8 +360,118 @@ CmdPayload.prototype = {
             ? []
             : this.drill.declaredPath(table, query);
 
+        /* What the page spent on rows, and what it therefore could not draw. A
+           dashboard that quietly shows less under load is the failure this whole
+           budget mechanism exists to prevent, so the shortfall is stated. */
+        payload.scan = this.data.scanBudget();
+        if (payload.scan.starved > 0) {
+            payload.notes.push(
+                'This subject is expensive to permission-check, so the page stopped ' +
+                'reading rows after ' + Math.round(payload.scan.spentMs / 100) / 10 +
+                's. ' + payload.scan.starved + ' further measurement' +
+                (payload.scan.starved === 1 ? ' was' : 's were') + ' not attempted, ' +
+                'and the panels shown are built from the rows that were read.');
+        }
+
         payload.timingMs = new Date().getTime() - t0;
         return payload;
+    },
+
+    /**
+     * Declares every reduction this page might need, and runs them in one pass.
+     *
+     * The list is deliberately generous. An accumulator that turns out not to be
+     * used costs a few field reads per row, which is immeasurable next to the ACL
+     * evaluation that admitted the row in the first place -- so guessing wide and
+     * discarding is far cheaper than guessing narrow and re-scanning. That asymmetry
+     * is the whole reason this works.
+     *
+     * The one thing it cannot know in advance is which dimension will turn out to be
+     * the page's lead, since that depends on profiles this scan is computing. So it
+     * asks for the time-series and crosstab reductions against the top few candidates
+     * by metadata rank, and the lead is chosen from those afterwards. Being wrong
+     * costs an unused accumulator; being narrow would cost a second scan.
+     */
+    _planScan: function (table, query, dateField, opts) {
+        var v = this.data.aclVerdict(table, query);
+        if (v.denied) return;
+
+        var grain = opts.grain || 'month';
+        var months = opts.months || 12;
+        var sp = this.data.specs;
+        var plan = [], i;
+
+        var dims = this.meta.dimensions(table);
+        var usable = [];
+        for (i = 0; i < dims.length && usable.length < CmdPayload.SCAN_DIMS; i++) {
+            usable.push(dims[i]);
+        }
+
+        /* Every candidate breakdown. These produce the profiles, and the profiles
+           are what decide the page's lead dimension. */
+        for (i = 0; i < usable.length; i++) plan.push(sp.group(usable[i].name));
+
+        /* The trend, the week cycle and the calendar all read the same column. */
+        if (dateField) {
+            plan.push(sp.series(dateField, null, grain, months));
+            plan.push(sp.dow(dateField));
+            plan.push(sp.day(dateField, 182));
+        }
+
+        /* Numeric columns, for the ranking that decides which are worth a chart. */
+        var ms = this.meta.measures(table), added = 0;
+        for (i = 0; i < ms.length && added < CmdPayload.SCAN_MEASURES; i++) {
+            if (ms[i].isDuration) continue;
+            plan.push(sp.numeric(ms[i].name));
+            added++;
+        }
+
+        /* Elapsed time between the two best-spread date columns. */
+        var pair = this.analysis._durationPair(table, query, CmdData.GROUP_MS);
+        if (pair) plan.push(sp.duration(pair.start.name, pair.end.name, null));
+
+        this.data.planScan(table, query, plan, CmdPayload.SCAN_MS);
+    },
+
+    /**
+     * The second scan: the reductions that depend on which dimension leads.
+     *
+     * Two scans rather than one, for a reason that cannot be engineered away. Half
+     * the panels are keyed on a lead dimension, and the lead is chosen from the
+     * profiles, which the first scan is what produces. You cannot know what to
+     * measure about the lead until you know what the lead is.
+     *
+     * Guessing the lead from metadata rank instead was tried and is worse. It
+     * misses often enough that each missed builder opened its own unplanned scan,
+     * which is unbounded in number and invisible in the timings -- the failure mode
+     * this whole mechanism exists to remove. Two declared, bounded scans is the
+     * honest shape of the problem.
+     */
+    _planLeadScan: function (table, query, dateField, lead, measures, opts) {
+        if (!lead || !lead.primary) return;
+        if (this.data.aclVerdict(table, query).denied) return;
+
+        var grain = opts.grain || 'month';
+        var months = opts.months || 12;
+        var sp = this.data.specs;
+        var plan = [], i;
+
+        if (dateField) {
+            plan.push(sp.series(dateField, lead.primary.name, grain, months));
+            /* Three buckets, for the change breakdown's two complete periods. */
+            plan.push(sp.series(dateField, lead.primary.name, grain, 3));
+        }
+        if (lead.secondary) {
+            plan.push(sp.cross(lead.primary.name, lead.secondary.name));
+        }
+        for (i = 0; i < measures.length && i < 2; i++) {
+            plan.push(sp.measure(measures[i].name, lead.primary.name));
+        }
+        if (measures.length >= 2) {
+            plan.push(sp.pair(measures[0].name, measures[1].name, lead.primary.name));
+        }
+
+        if (plan.length) this.data.planScan(table, query, plan, CmdPayload.SCAN_MS);
     },
 
     /* ── the analysis grid ──────────────────────────────────────────────── */
@@ -440,6 +613,11 @@ CmdPayload.prototype = {
             }});
         }
 
+        /* The deadline still governs, but it is measured from after the shared scan
+           rather than from the start of the page. The scan is the page's one
+           expensive act and it has already been bounded by its own budget; charging
+           its cost a second time against every builder that reads its results
+           produced pages that did the work and then declined to show it. */
         var attempted = 0, skipped = 0, i;
         for (i = 0; i < builders.length; i++) {
             if (out.length >= CmdPayload.MAX_ANALYSIS) { skipped++; continue; }
@@ -595,6 +773,30 @@ CmdPayload.prototype = {
         if (prof.total === 0) return null;
         if (prof.distinctNonEmpty < 2) return null;
         if (prof.fill < 0.05) return null;
+
+        /* The blank bucket must not be the biggest thing on the chart.
+         *
+         * A 5% fill floor is not enough on a wide, sparse reference column. Measured
+         * on cmdb_ci_computer.asset: 1,383 records spread over ~200 values so thinly
+         * that the largest single value held 22 records while "(none)" held more, and
+         * the treemap drawn from it led with a "(none)" tile and folded almost
+         * everything else into Other. It passed every existing gate -- well over 5%
+         * populated, far more than two distinct values -- and said nothing at all.
+         *
+         * If the most common answer to "what is this field" is "nobody filled it in",
+         * that is a data-quality observation and not a breakdown, and it does not
+         * earn a panel. */
+        var biggest = prof.rows.length ? prof.rows[0] : null;
+        if (biggest && biggest.key === '') return null;
+
+        /* Nor may the chart be almost entirely tail. A field whose largest real value
+           holds a couple of percent has no shape to show at this size; every mark
+           lands at the same near-zero width and the reader learns only that the
+           column is diffuse. */
+        if (prof.distinctNonEmpty > CmdForm.T.BAR_MAX &&
+            prof.topShare < CmdPayload.MIN_TOP_SHARE) {
+            return null;
+        }
 
         var f = this.meta.field(table, dim.name);
         var isChoice = f ? !!f.isChoice : false;
