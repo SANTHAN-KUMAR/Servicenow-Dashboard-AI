@@ -374,7 +374,7 @@
     var h = 116, padL = 2, padR = 2, barY = 20, barH = 42;
     var s = svgRoot(W, h);
     var total = sum(rows);
-    if (!total) return s;
+    if (!total) return emptyChart(s, h, 'No records in this slice, so there is no whole to divide.');
 
     var x = padL, iw = W - padL - padR;
     for (var i = 0; i < rows.length; i++) {
@@ -423,7 +423,7 @@
     var h = semi ? 168 : 210;
     var s = svgRoot(W, h);
     var total = sum(rows);
-    if (!total) return s;
+    if (!total) return emptyChart(s, h, 'No records in this slice, so there is no whole to divide.');
 
     var cx = 132, cy = semi ? 132 : 104, r = 76, thick = 26;
     var legendX = Math.min(250, W * 0.42);
@@ -486,7 +486,7 @@
     var h = 260;
     var s = svgRoot(W, h);
     var total = sum(rows);
-    if (!total) return s;
+    if (!total) return emptyChart(s, h, 'No records in this slice, so there is no area to divide.');
 
     var items = rows.map(function (r, i) {
       return { row: r, value: r.count, idx: i };
@@ -763,6 +763,28 @@
   /** Ink that stays legible on a sequential fill. */
   function onSeq(t) { return t > 0.55 ? 'vlOn' : 'vl'; }
 
+  /**
+   * The nothing-to-draw state, said out loud.
+   *
+   * Several forms cannot draw a total of zero -- there is no proportion of nothing
+   * to take an angle or an area from -- and every one of them used to handle that
+   * by returning an SVG with nothing in it. The panel then rendered as an empty box
+   * under a confident title, which is indistinguishable from a chart that failed,
+   * and is precisely the "looks half finished" complaint in miniature.
+   *
+   * The payload builders already refuse to emit a panel with no records, so this
+   * should be unreachable through the normal path. It exists because "should be
+   * unreachable" is not a rendering strategy, and because a filtered drill can
+   * arrive at an empty slice of a panel that was legitimate a moment earlier.
+   */
+  function emptyChart(s, h, message) {
+    s.appendChild(svgEl('rect', { x: 1, y: 1, width: W - 2, height: h - 2, rx: 8,
+      fill: 'none', stroke: v('--edge'), 'stroke-width': 1,
+      'stroke-dasharray': '4 4' }));
+    s.appendChild(text(W / 2, h / 2 + 4, message, 'tk', 'middle'));
+    return s;
+  }
+
   // ── time by category ─────────────────────────────────────────────────────
 
   /**
@@ -776,7 +798,9 @@
     var periods = panel.periods || [];
     var series = (panel.series || []).slice();
     if (panel.other) series.push(panel.other);
-    if (!periods.length || !series.length) return svgRoot(W, 60);
+    if (!periods.length || !series.length) {
+      return emptyChart(svgRoot(W, 80), 80, 'No series to draw over this window.');
+    }
 
     var p = plot(240, 44, 14, 16, 54);
     var max = 0, i, j;
@@ -851,7 +875,9 @@
     var periods = panel.periods || [];
     var series = (panel.series || []).slice();
     if (panel.other) series.push(panel.other);
-    if (!periods.length || !series.length) return svgRoot(W, 60);
+    if (!periods.length || !series.length) {
+      return emptyChart(svgRoot(W, 80), 80, 'No series to draw over this window.');
+    }
 
     var p = plot(240, 44, 14, 16, 54);
     var n = periods.length, i, j;
@@ -920,7 +946,9 @@
     var periods = panel.periods || [];
     var series = (panel.series || []).slice();
     if (panel.other) series.push(panel.other);
-    if (!periods.length || !series.length) return svgRoot(W, 60);
+    if (!periods.length || !series.length) {
+      return emptyChart(svgRoot(W, 80), 80, 'No series to draw over this window.');
+    }
 
     var cols = W >= 800 ? 3 : 2;
     var rows = Math.ceil(series.length / cols);
@@ -986,7 +1014,7 @@
       if (rows[i].from > max) max = rows[i].from;
       if (rows[i].to > max) max = rows[i].to;
     }
-    if (max <= 0) return p.s;
+    if (max <= 0) return emptyChart(p.s, p.h, 'No records in either period.');
 
     var top = p.y0, bot = p.y1;
     var y = function (val) { return bot - (val / max) * (bot - top); };
@@ -1071,7 +1099,9 @@
    */
   function drawWaterfall(panel) {
     var steps = panel.steps || [];
-    if (!steps.length) return svgRoot(W, 60);
+    if (!steps.length) {
+      return emptyChart(svgRoot(W, 80), 80, 'Nothing moved between these periods.');
+    }
 
     var p = plot(230, 44, 14, 20, 56);
     var n = steps.length + 2;
@@ -1156,7 +1186,9 @@
    */
   function drawHeatmap(panel) {
     var grid = panel.grid || [];
-    if (!grid.length) return svgRoot(W, 60);
+    if (!grid.length) {
+      return emptyChart(svgRoot(W, 80), 80, 'No cells to draw.');
+    }
 
     var rowLabels = panel.rowLabels || [];
     var colLabels = panel.colLabels || [];
@@ -1335,7 +1367,9 @@
   /** A histogram over binned observations, with the quartile box beneath it. */
   function drawHistogramBins(panel) {
     var bins = panel.bins || [];
-    if (!bins.length) return svgRoot(W, 60);
+    if (!bins.length) {
+      return emptyChart(svgRoot(W, 80), 80, 'No values to bin.');
+    }
 
     var p = plot(215, 44, 14, 18, 52);
     var max = 0, i;
@@ -1392,7 +1426,9 @@
    */
   function drawBox(panel) {
     var rows = panel.rows || [];
-    if (!rows.length) return svgRoot(W, 60);
+    if (!rows.length) {
+      return emptyChart(svgRoot(W, 80), 80, 'No group has enough records to summarise.');
+    }
 
     var p = plot(60 + rows.length * 34, 130, 60, 18, 34);
     var lo = null, hi = null, i, j;
@@ -1460,7 +1496,9 @@
   /** Two measures against each other, with quadrants at the medians. */
   function drawScatter(panel) {
     var pts = panel.points || [];
-    if (!pts.length) return svgRoot(W, 60);
+    if (!pts.length) {
+      return emptyChart(svgRoot(W, 80), 80, 'No records have both values set.');
+    }
 
     var p = plot(250, 48, 16, 18, 56);
     var i;
@@ -1551,7 +1589,9 @@
    */
   function drawPareto(panel) {
     var rows = panel.rows || [];
-    if (!rows.length) return svgRoot(W, 60);
+    if (!rows.length) {
+      return emptyChart(svgRoot(W, 80), 80, 'No values to rank.');
+    }
 
     var p = plot(250, 46, 46, 20, 66);
     var max = niceMax(rows[0].count);
@@ -1603,7 +1643,9 @@
   /** A funnel. Width is the surviving share; the gap between stages is the drop. */
   function drawFunnel(panel) {
     var stages = panel.stages || [];
-    if (!stages.length) return svgRoot(W, 60);
+    if (!stages.length) {
+      return emptyChart(svgRoot(W, 80), 80, 'No stages to draw.');
+    }
 
     var rowH = 44, padT = 8, padL = 4;
     var h = padT + stages.length * rowH + 16;

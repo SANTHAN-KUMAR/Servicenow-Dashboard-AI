@@ -169,4 +169,30 @@ function summarise(root) {
     return counts;
 }
 
-module.exports = { Node: Node, makeDocument: makeDocument, summarise: summarise };
+/**
+ * Every piece of text the render produced: visible copy, plus the hover reports.
+ *
+ * This exists because node counting is not enough to catch the bug that started
+ * all of this. When line_multi was aliased to the single-series renderer it drew
+ * one category and discarded the rest, and it still emitted a perfectly healthy
+ * number of nodes -- a line, markers, an axis, a legend. Counting nodes passes it.
+ * Asking "does every series in the payload actually appear in the output" does not.
+ */
+function textOf(root) {
+    var parts = [];
+    (function walk(n) {
+        for (var i = 0; i < n.childNodes.length; i++) {
+            var c = n.childNodes[i];
+            if (c._text) parts.push(c._text);
+            var t = c.getAttribute('data-tip');
+            if (t) parts.push(t);
+            var k = c.getAttribute('data-drill-key');
+            if (k !== null) parts.push('key:' + k);
+            walk(c);
+        }
+    })(root);
+    return parts.join('\n');
+}
+
+module.exports = { Node: Node, makeDocument: makeDocument, summarise: summarise,
+                   textOf: textOf };
