@@ -209,6 +209,44 @@ CmdMeta.prototype = {
         }
 
         out.sort(function (a, b) { return a.rank - b.rank; });
+
+        /* Interleaved by kind, not returned in strict rank order.
+         *
+         * Strict rank order puts every ordinal choice field first, and `incident`
+         * has six of them, so a caller that examines the first fourteen candidates
+         * never reaches `assignment_group` or `category` at all. The downstream
+         * panel selection then has nothing diverse to choose between and the page
+         * comes out as six variations on one chart.
+         *
+         * Round-robin across the kinds fixes it at the source: best nominal choice,
+         * best ordinal, best reference, best boolean, then the second of each. Rank
+         * still decides order within a kind, so the prior is preserved. */
+        return this._interleave(out);
+    },
+
+    _interleave: function (dims) {
+        var buckets = { choice: [], ordinal: [], ref: [], bool: [], other: [] };
+        var i;
+        for (i = 0; i < dims.length; i++) {
+            var d = dims[i];
+            if (d.isOrdinal) buckets.ordinal.push(d);
+            else if (d.isChoice) buckets.choice.push(d);
+            else if (d.isBool) buckets.bool.push(d);
+            else if (d.isRef) buckets.ref.push(d);
+            else buckets.other.push(d);
+        }
+        /* Nominal choices lead: a named category is the most legible breakdown a
+           viewer can be given, and it is the kind the client's own examples used. */
+        var order = ['choice', 'ordinal', 'ref', 'bool', 'other'];
+        var out = [], drained = false, round = 0;
+        while (!drained && round < 60) {
+            drained = true;
+            for (i = 0; i < order.length; i++) {
+                var b = buckets[order[i]];
+                if (round < b.length) { out.push(b[round]); drained = false; }
+            }
+            round++;
+        }
         return out;
     },
 

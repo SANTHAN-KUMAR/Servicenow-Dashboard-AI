@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+
+<!--
+  COMMAND catalog surface. The entry point.
+
+  The client's own Dashboards experience opens on a list of what you can open, and
+  the POC's single hard-coded page over one table is what they called a dumb stub.
+  This lists every subject the logged-in user is entitled to, derived from where
+  reporting demand already is on the instance rather than from a configured list,
+  so it works unchanged whether or not GRC, audit, HR and PPM are installed.
+
+  Same three constraints as the dashboard page: no inline script, no client fetch,
+  payload base64-encoded so Jelly cannot evaluate anything inside it.
+-->
+
+<g:evaluate var="jvar_b64" jelly="true">
+  var out;
+  try {
+    var cat = new CmdCatalog();
+    out = cat.build(30);
+  } catch (e) {
+    out = { error: 'The catalog could not be built: ' + e,
+            areas: [], cards: [],
+            stats: { user: gs.getUserDisplayName(), userName: gs.getUserName(),
+                     offered: 0, considered: 0, denied: 0, tooSmall: 0 } };
+  }
+  GlideStringUtil.base64Encode(JSON.stringify(out));
+</g:evaluate>
+
+<style>
+@@CSS@@
+</style>
+
+<div id="cmd-wrap">
+  <div id="cmd-data" data-view="catalog" data-b64="${jvar_b64}"></div>
+  <div id="cmd-root"></div>
+</div>
+
+<g:requires name="cmd_fonts.jsdbx" includes="true" />
+<g:requires name="cmd_render.jsdbx" includes="true" />
+
+</j:jelly>

@@ -58,6 +58,11 @@ UI_PAGES = [
     "cmd_dashboard.xhtml",
 ]
 
+# Shared stylesheet, substituted into both pages. Kept in one file so the two
+# surfaces cannot drift apart visually, and inlined rather than served as an asset
+# so the page has no second request to make.
+SHARED_CSS = "cmd.css"
+
 
 # ── validation ──────────────────────────────────────────────────────────────
 
@@ -150,6 +155,19 @@ def build_pages(script_hashes):
         if not p.exists():
             continue
         html = p.read_text()
+        css_path = UIP / SHARED_CSS
+        if "@@CSS@@" in html:
+            if not css_path.exists():
+                raise InstanceError(f"{p.name} wants @@CSS@@ but {SHARED_CSS} is missing")
+            css = css_path.read_text()
+            # A stylesheet is inlined into a Jelly document, so it must not contain
+            # anything Jelly or XML will act on.
+            for bad, why in (("]]>", "CDATA terminator"),
+                             ("${", "Jelly expression"),
+                             ("$[", "Jelly expression")):
+                if bad in css:
+                    raise InstanceError(f"{SHARED_CSS} contains {bad!r} ({why})")
+            html = html.replace("@@CSS@@", css)
         for name, h in script_hashes.items():
             html = html.replace(f"@@{name.upper()}_V@@", h)
         left = re.findall(r"@@[A-Z_]+@@", html)

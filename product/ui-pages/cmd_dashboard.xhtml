@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+
+<!--
+  COMMAND dashboard surface.
+
+  Three platform constraints shape this file, all measured on this instance and
+  all silent when violated.
+
+  1. Client JavaScript is never inline. Jelly evaluates script bodies, and a
+     CDATA-wrapped one makes the platform serve the whole page as zero bytes with
+     HTTP 200 and nothing in any log. So the renderer is a UI Script loaded by src,
+     with a content hash on the URL because .jsdbx is cached hard.
+
+  2. The page does not fetch its own data. An XHR from a logged-in session to a
+     Scripted REST endpoint never returns here, and the Table API behaves the same
+     way from the same context. Everything is computed in g:evaluate below and
+     embedded, which costs one round trip and no waterfall.
+
+  3. The payload travels as base64. Jelly evaluates ${...} and $[...] inside
+     attributes and text, and a JSON payload carries field labels and record values
+     from the instance, any of which could contain those sequences. Base64 has no
+     $, no braces and no quotes, so it cannot be evaluated, cannot break the XML,
+     and cannot be mangled by HTML escaping. The renderer decodes it as UTF-8.
+-->
+
+<g:evaluate var="jvar_b64" jelly="true">
+  var table = RP.getParameterValue('table') || 'incident';
+  var rawPath = RP.getParameterValue('path') || '';
+
+  /* The drill path travels in the URL as field:key|field:key, so a drill state is
+     shareable and the browser back button reverses it for free. */
+  var path = [];
+  if (rawPath) {
+    var segs = rawPath.split('|');
+    for (var i = 0; i &lt; segs.length; i++) {
+      var bits = segs[i].split(':');
+      if (!bits[0]) continue;
+      path.push({
+        field: decodeURIComponent(bits[0]),
+        key: bits.length &gt; 1 ? decodeURIComponent(bits[1]) : ''
+      });
+    }
+  }
+
+  var out;
+  try {
+    var builder = new CmdPayload();
+    out = builder.dashboard(table, path, {});
+  } catch (e) {
+    out = { error: 'The dashboard could not be built: ' + e,
+            subject: { table: table, label: table, rows: 0 },
+            panels: [], path: [], notes: [], drill: { atMax: true, options: [] } };
+  }
+  GlideStringUtil.base64Encode(JSON.stringify(out));
+</g:evaluate>
+
+<style>
+@@CSS@@
+</style>
+
+<div id="cmd-wrap">
+  <div id="cmd-data" data-view="dashboard" data-b64="${jvar_b64}"></div>
+  <div id="cmd-root"></div>
+</div>
+
+<g:requires name="cmd_fonts.jsdbx" includes="true" />
+<g:requires name="cmd_render.jsdbx" includes="true" />
+
+</j:jelly>
