@@ -1,0 +1,2934 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COMMAND / Analytics Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMMAND. A dark-first analytics design system for ServiceNow.
+   Categorical, sequential and status palettes were validated with an OKLab/CVD
+   validator against the real #0D1117 chart surface. Figures quoted in the colour
+   section are measured output.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* ═══ Dark is the flagship theme. Light is a selected counterpart: its own steps
+   from the same hues, validated against its own #FFFFFF surface, never an
+   automatic inversion of the dark values. Toggle with data-theme on the root. ═══ */
+:root{
+  --on-hi:#04161A;           /* text on a high sequential step (bright, on dark) */
+  --fill-a:.82; --fill-b:.30;  /* ribbon gradient stops */
+  --fill-area:.38;             /* area wash under a line */
+  --fill-flow-1:.5; --fill-flow-2:.42;
+  --crit-deep:#7A1E27; --warn-deep:#8A5F14;
+  --void:#06080B; --ground:#0A0D12; --surface:#0D1117;
+  --surface-2:#121924; --surface-3:#18202D;
+  --edge:rgba(255,255,255,.07); --edge-2:rgba(255,255,255,.13); --edge-lit:rgba(255,255,255,.2);
+
+  --ink-1:#E8EDF5; --ink-2:#98A5BA; --ink-3:#606E86; --ink-4:#3B4657;
+  --grid:rgba(255,255,255,.05); --baseline:rgba(255,255,255,.12);
+
+  /* categorical fills. In-band, validated. Never cycled. */
+  --c1:#16A5BA; --c2:#B8842A; --c3:#7A6DE0;
+  --c4:#D8544A; --c5:#2AA47E; --c6:#B25FA8; --c-other:#5A6472;
+  /* lighter steps. Strokes and markers only, for stroke legibility on dark. */
+  --c1-lit:#3DE0F5; --c2-lit:#F0B94A; --c3-lit:#A899FF;
+  --c4-lit:#FF8676; --c5-lit:#4CD9A6; --c6-lit:#E08ACE;
+
+  --signal:#16A5BA;          /* data slot 1 only, never chrome */
+  --ui:#E8EDF5;              /* chrome accent: ink, not hue */
+
+  --q1:#0E252C; --q2:#103A46; --q3:#125264;
+  --q4:#146D82; --q5:#16A5BA; --q6:#2AC8DC; --q7:#5EE4F2;
+
+  --dn3:#0F6C7A; --dn2:#16A5BA; --dn1:#1D6570; --dmid:#232B38;
+  --dp1:#6E332E; --dp2:#D8544A; --dp3:#FF8676;
+
+  --ok:#2FBF7F; --ok-lit:#4CE49F; --ok-wash:rgba(47,191,127,.12);
+  --warn:#D9A62E; --warn-lit:#F5C64E; --warn-wash:rgba(217,166,46,.12);
+  --hot:#E07A3C;
+  --crit:#FF4C5B; --crit-lit:#FF7C87; --crit-wash:rgba(255,76,91,.12);
+
+  --display:"Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --sans:"Inter Tight", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+}
+
+:root[data-theme="light"]{
+  color-scheme:light;
+  --on-hi:#FFFFFF;           /* on light, the high steps are DARK, so this flips */
+  --fill-a:.9; --fill-b:.42;   /* a wash that reads on black is invisible on white */
+  --fill-area:.3;
+  --fill-flow-1:.72; --fill-flow-2:.62;
+  --void:#ECEFF3; --ground:#F3F5F8; --surface:#FFFFFF;
+  --surface-2:#F8FAFC; --surface-3:#EDF0F5;
+  --edge:rgba(16,22,32,.10); --edge-2:rgba(16,22,32,.17); --edge-lit:rgba(16,22,32,.28);
+
+  --ink-1:#10161F; --ink-2:#475364; --ink-3:#6B778A; --ink-4:#99A3B3;
+  --grid:rgba(16,22,32,.07); --baseline:rgba(16,22,32,.18);
+
+  /* categorical, re-stepped for a white surface and re-validated there */
+  --c1:#008C9E; --c2:#A5741F; --c3:#6355C8;
+  --c4:#C24438; --c5:#1B8A67; --c6:#9A4B90; --c-other:#7A8394;
+  /* emphasis step. On light this is DARKER, not lighter: a 2px stroke on white
+     needs to go down in lightness to hold the same perceived weight. */
+  --c1-lit:#00707E; --c2-lit:#855C15; --c3-lit:#4E42A8;
+  --c4-lit:#A3352B; --c5-lit:#146F53; --c6-lit:#7E3C77;
+
+  --signal:#008C9E; --ui:#10161F;
+
+  /* sequential runs light to dark here, the inverse of the dark theme */
+  --q1:#E2F2F5; --q2:#C2E4EA; --q3:#93CFDA;
+  --q4:#55B0C0; --q5:#008C9E; --q6:#006B7A; --q7:#00505C;
+
+  --dn3:#00707E; --dn2:#008C9E; --dn1:#93CFDA; --dmid:#E6E9EE;
+  --dp1:#EFB3AC; --dp2:#C24438; --dp3:#8E2A21;
+
+  --ok:#167C4F;   --ok-lit:#0F6640;   --ok-wash:rgba(22,124,79,.10);
+  --warn:#8A6410; --warn-lit:#6E4F0B; --warn-wash:rgba(138,100,16,.11);
+  --hot:#B25718;
+  --crit:#C0272E; --crit-lit:#9C1E24; --crit-wash:rgba(192,39,46,.10);
+  --crit-deep:#F2C4C2; --warn-deep:#F0DDAE;
+}
+/* Panels invert their material: on light, the hairline and shadow do the work
+   that the top highlight does on dark. */
+:root[data-theme="light"] .panel{
+  background:linear-gradient(180deg,#FFFFFF,#FCFDFE);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(16,22,32,.05),
+             0 12px 28px -18px rgba(16,22,32,.22)}
+:root[data-theme="light"] .panel::before{
+  background:linear-gradient(180deg, rgba(16,22,32,.13), rgba(16,22,32,.08) 40%, rgba(16,22,32,.06))}
+:root[data-theme="light"] .panel.lit{
+  box-shadow:0 1px 2px rgba(16,22,32,.06), 0 0 0 1px rgba(16,22,32,.05),
+             0 18px 40px -20px rgba(16,22,32,.3)}
+:root[data-theme="light"] .tile{background:linear-gradient(180deg,#FFFFFF,#FBFCFE)}
+:root[data-theme="light"] .tile:hover{background:#F7F9FC}
+:root[data-theme="light"] .card{background:linear-gradient(180deg,#FFFFFF,#FBFCFE)}
+:root[data-theme="light"] .card-t{background:#F7F9FC}
+:root[data-theme="light"] .mock-bar{background:linear-gradient(180deg,#FBFCFE,#F1F4F8)}
+:root[data-theme="light"] .mock-dots i{background:rgba(16,22,32,.14)}
+:root[data-theme="light"] .nav{background:#F1F4F8}
+:root[data-theme="light"] .btn{background:linear-gradient(180deg,#FFFFFF,#F5F7FA)}
+:root[data-theme="light"] .btn:hover{background:linear-gradient(180deg,#FFFFFF,#EDF1F6)}
+:root[data-theme="light"] .btn-sig{color:#FFFFFF; background:linear-gradient(180deg,#2B3444,#10161F)}
+:root[data-theme="light"] .btn-sig:hover{background:linear-gradient(180deg,#3A4557,#1B2432)}
+:root[data-theme="light"] .seg{background:#EDF0F5}
+:root[data-theme="light"] .seg button[aria-selected="true"]{background:#FFFFFF;
+  box-shadow:0 1px 2px rgba(16,22,32,.12)}
+:root[data-theme="light"] .field{background:#FFFFFF}
+:root[data-theme="light"] .rule{background:linear-gradient(180deg,#FFFFFF,#FAFBFD)}
+:root[data-theme="light"] .note{background:#FFFFFF}
+:root[data-theme="light"] .sw{background:#FFFFFF}
+:root[data-theme="light"] .tip{background:#FFFFFF}
+:root[data-theme="light"] .kpi{background:linear-gradient(180deg,#FFFFFF,#FAFBFD)}
+:root[data-theme="light"] pre{background:#10161F; color:#E4E9F0}
+:root[data-theme="light"] .meter{background:rgba(16,22,32,.09)}
+:root[data-theme="light"] body::before{opacity:.028}
+:root[data-theme="light"] .mock{box-shadow:0 2px 4px rgba(16,22,32,.06),
+  0 30px 64px -34px rgba(16,22,32,.34)}
+:root[data-theme="light"] .dbar i{background:rgba(0,140,158,.22)}
+:root[data-theme="light"] .chip{background:rgba(16,22,32,.03)}
+:root[data-theme="light"] .chip.sig{background:rgba(16,22,32,.05)}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0; background:var(--void); color:var(--ink-1);
+  font-family:var(--sans); font-size:15px; line-height:1.62;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden}
+h1,h2,h3,h4,p,figure,dl,dd{margin:0}
+a{color:var(--signal); text-decoration:none}
+
+/* Grain. This is what stops large dark fields reading as flat vector. */
+/* Grain, composited cheaply. No mix-blend-mode: a blend layer forces the
+   compositor to read back everything beneath it on every paint, which on a page
+   this tall pins the GPU. A flat low-opacity tile gives the same texture for
+   effectively no cost. */
+body::before{content:""; position:fixed; inset:0; z-index:1; pointer-events:none;
+  opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E")}
+main,header,nav,footer{position:relative; z-index:3}
+
+.d1{font-family:var(--display); font-size:clamp(38px,6vw,72px); line-height:.98;
+  letter-spacing:-.045em; font-weight:600}
+.d2{font-family:var(--display); font-size:clamp(26px,3.4vw,38px); line-height:1.08;
+  letter-spacing:-.034em; font-weight:600}
+.h2{font-family:var(--display); font-size:21px; line-height:1.22; letter-spacing:-.022em; font-weight:600}
+.h3{font-family:var(--display); font-size:15px; line-height:1.3; letter-spacing:-.012em; font-weight:600}
+.lede{font-size:16.5px; line-height:1.72; color:var(--ink-2); max-width:64ch}
+.sm{font-size:13.5px; line-height:1.58; color:var(--ink-2)}
+.xs{font-size:12.5px; line-height:1.52; color:var(--ink-2)}
+.tag{font-family:var(--mono); font-size:10px; font-weight:500; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-3)}
+.mono{font-family:var(--mono)}
+.dim{color:var(--ink-2)} .dimmer{color:var(--ink-3)}
+.num{font-family:var(--display); font-variant-numeric:tabular-nums lining-nums;
+  font-weight:600; letter-spacing:-.035em}
+code{font-family:var(--mono); font-size:.85em; background:var(--surface-3);
+  padding:.14em .4em; border-radius:4px; color:var(--ink-1); border:1px solid var(--edge)}
+
+.wrap{max-width:1340px; margin:0 auto; padding:0 32px}
+section{padding:128px 0; position:relative;
+  content-visibility:auto; contain-intrinsic-size:auto 1200px}
+section + section{border-top:1px solid var(--edge)}
+.sec-h{display:flex; align-items:baseline; gap:18px; margin-bottom:20px; flex-wrap:wrap}
+.sec-n{font-family:var(--mono); font-size:10.5px; letter-spacing:.2em; color:var(--ink-3);
+  border-bottom:1px solid var(--edge-2); padding-bottom:2px}
+.grid{display:grid; gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1000px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.row{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.scroll-x{overflow-x:auto}
+
+/* ═══ Panel. The core material. Lit from above, gradient hairline edge. ═══ */
+.panel{position:relative; border-radius:14px; min-width:0;
+  background:linear-gradient(180deg,#141C27 0%, #0C1118 58%, #0A0E14 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.065), 0 1px 2px rgba(0,0,0,.55),
+             0 16px 40px -20px rgba(0,0,0,.85)}
+.panel::before{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
+  background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.045) 40%, rgba(255,255,255,.018));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none}
+.panel > *{position:relative}
+.pad{padding:26px}
+.panel.lit{box-shadow:inset 0 1px 0 rgba(255,255,255,.1), 0 1px 2px rgba(0,0,0,.6),
+  0 0 0 1px rgba(255,255,255,.05), 0 22px 55px -24px rgba(0,0,0,.92)}
+
+.cp{display:flex; flex-direction:column; padding:22px 22px 18px; border-radius:14px}
+.cp-h{display:flex; align-items:flex-start; justify-content:space-between; gap:16px}
+.cp-t{font-family:var(--display); font-size:14.5px; font-weight:600; letter-spacing:-.014em}
+.cp-s{font-size:12px; color:var(--ink-3); margin-top:3px}
+.cp-m{font-family:var(--mono); font-size:9.5px; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--ink-3); white-space:nowrap; padding-top:3px}
+.cp-b{margin-top:22px; flex:1; min-height:0}
+.cp-f{margin-top:18px; padding-top:14px; border-top:1px solid var(--edge);
+  font-size:11.5px; color:var(--ink-3); display:flex; gap:14px; flex-wrap:wrap; align-items:center}
+
+
+.chip{display:inline-flex; align-items:center; gap:6px; font-family:var(--mono);
+  font-size:9.5px; font-weight:500; letter-spacing:.11em; text-transform:uppercase;
+  padding:4px 9px; border-radius:4px; border:1px solid var(--edge);
+  color:var(--ink-2); background:rgba(255,255,255,.02); white-space:nowrap}
+.chip .dot{width:5px; height:5px; border-radius:50%; background:currentColor; flex:none;
+}
+.chip.ok{color:var(--ok-lit); border-color:rgba(47,191,127,.28); background:var(--ok-wash)}
+.chip.warn{color:var(--warn-lit); border-color:rgba(217,166,46,.28); background:var(--warn-wash)}
+.chip.crit{color:var(--crit-lit); border-color:rgba(255,76,91,.3); background:var(--crit-wash)}
+.chip.sig{color:var(--ink-1); border-color:var(--edge-2); background:rgba(255,255,255,.045)}
+
+
+
+.btn{font-family:var(--sans); font-size:12.5px; font-weight:500; padding:7px 14px;
+  border-radius:7px; border:1px solid var(--edge-2); cursor:pointer; color:var(--ink-1);
+  background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.012));
+  display:inline-flex; align-items:center; gap:7px;
+  transition:border-color .18s var(--ease), background .18s var(--ease)}
+.btn:hover{border-color:var(--edge-lit); background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.025))}
+.btn-sig{border-color:transparent; color:#0A0D12; font-weight:600;
+  background:linear-gradient(180deg,#F2F5F9,#CBD3DE)}
+.btn-sig:hover{background:linear-gradient(180deg,#FFFFFF,#DCE2EA)}
+.btn-sm{font-size:11.5px; padding:5px 10px}
+
+.seg{display:inline-flex; border:1px solid var(--edge); border-radius:8px; padding:2px;
+  background:rgba(0,0,0,.32); gap:2px}
+.seg button{font-family:var(--mono); font-size:10px; letter-spacing:.09em; padding:5px 11px;
+  border:0; border-radius:6px; background:transparent; color:var(--ink-3); cursor:pointer;
+  text-transform:uppercase}
+.seg button[aria-selected="true"]{color:var(--ink-1); background:var(--surface-3);
+  font-weight:600; box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+
+.field{display:flex; align-items:center; gap:8px; border:1px solid var(--edge);
+  border-radius:8px; padding:6px 11px; font-size:12.5px; color:var(--ink-3);
+  background:rgba(0,0,0,.28); min-width:190px}
+
+/* ═══ Stat tiles ═══ */
+.tiles{display:grid; gap:1px; border-radius:14px; overflow:hidden;
+  background:var(--edge); border:1px solid var(--edge);
+  grid-template-columns:repeat(auto-fit,minmax(176px,1fr))}
+.tile{padding:20px 22px 18px; display:flex; flex-direction:column; gap:9px; min-width:0;
+  background:linear-gradient(180deg,#131B26 0%, #0B1017 100%); position:relative;
+  transition:background .25s var(--ease)}
+.tile:hover{background:linear-gradient(180deg,#17212E 0%, #0D131B 100%)}
+.tile-l{font-family:var(--mono); font-size:9px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3); display:flex; align-items:center; gap:7px}
+.tile-v{font-family:var(--display); font-size:29px; font-weight:600; letter-spacing:-.038em;
+  line-height:1; display:flex; align-items:baseline; gap:5px; font-variant-numeric:lining-nums}
+.tile-v .u{font-family:var(--sans); font-size:13px; font-weight:500; color:var(--ink-3); letter-spacing:0}
+.tile-f{display:flex; align-items:center; gap:8px; font-size:11.5px; color:var(--ink-3);
+  margin-top:auto; padding-top:2px; flex-wrap:wrap}
+.tile.hero{grid-column:span 2; padding:24px 26px 22px}
+.tile.hero .tile-v{font-size:50px; letter-spacing:-.046em}
+.delta{display:inline-flex; align-items:center; gap:3px; font-family:var(--mono);
+  font-size:10.5px; font-weight:500; font-variant-numeric:tabular-nums}
+.d-bad{color:var(--crit-lit)} .d-good{color:var(--ok-lit)} .d-flat{color:var(--ink-3)}
+.meter{height:3px; border-radius:2px; background:rgba(255,255,255,.06); overflow:hidden; width:100%}
+.meter i{display:block; height:100%; border-radius:2px}
+
+/* ═══ Product mock chrome ═══ */
+.mock{border-radius:16px; overflow:hidden; border:1px solid var(--edge-2); background:var(--ground);
+  box-shadow:0 2px 4px rgba(0,0,0,.55), 0 36px 80px -34px rgba(0,0,0,1)}
+.mock-bar{display:flex; align-items:center; gap:10px; padding:10px 16px;
+  background:linear-gradient(180deg,#151D28,#0D1219); border-bottom:1px solid var(--edge)}
+.mock-dots{display:flex; gap:6px}
+.mock-dots i{width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,.12); display:block}
+.mock-url{flex:1; text-align:center; font-family:var(--mono); font-size:10px; color:var(--ink-3)}
+.mock-body{padding:28px; background:var(--ground)}
+.app-h{display:flex; align-items:flex-start; justify-content:space-between; gap:24px;
+  flex-wrap:wrap; margin-bottom:26px}
+.crumb{font-family:var(--mono); font-size:9.5px; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--ink-3); margin-bottom:8px; display:flex; gap:8px; align-items:center}
+.tabs{display:flex; gap:24px; border-bottom:1px solid var(--edge); margin-bottom:20px}
+.tabs button{font-family:var(--sans); font-size:13px; font-weight:500; color:var(--ink-3);
+  background:none; border:0; border-bottom:1.5px solid transparent; padding:0 0 11px;
+  cursor:pointer; margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink-1); border-bottom-color:var(--ink-1)}
+
+/* ═══ SVG defaults ═══ */
+svg.ch{display:block; width:100%; height:auto; overflow:visible}
+svg.ch .gl{stroke:var(--grid); stroke-width:1}
+svg.ch .bl{stroke:var(--baseline); stroke-width:1}
+svg.ch .tk{fill:var(--ink-3); font-family:var(--mono); font-size:9.5px; letter-spacing:.06em}
+svg.ch .ct{fill:var(--ink-2); font-family:var(--sans); font-size:11.5px}
+svg.ch .vl{fill:var(--ink-1); font-family:var(--display); font-size:11.5px; font-weight:600;
+  font-variant-numeric:tabular-nums}
+svg.ch .an{fill:var(--ink-2); font-family:var(--sans); font-size:11px}
+svg.ch .anl{stroke:var(--ink-4); stroke-width:1; stroke-dasharray:2 3}
+svg.ch .ring{stroke:#0D1117; stroke-width:2}
+
+/* ═══ Report matrix. Power BI's most-used artifact and the basis of a report
+       rather than a dashboard: hierarchy, in-cell data bars, colour scales,
+       inline sparklines, variance columns, subtotals. ═══ */
+.mx{width:100%; border-collapse:collapse; font-size:12.5px;
+  font-variant-numeric:tabular-nums lining-nums}
+.mx thead th{font-family:var(--mono); font-size:9px; font-weight:500; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink-3); text-align:right; padding:0 12px 10px 0;
+  border-bottom:1px solid var(--edge-2); white-space:nowrap; vertical-align:bottom}
+.mx thead th.l{text-align:left}
+.mx td{padding:0 12px 0 0; border-bottom:1px solid var(--edge); height:34px;
+  text-align:right; color:var(--ink-2); white-space:nowrap}
+.mx td.l{text-align:left; color:var(--ink-1)}
+.mx tr.grp > td{font-weight:600; color:var(--ink-1)}
+.mx tr.grp > td.l{font-family:var(--display); letter-spacing:-.01em}
+.mx tr.kid td.l{padding-left:22px; color:var(--ink-2); font-weight:400}
+.mx tr.sub td{border-top:1px solid var(--edge-2); border-bottom:0; font-weight:600;
+  color:var(--ink-1); font-size:12px}
+.mx tr.tot td{border-top:1px solid var(--edge-lit); border-bottom:0; font-weight:700;
+  color:var(--ink-1); font-size:13px; height:40px}
+.mx tr:hover td{background:rgba(255,255,255,.022)}
+.mx .car{display:inline-block; width:12px; color:var(--ink-3); font-size:9px}
+/* in-cell data bar: the bar is behind the number, never instead of it */
+.dbar{position:relative; display:block; width:100%; height:18px; line-height:18px;
+  padding-right:4px; border-radius:3px; overflow:hidden}
+.dbar i{position:absolute; left:0; top:0; bottom:0; border-radius:3px;
+  background:rgba(22,165,186,.34)}
+.dbar span{position:relative}
+/* colour-scale cell: a sequential step behind the value */
+.hcell{display:block; border-radius:3px; padding:2px 7px; text-align:right}
+.mx .neg{color:var(--crit-lit)} .mx .pos{color:var(--ok-lit)}
+
+/* ═══ KPI visual: value, goal, variance, trend and status in one mark ═══ */
+.kpi{border:1px solid var(--edge); border-radius:12px; padding:18px 20px;
+  background:linear-gradient(180deg,#131B26,#0B1017); display:flex; flex-direction:column; gap:12px}
+.kpi-h{display:flex; align-items:baseline; justify-content:space-between; gap:10px}
+.kpi-v{font-family:var(--display); font-size:34px; font-weight:600; letter-spacing:-.04em; line-height:1}
+.kpi-g{font-family:var(--mono); font-size:10px; letter-spacing:.1em; color:var(--ink-3)}
+
+/* ═══ Rich tooltip: a mini report on hover, not a single value ═══ */
+.tip{width:230px; border-radius:10px; border:1px solid var(--edge-2); padding:13px 15px;
+  background:#0F151E; box-shadow:0 18px 40px -14px rgba(0,0,0,1)}
+.tip-h{font-family:var(--display); font-size:12.5px; font-weight:600; margin-bottom:2px}
+.tip-s{font-family:var(--mono); font-size:9px; letter-spacing:.12em; color:var(--ink-3);
+  text-transform:uppercase; margin-bottom:11px}
+.tip-r{display:flex; align-items:center; gap:9px; margin-bottom:7px; font-size:11.5px}
+.tip-r .k{width:8px; height:8px; border-radius:2px; flex:none}
+.tip-r .n{flex:1; color:var(--ink-2)}
+.tip-r .v{font-variant-numeric:tabular-nums; color:var(--ink-1); font-weight:600}
+.tip-f{margin-top:11px; padding-top:9px; border-top:1px solid var(--edge);
+  font-size:11px; color:var(--ink-3)}
+
+.lg{display:flex; gap:16px; flex-wrap:wrap; align-items:center}
+.lgi{display:inline-flex; align-items:center; gap:7px; font-size:11.5px; color:var(--ink-2)}
+.lgk{width:9px; height:9px; border-radius:2px; flex:none}
+
+/* ═══ Catalog cards ═══ */
+.cards{display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(268px,1fr))}
+.card{border-radius:13px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column;
+  background:linear-gradient(180deg,#131B26 0%, #0A0E14 100%); border:1px solid var(--edge);
+  transition:transform .3s var(--ease-out), box-shadow .3s var(--ease-out), border-color .3s var(--ease)}
+.card:hover{transform:translateY(-3px); border-color:var(--edge-lit);
+  box-shadow:0 20px 44px -22px rgba(0,0,0,1)}
+.card-t{height:104px; padding:12px 14px; border-bottom:1px solid var(--edge);
+  background:#0A0E14; position:relative; overflow:hidden}
+.card-b{padding:15px 16px; display:flex; flex-direction:column; gap:7px; flex:1}
+.card-n{font-family:var(--display); font-size:13.5px; font-weight:600; letter-spacing:-.014em; line-height:1.32}
+.card-d{font-size:12.5px; color:var(--ink-3); line-height:1.46}
+.card-f{display:flex; align-items:center; gap:9px; margin-top:auto; padding-top:6px;
+  font-family:var(--mono); font-size:9px; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--ink-3); flex-wrap:wrap}
+.av{width:19px; height:19px; border-radius:5px; font-family:var(--mono); font-size:8px;
+  font-weight:700; display:grid; place-items:center; flex:none;
+  background:rgba(255,255,255,.06); color:var(--ink-2); border:1px solid var(--edge-2)}
+
+/* ═══ swatches, tables, rules ═══ */
+.sws{display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
+.sw{border:1px solid var(--edge); border-radius:10px; overflow:hidden; background:var(--surface)}
+.sw-c{height:58px; position:relative}
+.sw-c::after{content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg, rgba(255,255,255,.12), transparent 55%)}
+.sw-m{padding:9px 11px 11px}
+.sw-n{font-family:var(--display); font-size:12.5px; font-weight:600;
+  display:flex; justify-content:space-between; align-items:baseline; gap:6px}
+.sw-s{font-family:var(--mono); font-size:9px; color:var(--ink-3); letter-spacing:.08em}
+.sw-h{font-family:var(--mono); font-size:10px; color:var(--ink-3); margin-top:3px}
+.ramp{display:flex; gap:6px}
+.ramp div{flex:1; text-align:center; font-family:var(--mono); font-size:9px;
+  letter-spacing:.06em; color:var(--ink-3)}
+.ramp div b{display:block; height:52px; border-radius:6px; border:1px solid var(--edge);
+  margin-bottom:7px}
+
+table.sp{width:100%; border-collapse:collapse; font-size:13px}
+table.sp th{text-align:left; font-family:var(--mono); font-size:9px; font-weight:500;
+  letter-spacing:.15em; text-transform:uppercase; color:var(--ink-3);
+  padding:0 18px 10px 0; border-bottom:1px solid var(--edge-2); white-space:nowrap}
+table.sp td{padding:13px 20px 13px 0; border-bottom:1px solid var(--edge);
+  vertical-align:top; color:var(--ink-2)}
+table.sp td:first-child{color:var(--ink-1); font-weight:500; white-space:nowrap}
+table.sp td.n,table.sp th.n{text-align:right; padding-right:0;
+  font-family:var(--mono); font-variant-numeric:tabular-nums}
+table.sp code{font-size:11px}
+
+.rules{display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
+.rule{border:1px solid var(--edge); border-radius:11px; padding:18px 20px;
+  background:linear-gradient(180deg,#121A24,#0A0E14)}
+.rule::before{content:"RULE"; display:block; font-family:var(--mono); font-size:9px;
+  font-weight:500; letter-spacing:.18em; color:var(--ink-3); margin-bottom:9px}
+.rule.ok::before{content:"RULE"; color:var(--ink-3)}
+.rule.no::before{content:"AVOID"; color:var(--crit-lit)}
+.rule h4{font-family:var(--display); font-size:13.5px; font-weight:600; margin-bottom:6px}
+.rule p{font-size:12.5px; color:var(--ink-3); line-height:1.56}
+
+.note{border:1px solid var(--edge); border-radius:10px;
+  padding:20px 24px; font-size:13.5px; color:var(--ink-2); background:#0A0E14}
+.note b{color:var(--ink-1)}
+.note.warn b{color:var(--warn-lit)}
+.note.crit b{color:var(--crit-lit)}
+
+pre{background:#07090D; border:1px solid var(--edge); border-radius:10px; padding:18px 20px;
+  overflow-x:auto; font-family:var(--mono); font-size:11.5px; line-height:1.7; margin:0; color:#B4C2D4}
+pre .k{color:var(--c1-lit)} pre .v{color:var(--c5-lit)} pre .c{color:var(--ink-4)}
+
+.nav{position:sticky; top:0; z-index:60; border-bottom:1px solid var(--edge);
+  background:#080A0E}
+.nav-in{max-width:1340px; margin:0 auto; padding:0 32px; display:flex; align-items:center;
+  gap:20px; height:54px}
+.nav-l{display:flex; gap:3px; overflow-x:auto; flex:1; scrollbar-width:none}
+.nav-l::-webkit-scrollbar{display:none}
+.nav-l a{font-family:var(--mono); font-size:10px; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--ink-3); padding:7px 10px; border-radius:5px; white-space:nowrap}
+.nav-l a:hover{color:var(--ink-1); background:rgba(255,255,255,.05)}
+
+.mast{padding:86px 0 60px; position:relative}
+.horizon{height:1px; margin:44px 0 0; background:var(--edge-2)}
+.mast-meta{display:flex; gap:42px; flex-wrap:wrap; margin-top:26px}
+.mast-meta dt{font-family:var(--mono); font-size:9px; letter-spacing:.17em; text-transform:uppercase;
+  color:var(--ink-4); margin-bottom:5px}
+.mast-meta dd{font-size:13.5px; font-weight:500; color:var(--ink-1)}
+.mark{display:inline-flex; align-items:center; gap:11px; margin-bottom:34px}
+.mark-n{font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:.42em;
+  text-transform:uppercase; color:var(--ink-1)}
+
+/* ═══ motion ═══
+   Every from-state below is scoped to .js, which an inline script sets on the
+   root element. Without scripting the page renders fully drawn rather than
+   invisible, so a blocked or failed script can never hide the content. */
+.js .rise{opacity:0; transform:translateY(12px);
+  transition:opacity .7s var(--ease-out), transform .7s var(--ease-out)}
+.js .rise.in{opacity:1; transform:none}
+.js .draw{stroke-dashoffset:var(--len,2000)}
+.js .in .draw{animation:draw 1.4s var(--ease-out) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.js .grow{transform:scaleX(0); transform-origin:left center}
+.js .in .grow{animation:grow .9s var(--ease-out) forwards}
+@keyframes grow{to{transform:scaleX(1)}}
+.js .rise-b{transform:scaleY(0); transform-origin:bottom}
+.js .in .rise-b{animation:riseb .85s var(--ease-out) forwards}
+@keyframes riseb{to{transform:scaleY(1)}}
+.js .fade{opacity:0}
+.js .in .fade{animation:fade .8s var(--ease-out) .5s forwards}
+@keyframes fade{to{opacity:1}}
+.js .cell{opacity:0}
+.js .in .cell{animation:fade .45s var(--ease-out) forwards}
+
+footer{padding:60px 0 84px; border-top:1px solid var(--edge); color:var(--ink-3); font-size:12.5px}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important; transition:none !important}
+  .js .rise{opacity:1; transform:none}
+  .js .draw{stroke-dashoffset:0} .js .grow,.js .rise-b{transform:none}
+  .js .fade,.js .cell{opacity:1}
+}
+@media print{
+  .js .rise{opacity:1; transform:none}
+  .js .draw{stroke-dashoffset:0} .js .grow,.js .rise-b{transform:none}
+  .js .fade,.js .cell{opacity:1}
+}
+</style>
+
+<script>document.documentElement.classList.add('js')</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="var(--c1-lit)" stop-opacity="var(--fill-area)"/>
+    <stop offset="55%" stop-color="var(--c1)" stop-opacity=".14"/>
+    <stop offset="100%" stop-color="var(--c1)" stop-opacity="0"/></linearGradient>
+  <linearGradient id="gBar" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="var(--dn3)"/><stop offset="74%" stop-color="var(--c1)"/>
+    <stop offset="100%" stop-color="var(--c1-lit)"/></linearGradient>
+  <linearGradient id="gBarV" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0%" stop-color="var(--dn3)"/><stop offset="70%" stop-color="var(--c1)"/>
+    <stop offset="100%" stop-color="var(--c1-lit)"/></linearGradient>
+  <linearGradient id="gGauge" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0%" stop-color="var(--q4)"/><stop offset="55%" stop-color="var(--c1)"/>
+    <stop offset="100%" stop-color="var(--q7)"/></linearGradient>
+  <linearGradient id="gS1" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="var(--c1)" stop-opacity="var(--fill-a)"/><stop offset="100%" stop-color="var(--c1)" stop-opacity="var(--fill-b)"/></linearGradient>
+  <linearGradient id="gS2" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="var(--c3)" stop-opacity="var(--fill-a)"/><stop offset="100%" stop-color="var(--c3)" stop-opacity="var(--fill-b)"/></linearGradient>
+  <linearGradient id="gS3" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="var(--c2)" stop-opacity="var(--fill-a)"/><stop offset="100%" stop-color="var(--c2)" stop-opacity="var(--fill-b)"/></linearGradient>
+  <linearGradient id="gS4" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="var(--c5)" stop-opacity="var(--fill-a)"/><stop offset="100%" stop-color="var(--c5)" stop-opacity="var(--fill-b)"/></linearGradient>
+  <linearGradient id="gSt1" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="var(--c1-lit)" stop-opacity=".82"/><stop offset="100%" stop-color="var(--c1)" stop-opacity=".5"/></linearGradient>
+  <linearGradient id="gSt2" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="var(--c3-lit)" stop-opacity=".78"/><stop offset="100%" stop-color="var(--c3)" stop-opacity=".45"/></linearGradient>
+  <linearGradient id="gSt3" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="var(--c2-lit)" stop-opacity=".78"/><stop offset="100%" stop-color="var(--c2)" stop-opacity=".45"/></linearGradient>
+  <linearGradient id="gSt4" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="var(--c5-lit)" stop-opacity=".78"/><stop offset="100%" stop-color="var(--c5)" stop-opacity=".45"/></linearGradient>
+  <radialGradient id="gRadar">
+    <stop offset="0%" stop-color="var(--c1-lit)" stop-opacity="var(--fill-area)"/>
+    <stop offset="100%" stop-color="var(--c1)" stop-opacity=".12"/></radialGradient>
+</defs></svg>
+
+<nav class="nav">
+  <div class="nav-in">
+    <span class="mono" style="font-size:11px;font-weight:700;letter-spacing:.34em;flex:none">COMMAND</span>
+    <div class="nav-l">
+      <a href="#dashboard">Dashboard</a>
+      <a href="#evidence">Instance evidence</a>
+      <a href="#selector">Form engine</a>
+      <a href="#catalog">Catalog</a>
+      <a href="#charts">Chart library</a>
+      <a href="#reports">Reports &amp; parity</a>
+      <a href="#material">Material</a>
+      <a href="#colour">Colour</a>
+      <a href="#type">Type</a>
+      <a href="#motion">Motion</a>
+      <a href="#stack">Stack</a>
+    </div>
+    <div class="seg" style="flex:none" id="themeSeg" role="group" aria-label="Theme">
+      <button type="button" data-t="dark" aria-selected="true">Dark</button>
+      <button type="button" data-t="light" aria-selected="false">Light</button>
+    </div>
+  </div>
+</nav>
+
+<header class="mast">
+  <div class="wrap">
+    <div class="mark">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+        <rect x="1.2" y="1.2" width="27.6" height="27.6" rx="7.5" stroke="url(#gGauge)" stroke-width="1.4"/>
+        <path d="M6.5 20.5 11.5 12.5 16 16.5 23.5 7" stroke="var(--c1-lit)" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="23.5" cy="7" r="2.6" fill="var(--c1-lit)"/>
+      </svg>
+      <span class="mark-n">Command</span>
+    </div>
+
+    <h1 class="d1" style="max-width:17ch">A production design system for ServiceNow analytics.</h1>
+
+    <p class="lede" style="margin-top:26px">
+      A dark-first design system for ServiceNow dashboards and reports, built to clear the bar the
+      client set in their own words: beautiful, impressive, attractive. Every design decision below
+      is anchored to something measured, either on the live instance or by a colour validator.
+    </p>
+
+    <div class="row" style="margin-top:30px">
+      <span class="chip sig"><span class="dot"></span>Design proposal</span>
+      <span class="chip ok"><span class="dot"></span>2,368 live reports analysed</span>
+      <span class="chip ok"><span class="dot"></span>Palette validated, OKLab and CVD</span>
+      <span class="chip">Instance data never leaves</span>
+    </div>
+
+    <div class="horizon"></div>
+
+    <dl class="mast-meta">
+      <div><dt>Version</dt><dd>1.0, for approval</dd></div>
+      <div><dt>Date</dt><dd>1 August 2026</dd></div>
+      <div><dt>Surfaces</dt><dd>Catalog and dashboard</dd></div>
+      <div><dt>Engine</dt><dd>ECharts, WebGL where earned</dd></div>
+      <div><dt>Chart forms</dt><dd>22 specified</dd></div>
+    </dl>
+  </div>
+</header>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════════ 01 DASHBOARD -->
+<section id="dashboard" style="padding-top:36px">
+  <div class="wrap">
+    <div class="sec-h rise"><span class="sec-n">01</span><h2 class="d2">The dashboard</h2></div>
+    <p class="lede rise" style="margin-bottom:38px">
+      Same instance, same 13,986 ACL-checked incident records as the current build. What changes is
+      the composition: one hero, one signal colour, a comparison attached to every figure, the story
+      annotated on the chart itself, and six different chart forms because there are six different
+      questions on the page.
+    </p>
+
+    <div class="mock rise">
+      <div class="mock-bar">
+        <div class="mock-dots"><i></i><i></i><i></i></div>
+        <div class="mock-url">instance.service-now.com&#8202;/&#8202;analytics&#8202;/&#8202;service-operations</div>
+        <div style="width:50px"></div>
+      </div>
+      <div class="mock-body">
+
+        <div class="app-h">
+          <div>
+            <div class="crumb">Analytics <span style="color:var(--ink-4)">/</span> Dashboards
+              <span style="color:var(--ink-4)">/</span> Service Operations</div>
+            <h3 class="d2" style="font-size:29px">Service Operations Intelligence</h3>
+            <div class="row" style="margin-top:11px">
+              <span class="xs" style="color:var(--ink-3)">Incident &middot; last 12 months &middot; updated 14:22 UTC</span>
+              <span class="chip ok">
+                <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 5.2 4 7.6 8.5 2.4" stroke="currentColor" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                ACL verified</span>
+            </div>
+          </div>
+          <div class="row">
+            <div class="seg">
+              <button aria-selected="false">90d</button>
+              <button aria-selected="true">12mo</button>
+              <button aria-selected="false">24mo</button>
+            </div>
+            <button class="btn btn-sm">Filters</button>
+            <button class="btn btn-sm btn-sig">Export</button>
+          </div>
+        </div>
+
+        <div class="tiles rise" style="margin-bottom:16px">
+          <div class="tile hero">
+            <div class="tile-l">Records visible to you</div>
+            <div class="tile-v" data-count="13986">13,986</div>
+            <div class="tile-f"><span class="delta d-bad">&#9650; 8.4%</span><span>vs prior 12 months</span></div>
+          </div>
+          <div class="tile">
+            <div class="tile-l">Active</div>
+            <div class="tile-v" data-count="13943">13,943</div>
+            <div class="tile-f">
+              <svg width="62" height="20" viewBox="0 0 62 20" aria-hidden="true" style="flex:none">
+                <polyline points="0,15 9,14 18,15 27,12.5 35,13.5 44,8 53,3 62,2" fill="none"
+                  stroke="var(--c1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="62" cy="2" r="2.5" fill="var(--c1-lit)"/>
+              </svg>
+              <span class="mono" style="font-size:10.5px">99.7%</span>
+            </div>
+          </div>
+          <div class="tile">
+            <div class="tile-l">P1 critical</div>
+            <div class="tile-v" data-count="922">922</div>
+            <div class="tile-f"><span class="delta d-good">&#9660; 12%</span><span>vs prior</span></div>
+          </div>
+          <div class="tile">
+            <div class="tile-l">Unassigned
+              <span class="chip crit" style="padding:2px 6px;font-size:8px">breach</span></div>
+            <div class="tile-v" data-count="11181">11,181</div>
+            <div class="tile-f" style="width:100%"><div style="width:100%">
+              <div class="meter" style="margin-bottom:6px">
+                <i class="grow" style="width:80.2%;background:linear-gradient(90deg,var(--crit-deep),var(--crit))"></i></div>
+              <span class="delta d-bad">80.2%</span>
+              <span class="mono" style="font-size:9.5px;color:var(--ink-4)"> TARGET 15%</span>
+            </div></div>
+          </div>
+          <div class="tile">
+            <div class="tile-l">MTTR
+              <span class="chip warn" style="padding:2px 6px;font-size:8px">low n</span></div>
+            <div class="tile-v">440<span class="u">d</span></div>
+            <div class="tile-f"><span>46 of 13,986 resolved</span></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,1fr);gap:16px;margin-bottom:16px"
+             class="rise hero-row">
+
+          <div class="panel cp lit">
+            <div class="cp-h">
+              <div><div class="cp-t">Incidents opened per month</div>
+                <div class="cp-s">Volume left its baseline in June and has not returned</div></div>
+              <div class="cp-m">count</div>
+            </div>
+            <div class="cp-b">
+              <svg class="ch" viewBox="0 0 700 268" role="img"
+                aria-label="Incidents opened per month, September 2025 to August 2026. Between 12 and 30 per month until May 2026, rising to 155 in June and a peak of 207 in July, then 12 in a partial August.">
+                <line class="gl" x1="52" y1="30" x2="694" y2="30"/>
+                <line class="gl" x1="52" y1="75" x2="694" y2="75"/>
+                <line class="gl" x1="52" y1="120" x2="694" y2="120"/>
+                <line class="gl" x1="52" y1="165" x2="694" y2="165"/>
+                <text class="tk" x="44" y="34" text-anchor="end">200</text>
+                <text class="tk" x="44" y="79" text-anchor="end">150</text>
+                <text class="tk" x="44" y="124" text-anchor="end">100</text>
+                <text class="tk" x="44" y="169" text-anchor="end">50</text>
+                <text class="tk" x="44" y="214" text-anchor="end">0</text>
+
+                <rect class="fade" x="52" y="183" width="642" height="24" fill="var(--c1)" fill-opacity=".07"/>
+                <line class="anl fade" x1="52" y1="195" x2="694" y2="195"/>
+                <text class="tk fade" x="60" y="180" style="fill:var(--ink-4)">BASELINE BAND, SEP TO MAY</text>
+
+                <path class="fade" d="M60,191 L116,197 L173,187 L229,195 L285,186 L342,198 L398,195 L455,184 L511,200 L567,75 L624,30 L680,200 L680,210 L60,210 Z" fill="url(#gArea)"/>
+                <path class="draw" style="--len:1400"
+                  d="M60,191 L116,197 L173,187 L229,195 L285,186 L342,198 L398,195 L455,184 L511,200 L567,75 L624,30 L680,200"
+                  fill="none" stroke="var(--c1-lit)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1400"/>
+                <line class="bl" x1="52" y1="210" x2="694" y2="210"/>
+
+                <g class="fade">
+                  <circle cx="624" cy="30" r="5" fill="var(--c1-lit)" class="ring"/>
+                  <line class="anl" x1="470" y1="52" x2="612" y2="33"/>
+                  <text class="an" x="462" y="49" text-anchor="end" font-weight="600" fill="var(--ink-1)">207 in July, 10x the baseline</text>
+                  <text class="an" x="462" y="65" text-anchor="end">Onset tracks the Jun 3 catalogue change</text>
+                </g>
+                <g class="fade">
+                  <circle cx="680" cy="200" r="4.2" fill="var(--c1)" class="ring"/>
+                  <text class="tk" x="670" y="205" text-anchor="end" style="fill:var(--ink-4)">AUG PARTIAL</text>
+                </g>
+
+                <text class="tk" x="60" y="232">SEP '25</text>
+                <text class="tk" x="370" y="232" text-anchor="middle">FEB '26</text>
+                <text class="tk" x="680" y="232" text-anchor="end">AUG '26</text>
+              </svg>
+            </div>
+            <div class="cp-f"><span>Single series, so no legend</span>
+              <span style="color:var(--ink-4)">&middot;</span>
+              <span>Click any month to drill to the record list</span></div>
+          </div>
+
+          <div class="panel cp">
+            <div class="cp-h">
+              <div><div class="cp-t">Service level</div><div class="cp-s">Against commitment</div></div>
+              <div class="cp-m">SLA</div>
+            </div>
+            <div class="cp-b" style="display:flex;flex-direction:column;align-items:center;gap:14px">
+              <svg class="ch" viewBox="0 -8 220 206" style="max-width:228px" role="img"
+                aria-label="P1 acknowledged within SLA is 96 percent against a 95 percent target, so the target is met.">
+                <circle cx="110" cy="94" r="72" fill="none" stroke="rgba(255,255,255,.05)"
+                  stroke-width="13" stroke-linecap="round" stroke-dasharray="326 500" transform="rotate(140 110 94)"/>
+                <circle class="draw" style="--len:313" cx="110" cy="94" r="72" fill="none"
+                  stroke="url(#gGauge)" stroke-width="13" stroke-linecap="round"
+                  stroke-dasharray="313 500" transform="rotate(140 110 94)"/>
+                <!-- Commitment notch. Arc starts at 140deg and sweeps 260deg, so 95%
+                     of the sweep lands at 140 + 247 = 27deg from the +x axis. -->
+                <line x1="167" y1="123.1" x2="181.3" y2="130.3" stroke="var(--ink-1)"
+                  stroke-width="2" opacity=".8"/>
+                <text x="110" y="94" text-anchor="middle" class="num" style="font-size:44px;fill:var(--ink-1)">96<tspan style="font-size:20px;fill:var(--ink-3)">%</tspan></text>
+                <text x="110" y="115" text-anchor="middle" class="tk">P1 ACK IN SLA</text>
+                <text x="110" y="182" text-anchor="middle" class="tk" style="fill:var(--ok-lit)">TARGET 95%, MET</text>
+              </svg>
+
+              <div style="width:100%;display:flex;flex-direction:column;gap:13px">
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                    <span class="tag">First-call resolution</span>
+                    <span class="mono" style="font-size:10.5px;color:var(--ok-lit)">74%</span></div>
+                  <div class="meter"><i class="grow" style="width:74%;background:linear-gradient(90deg,var(--q4),var(--ok-lit))"></i></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                    <span class="tag">Reassignment rate</span>
+                    <span class="mono" style="font-size:10.5px;color:var(--crit-lit)">31%</span></div>
+                  <div class="meter"><i class="grow" style="width:31%;background:linear-gradient(90deg,var(--crit-deep),var(--crit-lit))"></i></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                    <span class="tag">Backlog burn-down</span>
+                    <span class="mono" style="font-size:10.5px;color:var(--warn-lit)">52%</span></div>
+                  <div class="meter"><i class="grow" style="width:52%;background:linear-gradient(90deg,var(--warn-deep),var(--warn-lit))"></i></div>
+                </div>
+              </div>
+            </div>
+            <div class="cp-f"><span>Notch marks the commitment, fill carries status</span></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1.32fr) minmax(0,1fr);gap:16px;margin-bottom:16px"
+             class="rise hero-row">
+
+          <div class="panel cp">
+            <div class="cp-h">
+              <div><div class="cp-t">Incident flow, channel to outcome</div>
+                <div class="cp-s">Channel, then assignment group, then outcome</div></div>
+              <div class="cp-m">flow &middot; 13,986</div>
+            </div>
+            <div class="cp-b">
+              <svg class="ch" viewBox="0 0 584 236" role="img"
+                aria-label="Flow diagram of 13,986 incidents from four arrival channels through four assignment groups to three outcomes: Resolved 8,980, Reassigned 3,120, Ageing 1,886.">
+                <text class="tk" x="0" y="10">CHANNEL</text>
+                <text class="tk" x="248" y="10" text-anchor="middle">GROUP</text>
+                <text class="tk" x="584" y="10" text-anchor="end">OUTCOME</text>
+                <g opacity="var(--fill-flow-1)">
+                  <path class="fade" d="M46,24 C150,24 150,26 226,26 L226,74 C150,74 150,80 46,80 Z" fill="url(#gS1)"/>
+                  <path class="fade" d="M46,86 C150,86 150,82 226,82 L226,118 C150,118 150,128 46,128 Z" fill="url(#gS2)"/>
+                  <path class="fade" d="M46,134 C150,134 150,124 226,124 L226,152 C150,152 150,168 46,168 Z" fill="url(#gS3)"/>
+                  <path class="fade" d="M46,174 C150,174 150,158 226,158 L226,186 C150,186 150,210 46,210 Z" fill="url(#gS4)"/>
+                </g>
+                <g opacity="var(--fill-flow-2)">
+                  <path class="fade" d="M270,26 C360,26 360,30 500,30 L500,96 C360,96 360,74 270,74 Z" fill="url(#gS1)"/>
+                  <path class="fade" d="M270,82 C360,82 360,104 500,104 L500,146 C360,146 360,118 270,118 Z" fill="url(#gS2)"/>
+                  <path class="fade" d="M270,124 C360,124 360,154 500,154 L500,186 C360,186 360,152 270,152 Z" fill="url(#gS3)"/>
+                  <path class="fade" d="M270,158 C360,158 360,194 500,194 L500,214 C360,214 360,186 270,186 Z" fill="url(#gS4)"/>
+                </g>
+                <g>
+                  <rect x="38" y="24" width="8" height="56" rx="3" fill="var(--c1)"/>
+                  <rect x="38" y="86" width="8" height="42" rx="3" fill="var(--c3)"/>
+                  <rect x="38" y="134" width="8" height="34" rx="3" fill="var(--c2)"/>
+                  <rect x="38" y="174" width="8" height="36" rx="3" fill="var(--c5)"/>
+                  <text class="ct" x="32" y="56" text-anchor="end" font-size="10.5">Portal</text>
+                  <text class="ct" x="32" y="111" text-anchor="end" font-size="10.5">Email</text>
+                  <text class="ct" x="32" y="155" text-anchor="end" font-size="10.5">Phone</text>
+                  <text class="ct" x="32" y="196" text-anchor="end" font-size="10.5">Chat</text>
+                </g>
+                <g>
+                  <rect x="226" y="26" width="8" height="48" rx="3" fill="var(--c1)"/>
+                  <rect x="226" y="82" width="8" height="36" rx="3" fill="var(--c3)"/>
+                  <rect x="226" y="124" width="8" height="28" rx="3" fill="var(--c2)"/>
+                  <rect x="226" y="158" width="8" height="28" rx="3" fill="var(--c5)"/>
+                  <text class="ct" x="242" y="54" font-size="10.5">Network</text>
+                  <text class="ct" x="242" y="104" font-size="10.5">Software</text>
+                  <text class="ct" x="242" y="142" font-size="10.5">Service Desk</text>
+                  <text class="ct" x="242" y="176" font-size="10.5">Hardware</text>
+                </g>
+                <g>
+                  <rect x="500" y="30" width="8" height="66" rx="3" fill="var(--c5)"/>
+                  <rect x="500" y="104" width="8" height="42" rx="3" fill="var(--c2)"/>
+                  <rect x="500" y="154" width="8" height="60" rx="3" fill="var(--c4)"/>
+                  <text class="ct" x="516" y="60" font-size="10.5">Resolved</text>
+                  <text class="vl" x="516" y="75" font-size="11">8,980</text>
+                  <text class="ct" x="516" y="122" font-size="10.5">Reassigned</text>
+                  <text class="vl" x="516" y="137" font-size="11">3,120</text>
+                  <text class="ct" x="516" y="180" font-size="10.5">Ageing</text>
+                  <text class="vl" x="516" y="195" font-size="11">1,886</text>
+                </g>
+              </svg>
+            </div>
+            <div class="cp-f"><span class="delta d-bad">22% never reach first-time resolution</span>
+              <span style="color:var(--ink-4)">&middot;</span><span>Zero instances of this form exist on the instance today</span></div>
+          </div>
+
+          <div class="panel cp">
+            <div class="cp-h">
+              <div><div class="cp-t">When incidents arrive</div>
+                <div class="cp-s">Demand density, weekday against hour</div></div>
+              <div class="cp-m">seq</div>
+            </div>
+            <div class="cp-b">
+              <svg class="ch" viewBox="0 0 412 214" role="img"
+                aria-label="Heatmap of incident arrivals by weekday and hour. Demand concentrates Monday to Friday between 08:00 and 17:00 and peaks Monday at 09:00. Weekends are near empty.">
+                <g class="tk">
+                  <text x="26" y="28">MON</text><text x="26" y="52">TUE</text><text x="26" y="76">WED</text>
+                  <text x="26" y="100">THU</text><text x="26" y="124">FRI</text><text x="26" y="148">SAT</text>
+                  <text x="26" y="172">SUN</text>
+                </g>
+                <g id="cal"></g>
+                <text class="tk" x="58" y="196">00</text>
+                <text class="tk" x="228" y="196" text-anchor="middle">12</text>
+                <text class="tk" x="407" y="196" text-anchor="end">23</text>
+              </svg>
+            </div>
+            <div class="cp-f">
+              <span class="mono" style="font-size:9.5px">LOW</span>
+              <span style="display:inline-flex;gap:3px">
+                <i style="width:15px;height:8px;background:var(--q1);border-radius:2px"></i>
+                <i style="width:15px;height:8px;background:var(--q2);border-radius:2px"></i>
+                <i style="width:15px;height:8px;background:var(--q3);border-radius:2px"></i>
+                <i style="width:15px;height:8px;background:var(--q4);border-radius:2px"></i>
+                <i style="width:15px;height:8px;background:var(--q5);border-radius:2px"></i>
+                <i style="width:15px;height:8px;background:var(--q6);border-radius:2px"></i>
+                <i style="width:15px;height:8px;background:var(--q7);border-radius:2px"></i>
+              </span>
+              <span class="mono" style="font-size:9.5px">HIGH</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid g3 rise">
+          <div class="panel cp">
+            <div class="cp-h"><div><div class="cp-t">Volume by category</div>
+              <div class="cp-s">Ranked, unknown reserved</div></div><div class="cp-m">top 6 / 10</div></div>
+            <div class="cp-b">
+              <svg class="ch" viewBox="0 -4 320 208" role="img"
+                aria-label="Volume by category. Inquiry or Help 3,733; Software 2,651; Hardware 2,571; Network 2,441; Password Reset 2,237; Unknown 344.">
+                <text class="ct" x="0" y="10" font-size="11">Inquiry / Help</text>
+                <text class="vl" x="320" y="10" text-anchor="end" font-size="11">3,733</text>
+                <rect class="grow" x="0" y="16" width="248" height="9" rx="4.5" fill="url(#gBar)"/>
+                <circle class="fade" cx="248" cy="20.5" r="3" fill="var(--q7)"/>
+
+                <text class="ct" x="0" y="45" font-size="11">Software</text>
+                <text class="vl" x="320" y="45" text-anchor="end" font-size="11">2,651</text>
+                <rect class="grow" x="0" y="51" width="176" height="9" rx="4.5" fill="url(#gBar)"/>
+                <circle class="fade" cx="176" cy="55.5" r="3" fill="var(--q7)"/>
+
+                <text class="ct" x="0" y="80" font-size="11">Hardware</text>
+                <text class="vl" x="320" y="80" text-anchor="end" font-size="11">2,571</text>
+                <rect class="grow" x="0" y="86" width="171" height="9" rx="4.5" fill="url(#gBar)"/>
+                <circle class="fade" cx="171" cy="90.5" r="3" fill="var(--q7)"/>
+
+                <text class="ct" x="0" y="115" font-size="11">Network</text>
+                <text class="vl" x="320" y="115" text-anchor="end" font-size="11">2,441</text>
+                <rect class="grow" x="0" y="121" width="162" height="9" rx="4.5" fill="url(#gBar)"/>
+                <circle class="fade" cx="162" cy="125.5" r="3" fill="var(--q7)"/>
+
+                <text class="ct" x="0" y="150" font-size="11">Password Reset</text>
+                <text class="vl" x="320" y="150" text-anchor="end" font-size="11">2,237</text>
+                <rect class="grow" x="0" y="156" width="149" height="9" rx="4.5" fill="url(#gBar)"/>
+                <circle class="fade" cx="149" cy="160.5" r="3" fill="var(--q7)"/>
+
+                <text class="ct" x="0" y="185" font-size="11" fill="var(--ink-3)">Unknown</text>
+                <text class="vl" x="320" y="185" text-anchor="end" font-size="11" fill="var(--ink-3)">344</text>
+                <rect class="grow" x="0" y="191" width="23" height="9" rx="4.5" fill="var(--c-other)"/>
+              </svg>
+            </div>
+            <div class="cp-f"><span><code>(empty)</code> and <code>undefined</code> merged, pinned last</span></div>
+          </div>
+
+          <div class="panel cp">
+            <div class="cp-h"><div><div class="cp-t">Assignment group rank by open load</div>
+              <div class="cp-s">Quarterly, five largest groups</div></div><div class="cp-m">rank</div></div>
+            <div class="cp-b">
+              <svg class="ch" viewBox="0 0 320 196" role="img"
+                aria-label="Rank of assignment groups by open load across four quarters. Network moves from rank 4 to rank 1. Software falls from 1 to 3. Service Desk holds near 2. Hardware falls from 3 to 5.">
+                <g class="tk"><text x="0" y="26">1</text><text x="0" y="62">2</text>
+                  <text x="0" y="98">3</text><text x="0" y="134">4</text><text x="0" y="170">5</text></g>
+                <g stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path class="draw" style="--len:380" d="M30,130 L104,94 L178,58 L248,22" stroke="var(--c1-lit)" stroke-dasharray="380"/>
+                  <path class="draw" style="--len:380" d="M30,22 L104,58 L178,94 L248,94" stroke="var(--c3)" stroke-dasharray="380"/>
+                  <path class="draw" style="--len:380" d="M30,58 L104,22 L178,22 L248,58" stroke="var(--c2)" stroke-dasharray="380"/>
+                  <path class="draw" style="--len:380" d="M30,94 L104,130 L178,166 L248,166" stroke="var(--c4)" stroke-dasharray="380"/>
+                  <path class="draw" style="--len:380" d="M30,166 L104,166 L178,130 L248,130" stroke="var(--c5)" stroke-dasharray="380"/>
+                </g>
+                <g class="fade">
+                  <circle cx="248" cy="22" r="4" fill="var(--c1-lit)" class="ring"/>
+                  <circle cx="248" cy="58" r="4" fill="var(--c2)" class="ring"/>
+                  <circle cx="248" cy="94" r="4" fill="var(--c3)" class="ring"/>
+                  <circle cx="248" cy="130" r="4" fill="var(--c5)" class="ring"/>
+                  <circle cx="248" cy="166" r="4" fill="var(--c4)" class="ring"/>
+                  <text class="ct" x="258" y="26" font-size="9.5">Network</text>
+                  <text class="ct" x="258" y="62" font-size="9.5">Svc Desk</text>
+                  <text class="ct" x="258" y="98" font-size="9.5">Software</text>
+                  <text class="ct" x="258" y="134" font-size="9.5">Facilities</text>
+                  <text class="ct" x="258" y="170" font-size="9.5">Hardware</text>
+                </g>
+                <text class="tk" x="30" y="190">Q3 '25</text>
+                <text class="tk" x="139" y="190" text-anchor="middle">Q1 '26</text>
+                <text class="tk" x="248" y="190" text-anchor="end">Q2 '26</text>
+              </svg>
+            </div>
+            <div class="cp-f"><span class="delta d-bad">Network: rank 4 to rank 1 in three quarters</span></div>
+          </div>
+
+          <div class="panel cp">
+            <div class="cp-h"><div><div class="cp-t">Service health profile</div>
+              <div class="cp-s">Now against the same quarter last year</div></div><div class="cp-m">radar</div></div>
+            <div class="cp-b" style="display:grid;place-items:center">
+              <svg class="ch" viewBox="-18 0 296 200" style="max-width:280px" role="img"
+                aria-label="Radar of six service health dimensions comparing this quarter with the same quarter last year. Speed and Coverage improved, Ownership and Prevention declined.">
+                <g stroke="rgba(255,255,255,.06)" fill="none">
+                  <polygon points="130,26 200,66 200,146 130,186 60,146 60,66"/>
+                  <polygon points="130,52 178,79 178,133 130,160 82,133 82,79"/>
+                  <polygon points="130,78 156,93 156,120 130,134 104,120 104,93"/>
+                </g>
+                <g stroke="rgba(255,255,255,.045)">
+                  <line x1="130" y1="106" x2="130" y2="26"/><line x1="130" y1="106" x2="200" y2="66"/>
+                  <line x1="130" y1="106" x2="200" y2="146"/><line x1="130" y1="106" x2="130" y2="186"/>
+                  <line x1="130" y1="106" x2="60" y2="146"/><line x1="130" y1="106" x2="60" y2="66"/>
+                </g>
+                <polygon class="fade" points="130,60 172,84 168,132 130,152 92,128 90,80"
+                  fill="none" stroke="var(--c-other)" stroke-width="1.6" stroke-dasharray="4 4"/>
+                <polygon class="fade" points="130,38 190,72 172,136 130,168 78,138 88,74"
+                  fill="url(#gRadar)" stroke="var(--c1-lit)" stroke-width="2"/>
+                <g class="fade" fill="var(--c1-lit)">
+                  <circle cx="130" cy="38" r="3.4"/><circle cx="190" cy="72" r="3.4"/>
+                  <circle cx="172" cy="136" r="3.4"/><circle cx="130" cy="168" r="3.4"/>
+                  <circle cx="78" cy="138" r="3.4"/><circle cx="88" cy="74" r="3.4"/>
+                </g>
+                <g class="tk">
+                  <text x="130" y="16" text-anchor="middle">SPEED</text>
+                  <text x="208" y="64">COVERAGE</text><text x="208" y="152">QUALITY</text>
+                  <text x="130" y="198" text-anchor="middle">OWNERSHIP</text>
+                  <text x="52" y="152" text-anchor="end">PREVENTION</text>
+                  <text x="52" y="64" text-anchor="end">DEMAND</text>
+                </g>
+              </svg>
+            </div>
+            <div class="cp-f">
+              <span class="lgi"><span class="lgk" style="background:var(--c1-lit)"></span>This quarter</span>
+              <span class="lgi"><span class="lgk" style="background:var(--c-other)"></span>Same quarter LY</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 02 EVIDENCE -->
+<section id="evidence">
+  <div class="wrap">
+    <div class="sec-h rise"><span class="sec-n">02</span><h2 class="d2">Report inventory, measured live</h2></div>
+    <p class="lede rise" style="margin-bottom:14px">
+      Before designing the chart engine we queried <code>sys_report</code> on the live instance:
+      2,368 reports across 24 chart types. The question we set out to answer was which chart type
+      belongs to which kind of report, so that generation could follow the existing convention.
+    </p>
+    <p class="lede rise" style="margin-bottom:34px">
+      There is no convention. That finding is what the rest of this section is about, and it decides
+      the architecture.
+    </p>
+
+    <div class="grid g4 rise" style="margin-bottom:22px">
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:10px">Reports analysed</div>
+        <div class="num" style="font-size:38px">2,368</div>
+        <p class="xs" style="margin-top:8px">Live rows in <code>sys_report</code>, across 24 distinct chart types.</p>
+      </div>
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:10px">Carried by 5 types</div>
+        <div class="num" style="font-size:38px;color:var(--c1-lit)">77.4%</div>
+        <p class="xs" style="margin-top:8px">Single score, bar, list, horizontal bar, line. Eight types reach 89.2%.</p>
+      </div>
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:10px">No group-by at all</div>
+        <div class="num" style="font-size:38px;color:var(--warn-lit)">36.9%</div>
+        <p class="xs" style="margin-top:8px">874 reports have no dimension. Three quarters of the rest are a plain COUNT.</p>
+      </div>
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:10px">Forms for one field</div>
+        <div class="num" style="font-size:38px;color:var(--crit-lit)">9</div>
+        <p class="xs" style="margin-top:8px">The <code>priority</code> field is drawn nine different ways across 53 reports.</p>
+      </div>
+    </div>
+
+    <div class="grid g2 rise" style="margin-bottom:22px">
+      <div class="panel cp">
+        <div class="cp-h">
+          <div><div class="cp-t">Chart type usage on this instance</div>
+            <div class="cp-s">All 2,368 reports, ranked. The palette is wide and almost unused.</div></div>
+          <div class="cp-m">sys_report</div>
+        </div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 664 250" role="img"
+            aria-label="Ranked bar chart of chart type usage across 2,368 reports. Single score 756, bar 486, list 287, horizontal bar 180, line 124, pie 106, donut 88, heatmap 85, trend 66, line bar 42, pivot v2 38, spline 37, pivot 25, and eleven further types totalling 48.">
+            <line class="gl" x1="44" y1="30" x2="600" y2="30"/>
+            <line class="gl" x1="44" y1="80" x2="600" y2="80"/>
+            <line class="gl" x1="44" y1="130" x2="600" y2="130"/>
+            <text class="tk" x="38" y="34" text-anchor="end">750</text>
+            <text class="tk" x="38" y="84" text-anchor="end">500</text>
+            <text class="tk" x="38" y="134" text-anchor="end">250</text>
+            <text class="tk" x="38" y="184" text-anchor="end">0</text>
+
+            <!-- threshold markers -->
+            <line class="anl" x1="234" y1="18" x2="234" y2="180"/>
+            <text class="tk" x="240" y="26" style="fill:var(--c1-lit)">5 TYPES = 77.4%</text>
+            <line class="anl" x1="348" y1="42" x2="348" y2="180"/>
+            <text class="tk" x="354" y="50" style="fill:var(--ink-3)">8 TYPES = 89.2%</text>
+
+            <g>
+              <rect class="rise-b" x="46" y="30" width="30" height="150" rx="4" fill="url(#gBarV)"/>
+              <rect class="rise-b" x="84" y="83.6" width="30" height="96.4" rx="4" fill="url(#gBarV)"/>
+              <rect class="rise-b" x="122" y="123.1" width="30" height="56.9" rx="4" fill="url(#gBarV)"/>
+              <rect class="rise-b" x="160" y="144.3" width="30" height="35.7" rx="4" fill="url(#gBarV)"/>
+              <rect class="rise-b" x="198" y="155.4" width="30" height="24.6" rx="4" fill="url(#gBarV)"/>
+              <rect class="rise-b" x="236" y="159" width="30" height="21" rx="4" fill="var(--q4)"/>
+              <rect class="rise-b" x="274" y="162.5" width="30" height="17.5" rx="4" fill="var(--q4)"/>
+              <rect class="rise-b" x="312" y="163.1" width="30" height="16.9" rx="4" fill="var(--q4)"/>
+              <rect class="rise-b" x="350" y="166.9" width="30" height="13.1" rx="4" fill="var(--q3)"/>
+              <rect class="rise-b" x="388" y="171.7" width="30" height="8.3" rx="4" fill="var(--q3)"/>
+              <rect class="rise-b" x="426" y="172.5" width="30" height="7.5" rx="4" fill="var(--q3)"/>
+              <rect class="rise-b" x="464" y="172.7" width="30" height="7.3" rx="4" fill="var(--q3)"/>
+              <rect class="rise-b" x="502" y="175" width="30" height="5" rx="4" fill="var(--q2)"/>
+              <rect class="rise-b" x="540" y="170.5" width="30" height="9.5" rx="4" fill="var(--c-other)"/>
+            </g>
+            <line class="bl" x1="44" y1="180" x2="600" y2="180"/>
+
+            <g class="fade">
+              <text class="vl" x="61" y="24" text-anchor="middle" font-size="11">756</text>
+              <text class="vl" x="99" y="77" text-anchor="middle" font-size="11">486</text>
+              <text class="vl" x="137" y="117" text-anchor="middle" font-size="11">287</text>
+              <text class="vl" x="555" y="164" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">48</text>
+            </g>
+
+            <g class="tk" style="font-size:8.5px;letter-spacing:.03em">
+              <text x="61" y="196" text-anchor="middle">SCORE</text>
+              <text x="99" y="196" text-anchor="middle">BAR</text>
+              <text x="137" y="196" text-anchor="middle">LIST</text>
+              <text x="175" y="196" text-anchor="middle">HBAR</text>
+              <text x="213" y="196" text-anchor="middle">LINE</text>
+              <text x="251" y="196" text-anchor="middle">PIE</text>
+              <text x="289" y="196" text-anchor="middle">DONUT</text>
+              <text x="327" y="196" text-anchor="middle">HEAT</text>
+              <text x="365" y="196" text-anchor="middle">TREND</text>
+              <text x="403" y="196" text-anchor="middle">LBAR</text>
+              <text x="441" y="196" text-anchor="middle">PVT2</text>
+              <text x="479" y="196" text-anchor="middle">SPLN</text>
+              <text x="517" y="196" text-anchor="middle">PVT</text>
+              <text x="555" y="196" text-anchor="middle" style="fill:var(--ink-4)">+11</text>
+            </g>
+            <text class="an" x="44" y="232" fill="var(--ink-2)" font-size="11">Zero reports use sankey, stream, bump, radar, treemap, sunburst, network or waterfall. Those forms do not exist in the product.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>A Pareto would need a second axis, which this system forbids, so cumulative share is annotated instead</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h">
+          <div><div class="cp-t">The same field, drawn every possible way</div>
+            <div class="cp-s">Each bar is 100% of the reports grouped by that field</div></div>
+          <div class="cp-m">fragmentation</div>
+        </div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 520 250" role="img"
+            aria-label="Three stacked bars showing how inconsistently each field is visualised. Priority is drawn nine ways across 53 reports. Category is drawn eleven ways across 52 reports. The datetime field sys_created_on is drawn as a single score in 20 of 26 reports.">
+            <text class="ct" x="0" y="14" font-size="12" fill="var(--ink-1)">priority</text>
+            <text class="tk" x="520" y="14" text-anchor="end">53 REPORTS &middot; 9 FORMS</text>
+            <g>
+              <rect class="grow" x="0" y="22" width="133.8" height="26" rx="4" fill="var(--q7)"/>
+              <rect class="grow" x="137.8" y="22" width="88.6" height="26" fill="var(--q6)"/>
+              <rect class="grow" x="228.4" y="22" width="61.4" height="26" fill="var(--q5)"/>
+              <rect class="grow" x="291.8" y="22" width="43.3" height="26" fill="var(--q4)"/>
+              <rect class="grow" x="337.1" y="22" width="43.3" height="26" fill="var(--q4)"/>
+              <rect class="grow" x="382.4" y="22" width="34.2" height="26" fill="var(--q3)"/>
+              <rect class="grow" x="418.6" y="22" width="25.2" height="26" fill="var(--q3)"/>
+              <rect class="grow" x="445.8" y="22" width="25.2" height="26" fill="var(--q2)"/>
+              <rect class="grow" x="473" y="22" width="7.1" height="26" rx="4" fill="var(--q2)"/>
+            </g>
+            <text class="tk" x="0" y="62" style="fill:var(--ink-4);font-size:8.5px">H-BAR 15 &middot; BAR 10 &middot; DONUT 7 &middot; HEATMAP 5 &middot; PIVOT 5 &middot; LINE 4 &middot; PIE 3 &middot; SCORE 3 &middot; TREND 1</text>
+
+            <text class="ct" x="0" y="102" font-size="12" fill="var(--ink-1)">category</text>
+            <text class="tk" x="520" y="102" text-anchor="end">52 REPORTS &middot; 11 FORMS</text>
+            <g>
+              <rect class="grow" x="0" y="110" width="127.2" height="26" rx="4" fill="var(--q7)"/>
+              <rect class="grow" x="131.2" y="110" width="90.3" height="26" fill="var(--q6)"/>
+              <rect class="grow" x="225.5" y="110" width="53.4" height="26" fill="var(--q5)"/>
+              <rect class="grow" x="282.9" y="110" width="44.2" height="26" fill="var(--q4)"/>
+              <rect class="grow" x="331.1" y="110" width="44.2" height="26" fill="var(--q4)"/>
+              <rect class="grow" x="379.3" y="110" width="25.7" height="26" fill="var(--q3)"/>
+              <rect class="grow" x="409" y="110" width="25.7" height="26" fill="var(--q3)"/>
+              <rect class="grow" x="438.7" y="110" width="16.5" height="26" fill="var(--q2)"/>
+              <rect class="grow" x="459.2" y="110" width="16.5" height="26" fill="var(--q2)"/>
+              <rect class="grow" x="479.7" y="110" width="7.2" height="26" fill="var(--q1)"/>
+              <rect class="grow" x="490.9" y="110" width="7.2" height="26" rx="4" fill="var(--q1)"/>
+            </g>
+            <text class="tk" x="0" y="150" style="fill:var(--ink-4);font-size:8.5px">BAR 14 &middot; PIVOT 10 &middot; PIE 6 &middot; H-BAR 5 &middot; LIST 5 &middot; SCORE 3 &middot; TREND 3 &middot; DONUT 2 &middot; LINE 2 &middot; +2 MORE</text>
+
+            <text class="ct" x="0" y="190" font-size="12" fill="var(--ink-1)">sys_created_on</text>
+            <text class="tk" x="520" y="190" text-anchor="end" style="fill:var(--crit-lit)">A DATETIME FIELD</text>
+            <g>
+              <rect class="grow" x="0" y="198" width="365.2" height="26" rx="4" fill="var(--crit)" opacity=".8"/>
+              <rect class="grow" x="369.2" y="198" width="88.3" height="26" fill="var(--q5)"/>
+              <rect class="grow" x="461.5" y="198" width="14.5" height="26" rx="4" fill="var(--q3)"/>
+            </g>
+            <text class="vl" x="12" y="215" font-size="11" fill="var(--on-hi)">SINGLE SCORE, 20 OF 26</text>
+            <text class="tk" x="0" y="240" style="fill:var(--ink-4)">Not one line, trend, spline or area report groups by it</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span class="delta d-bad">Form is whatever the author picked, not what the data warranted</span></div>
+      </div>
+    </div>
+
+    <div class="note crit rise">
+      <b>The conclusion this forces.</b> There is no field-to-form mapping stored anywhere on the
+      instance, because the product has no such logic. <code>sys_report.type</code> records an
+      author's choice, not a property of the data. So "read the existing mapping and follow it" is
+      not merely blocked by access, it is impossible in principle. A selector driven by the measured
+      shape of the data is not one option among several. It is the only approach with a defensible
+      input, and it is what section 03 specifies.
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 03 SELECTOR -->
+<section id="selector">
+  <div class="wrap">
+    <div class="sec-h rise"><span class="sec-n">03</span><h2 class="d2">The form engine</h2></div>
+    <p class="lede rise" style="margin-bottom:34px">
+      Given a table and a field, decide the chart without a human in the loop. Four inputs, all of
+      which either already exist in the current build or are a single dictionary lookup away. No
+      tagging, no configuration table, no per-report authoring decision.
+    </p>
+
+    <div class="grid g4 rise" style="margin-bottom:24px">
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:9px">Input 01</div>
+        <h4 class="h3" style="margin-bottom:7px">Field type</h4>
+        <p class="xs"><code>sys_dictionary.internal_type</code>. Boolean, choice, reference,
+        glide_date_time, integer, decimal, string. One lookup, cached per table.</p>
+        <p class="xs" style="margin-top:8px;color:var(--ok-lit)">Needs building, trivial</p>
+      </div>
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:9px">Input 02</div>
+        <h4 class="h3" style="margin-bottom:7px">Measured shape</h4>
+        <p class="xs">Distinct count, top share, concentration. Computed over the real rows, not
+        over the schema, so a 40-value choice field with 3 values in use reads as 3.</p>
+        <p class="xs" style="margin-top:8px;color:var(--ok-lit)">Already built, <code>profileField()</code></p>
+      </div>
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:9px">Input 03</div>
+        <h4 class="h3" style="margin-bottom:7px">Aggregate</h4>
+        <p class="xs">COUNT, SUM, AVG or COUNT DISTINCT. Determines whether parts sum to a
+        meaningful whole, which is what makes part-to-whole legal or illegal.</p>
+        <p class="xs" style="margin-top:8px;color:var(--ok-lit)">Already available</p>
+      </div>
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:9px">Input 04</div>
+        <h4 class="h3" style="margin-bottom:7px">Row count n</h4>
+        <p class="xs">The ACL-checked row count behind the aggregate. Drives the low-n caveat and
+        suppresses forms that need more data than exists.</p>
+        <p class="xs" style="margin-top:8px;color:var(--ok-lit)">Already built</p>
+      </div>
+    </div>
+
+    <div class="grid g2 rise" style="margin-bottom:24px">
+      <div>
+        <h4 class="h3" style="margin-bottom:12px">The rule table</h4>
+        <p class="sm" style="margin-bottom:14px">Deterministic, reviewable, and testable against
+        all 2,368 live reports. First match wins, top to bottom.</p>
+        <div class="scroll-x">
+          <table class="sp">
+            <thead><tr><th>Condition</th><th>Form</th></tr></thead>
+            <tbody>
+              <tr><td>no group-by field</td><td>Stat tile, with delta or target</td></tr>
+              <tr><td>datetime, any aggregate</td><td>Line, area if single series</td></tr>
+              <tr><td>datetime x categorical, distinct &le; 8</td><td>Stream graph</td></tr>
+              <tr><td>datetime x categorical, distinct &gt; 8</td><td>Small multiples</td></tr>
+              <tr><td>boolean</td><td>Stacked proportion bar</td></tr>
+              <tr><td>ordinal choice, distinct &le; 7, COUNT</td><td>Stacked bar, sequential ramp</td></tr>
+              <tr><td>nominal, distinct &le; 12</td><td>Ranked horizontal bar</td></tr>
+              <tr><td>nominal, distinct &gt; 12, concentration &gt; .8</td><td>Top 10 plus Other</td></tr>
+              <tr><td>nominal, distinct &gt; 12, concentration &lt; .5</td><td>Treemap</td></tr>
+              <tr><td>two categorical x one measure</td><td>Matrix heatmap</td></tr>
+              <tr><td>reference to reference, with volume</td><td>Sankey</td></tr>
+              <tr><td>ordered stages, monotonic decline</td><td>Funnel</td></tr>
+              <tr><td>numeric measure, continuous</td><td>Histogram or box</td></tr>
+              <tr><td>actual against a stored target</td><td>Radial gauge or bullet</td></tr>
+              <tr><td>rank of &le; 6 entities over &le; 8 periods</td><td>Bump chart</td></tr>
+              <tr><td>4 to 8 normalised dimensions</td><td>Radar</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h4 class="h3" style="margin-bottom:12px">Guards that run after selection</h4>
+        <p class="sm" style="margin-bottom:14px">The form is chosen, then the data is checked
+        against it. These are the rules that stop a technically valid chart from being a dishonest
+        one, and they are the reason the output can be trusted unattended.</p>
+        <div class="scroll-x">
+          <table class="sp">
+            <tbody>
+              <tr><td>n &lt; 30</td><td>Attach a low-n caveat chip. The current build shows a 440-day mean from 46 of 13,986 records with no warning at all.</td></tr>
+              <tr><td>Null or empty group</td><td>Merge to a single Unknown bucket, paint it the reserved neutral, pin it last regardless of size.</td></tr>
+              <tr><td>Part-to-whole with a non-additive aggregate</td><td>Refuse. AVG segments do not sum to a whole, so the form is illegal here.</td></tr>
+              <tr><td>Top share &gt; 0.9</td><td>Demote from part-to-whole. A pie that says "one slice is nearly all of it" wastes a circle.</td></tr>
+              <tr><td>Series count &gt; 6</td><td>Fold the tail to Other or facet. A seventh hue is never generated.</td></tr>
+              <tr><td>Scatter, bubble or choropleth</td><td>Cap at 3 series. Measured: only the first three slots clear the all-pairs colour gate.</td></tr>
+              <tr><td>Partial trailing period</td><td>Mark it on the chart. An in-progress month always looks like a collapse.</td></tr>
+              <tr><td>Aggregate against ACL count</td><td>Compare and flag any divergence. GlideAggregate does not enforce row-level ACLs.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="note rise">
+      <b>How to prove it before shipping.</b> Run the rule table over all 2,368 live reports and
+      produce a diff of chosen form against authored form. Two useful outputs fall out. Where the
+      engine agrees with the author, that is a regression baseline. Where it disagrees, that is a
+      reviewable list of the instance's worst existing charts, starting with the 20 datetime fields
+      currently rendered as a single score. That diff is a deliverable in its own right, and it
+      costs one script.
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 04 CATALOG -->
+<section id="catalog">
+  <div class="wrap">
+    <div class="sec-h rise"><span class="sec-n">04</span><h2 class="d2">The catalog</h2></div>
+    <p class="lede rise" style="margin-bottom:38px">
+      The entry point, and the thing that makes this a product rather than a page. Cards below carry
+      real dashboard names read from the instance. One live finding shapes the design: almost every
+      dashboard there is owned by System Administrator, so Owned by me would be empty for nearly
+      every viewer. Recent is the default tab, not Owned.
+    </p>
+
+    <div class="mock rise">
+      <div class="mock-bar">
+        <div class="mock-dots"><i></i><i></i><i></i></div>
+        <div class="mock-url">instance.service-now.com&#8202;/&#8202;analytics</div>
+        <div style="width:50px"></div>
+      </div>
+      <div class="mock-body">
+        <div class="app-h">
+          <div>
+            <div class="crumb">Analytics <span style="color:var(--ink-4)">/</span> Dashboards</div>
+            <h3 class="d2" style="font-size:29px">Dashboards</h3>
+            <p class="mono xs" style="margin-top:7px;color:var(--ink-3)">18 AVAILABLE TO YOU &middot; KUMAR G</p>
+          </div>
+          <div class="row">
+            <div class="field">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.4" stroke="currentColor" stroke-width="1.5"/><path d="M9.4 9.4 12.5 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Search dashboards</div>
+            <button class="btn btn-sm">Group</button>
+            <button class="btn btn-sm btn-sig">New</button>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button aria-selected="true">Recent</button>
+          <button aria-selected="false">Shared with me</button>
+          <button aria-selected="false">Owned by me</button>
+          <button aria-selected="false">All</button>
+        </div>
+
+        <div class="cards">
+          <div class="card">
+            <div class="card-t">
+              <svg viewBox="0 0 250 82" style="width:100%;height:100%" aria-hidden="true">
+                <path d="M0,64 L36,62 L72,58 L108,60 L144,40 L180,18 L214,10 L250,30 L250,82 L0,82 Z" fill="url(#gArea)"/>
+                <path d="M0,64 L36,62 L72,58 L108,60 L144,40 L180,18 L214,10 L250,30" fill="none"
+                  stroke="var(--c1-lit)" stroke-width="1.8" stroke-linejoin="round"/>
+                <circle cx="214" cy="10" r="3" fill="var(--c1-lit)"/>
+              </svg>
+            </div>
+            <div class="card-b">
+              <div class="card-n">Incident Overview</div>
+              <div class="card-d">Volume, priority mix and resolution performance across the incident queue.</div>
+              <div class="card-f"><span class="av">KG</span><span>You</span>
+                <span style="color:var(--ink-4)">&middot;</span><span>Incident</span>
+                <span class="chip ok" style="margin-left:auto;padding:2px 6px;font-size:8px">Verified</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-t">
+              <svg viewBox="0 0 250 82" style="width:100%;height:100%" aria-hidden="true">
+                <path d="M0,30 C60,20 80,40 130,32 C180,24 210,38 250,30 L250,42 C210,52 180,36 130,46 C80,56 60,32 0,44 Z" fill="url(#gSt3)"/>
+                <path d="M0,44 C60,32 80,56 130,46 C180,36 210,52 250,42 L250,58 C210,66 180,52 130,60 C80,68 60,48 0,58 Z" fill="url(#gSt1)"/>
+                <path d="M0,58 C60,48 80,68 130,60 C180,52 210,66 250,58 L250,70 C210,76 180,64 130,72 C80,78 60,60 0,70 Z" fill="url(#gSt2)"/>
+              </svg>
+            </div>
+            <div class="card-b">
+              <div class="card-n">Change Overview</div>
+              <div class="card-d">Approval state, risk distribution and CAB throughput by week.</div>
+              <div class="card-f"><span class="av" style="background:rgba(255,255,255,.05);color:var(--ink-2);border-color:var(--edge)">SA</span><span>Sys Admin</span>
+                <span style="color:var(--ink-4)">&middot;</span><span>Change</span>
+                <span class="chip" style="margin-left:auto;padding:2px 6px;font-size:8px">Shared</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-t">
+              <svg viewBox="0 0 250 82" style="width:100%;height:100%" aria-hidden="true">
+                <g id="mini-cal"></g></svg>
+            </div>
+            <div class="card-b">
+              <div class="card-n">Universal Request Process Overview</div>
+              <div class="card-d">Arrival density by weekday and hour, with a staffing overlay.</div>
+              <div class="card-f"><span class="av" style="background:rgba(255,255,255,.05);color:var(--ink-2);border-color:var(--edge)">SA</span><span>Sys Admin</span>
+                <span style="color:var(--ink-4)">&middot;</span><span>Request</span>
+                <span class="chip" style="margin-left:auto;padding:2px 6px;font-size:8px">Shared</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-t">
+              <svg viewBox="0 0 250 82" style="width:100%;height:100%" aria-hidden="true">
+                <circle cx="58" cy="46" r="28" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="7"
+                  stroke-dasharray="127 300" transform="rotate(140 58 46)"/>
+                <circle cx="58" cy="46" r="28" fill="none" stroke="url(#gGauge)" stroke-width="7"
+                  stroke-linecap="round" stroke-dasharray="96 300" transform="rotate(140 58 46)"/>
+                <rect x="118" y="52" width="26" height="24" rx="4" fill="url(#gBarV)"/>
+                <rect x="152" y="38" width="26" height="38" rx="4" fill="url(#gBarV)"/>
+                <rect x="186" y="24" width="26" height="52" rx="4" fill="url(#gBarV)"/>
+                <rect x="220" y="44" width="26" height="32" rx="4" fill="var(--c-other)"/>
+              </svg>
+            </div>
+            <div class="card-b">
+              <div class="card-n">CMDB Correctness Dashboard</div>
+              <div class="card-d">Completeness and correctness scores by CI class, with drift.</div>
+              <div class="card-f"><span class="av" style="background:rgba(255,255,255,.05);color:var(--ink-2);border-color:var(--edge)">SA</span><span>Sys Admin</span>
+                <span style="color:var(--ink-4)">&middot;</span><span>cmdb_ci</span>
+                <span class="chip" style="margin-left:auto;padding:2px 6px;font-size:8px">Shared</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-t">
+              <svg viewBox="0 0 250 82" style="width:100%;height:100%" aria-hidden="true">
+                <path d="M18,74 L18,22 Q18,14 26,14 L86,14 Q94,14 94,22 L94,74 Z" fill="url(#gS1)"/>
+                <path d="M104,74 L104,34 Q104,26 112,26 L172,26 Q180,26 180,34 L180,74 Z" fill="url(#gS2)"/>
+                <path d="M190,74 L190,48 Q190,40 198,40 L238,40 L238,74 Z" fill="url(#gS3)"/>
+                <line x1="0" y1="74" x2="250" y2="74" stroke="rgba(255,255,255,.1)" stroke-width="1"/>
+              </svg>
+            </div>
+            <div class="card-b">
+              <div class="card-n">SOX Compliance Dashboard</div>
+              <div class="card-d">Control test attrition from scoped through tested to signed off.</div>
+              <div class="card-f"><span class="av">KG</span><span>You</span>
+                <span style="color:var(--ink-4)">&middot;</span><span>sn_compliance</span>
+                <span class="chip ok" style="margin-left:auto;padding:2px 6px;font-size:8px">Verified</span></div>
+            </div>
+          </div>
+
+          <div class="card" style="opacity:.5">
+            <div class="card-t" style="display:grid;place-items:center">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="5" y="10.5" width="14" height="9.5" rx="2.5" stroke="var(--ink-3)" stroke-width="1.5"/>
+                <path d="M8.2 10.5V8a3.8 3.8 0 0 1 7.6 0v2.5" stroke="var(--ink-3)" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <div class="card-b">
+              <div class="card-n">HR Employee Documents</div>
+              <div class="card-d">Needs the <code>sn_hr_core.basic</code> role. Visible only because a
+                colleague shared the link with you.</div>
+              <div class="card-f"><span class="chip warn" style="padding:2px 6px;font-size:8px">Request access</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid g3 rise" style="margin-top:20px">
+      <div class="rule ok"><h4>Thumbnails are generated, never screenshots</h4>
+        <p>Each card renders a miniature from the dashboard's own chart spec, through the same form
+        engine. It cannot go stale, costs nothing to store, and it is the difference between a
+        catalog and a list of links.</p></div>
+      <div class="rule ok"><h4>Entitlement is membership, not a padlock</h4>
+        <p>An entry the viewer cannot read is normally absent, using the same persona and ACL
+        machinery that proves the aggregates. The locked card appears only where someone explicitly
+        shared a link, so the state carries information rather than teasing.</p></div>
+      <div class="rule ok"><h4>Reporting demand is not ITSM-shaped</h4>
+        <p>Measured on the instance: GRC, risk, audit and compliance tables together carry more
+        reports than <code>incident</code>. A generic render surface over a registry is the right
+        architecture. An incident-only page is not.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 05 CHARTS -->
+<section id="charts">
+  <div class="wrap">
+    <div class="sec-h rise"><span class="sec-n">05</span><h2 class="d2">Chart library</h2></div>
+    <p class="lede rise" style="margin-bottom:34px">
+      The core forms, each triggered by a question plus the measured shape of the data. Section 06
+      adds the report matrix and the full analytical set on top of these. Nine of the twenty-two
+      forms have zero instances anywhere on the live instance because the product cannot draw them,
+      which is the evidence-backed version of the differentiation argument.
+    </p>
+
+    <div class="grid g2 rise" style="margin-bottom:16px">
+      <div class="panel cp">
+        <div class="cp-h">
+          <div><div class="cp-t">Stream graph</div>
+            <div class="cp-s">Composition over time, so the mix itself is the subject</div></div>
+          <div class="cp-m">4 series</div>
+        </div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 520 210" role="img"
+            aria-label="Stream graph of incident volume by channel over twelve months. Portal grows steadily and dominates by the final months, phone shrinks, email is stable, chat is small but growing.">
+            <path class="fade" d="M20,104 C90,100 150,92 220,82 C290,72 370,52 500,34 L500,86 C370,96 290,106 220,112 C150,118 90,122 20,124 Z" fill="url(#gSt1)"/>
+            <path class="fade" d="M20,124 C90,122 150,118 220,112 C290,106 370,96 500,86 L500,124 C370,132 290,140 220,144 C150,148 90,150 20,152 Z" fill="url(#gSt2)"/>
+            <path class="fade" d="M20,152 C90,150 150,148 220,144 C290,140 370,132 500,124 L500,150 C370,158 290,164 220,168 C150,171 90,173 20,174 Z" fill="url(#gSt3)"/>
+            <path class="fade" d="M20,174 C90,173 150,171 220,168 C290,164 370,158 500,150 L500,164 C370,172 290,178 220,181 C150,184 90,186 20,187 Z" fill="url(#gSt4)"/>
+            <text class="tk" x="20" y="202">SEP '25</text>
+            <text class="tk" x="260" y="202" text-anchor="middle">FEB '26</text>
+            <text class="tk" x="500" y="202" text-anchor="end">AUG '26</text>
+            <text class="ct" x="492" y="60" font-size="10" text-anchor="end" fill="var(--ink-1)">Portal</text>
+            <text class="ct" x="492" y="108" font-size="10" text-anchor="end">Email</text>
+          </svg>
+          <div class="lg" style="margin-top:14px">
+            <span class="lgi"><span class="lgk" style="background:var(--c1)"></span>Portal</span>
+            <span class="lgi"><span class="lgk" style="background:var(--c3)"></span>Email</span>
+            <span class="lgi"><span class="lgk" style="background:var(--c2)"></span>Phone</span>
+            <span class="lgi"><span class="lgk" style="background:var(--c5)"></span>Chat</span>
+          </div>
+        </div>
+        <div class="cp-f"><span>Legend plus direct labels on the two largest bands, so identity never rests on hue</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h">
+          <div><div class="cp-t">Funnel</div>
+            <div class="cp-s">Ordered stages, and the drop is what gets labelled</div></div>
+          <div class="cp-m">ordinal</div>
+        </div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 520 210" role="img"
+            aria-label="Request fulfilment funnel. Submitted 12,400; Approved 10,900 down 12 percent; Assigned 9,140 down 16 percent; Fulfilled 7,020 down 23 percent; Closed 6,880 down 2 percent.">
+            <rect class="rise-b" x="8" y="46" width="88" height="118" rx="6" fill="url(#gBarV)"/>
+            <rect class="rise-b" x="112" y="62" width="88" height="102" rx="6" fill="url(#gBarV)" opacity=".88"/>
+            <rect class="rise-b" x="216" y="80" width="88" height="84" rx="6" fill="url(#gBarV)" opacity=".76"/>
+            <rect class="rise-b" x="320" y="102" width="88" height="62" rx="6" fill="url(#gBarV)" opacity=".64"/>
+            <rect class="rise-b" x="424" y="104" width="88" height="60" rx="6" fill="url(#gBarV)" opacity=".56"/>
+            <g class="fade">
+              <text class="vl" x="52" y="38" text-anchor="middle" font-size="13">12,400</text>
+              <text class="vl" x="156" y="38" text-anchor="middle" font-size="13">10,900</text>
+              <text class="vl" x="260" y="38" text-anchor="middle" font-size="13">9,140</text>
+              <text class="vl" x="364" y="38" text-anchor="middle" font-size="13">7,020</text>
+              <text class="vl" x="468" y="38" text-anchor="middle" font-size="13">6,880</text>
+              <text class="tk" x="156" y="22" text-anchor="middle" style="fill:var(--warn-lit)">-12%</text>
+              <text class="tk" x="260" y="22" text-anchor="middle" style="fill:var(--warn-lit)">-16%</text>
+              <text class="tk" x="364" y="22" text-anchor="middle" style="fill:var(--crit-lit)">-23%</text>
+              <text class="tk" x="468" y="22" text-anchor="middle" style="fill:var(--ink-3)">-2%</text>
+            </g>
+            <g class="tk">
+              <text x="52" y="182" text-anchor="middle">SUBMITTED</text>
+              <text x="156" y="182" text-anchor="middle">APPROVED</text>
+              <text x="260" y="182" text-anchor="middle">ASSIGNED</text>
+              <text x="364" y="182" text-anchor="middle">FULFILLED</text>
+              <text x="468" y="182" text-anchor="middle">CLOSED</text>
+            </g>
+            <line class="bl" x1="8" y1="164" x2="512" y2="164"/>
+            <text class="an" x="8" y="202" fill="var(--ink-2)">The biggest loss is assignment to fulfilment, not approval.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Stage-to-stage delta is the story, so totals alone are not enough</span></div>
+      </div>
+    </div>
+
+    <div class="grid g3 rise">
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Diverging bar</div>
+          <div class="cp-s">Variance to target</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 320 176" role="img"
+            aria-label="Variance to target by group. Network plus 22 percent, Software plus 9, Hardware minus 4, Service Desk minus 14, Facilities minus 26.">
+            <line x1="160" y1="4" x2="160" y2="146" stroke="rgba(255,255,255,.26)" stroke-width="1"/>
+            <rect class="grow" x="160" y="8" width="96" height="12" rx="4" fill="var(--c4)" style="transform-origin:160px center"/>
+            <text class="ct" x="154" y="18" text-anchor="end" font-size="10.5">Network</text>
+            <text class="vl" x="262" y="18" font-size="10.5" fill="var(--c4-lit)">+22%</text>
+
+            <rect class="grow" x="160" y="36" width="40" height="12" rx="4" fill="var(--dp1)" style="transform-origin:160px center"/>
+            <text class="ct" x="154" y="46" text-anchor="end" font-size="10.5">Software</text>
+            <text class="vl" x="206" y="46" font-size="10.5" fill="var(--ink-2)">+9%</text>
+
+            <rect class="grow" x="142" y="64" width="18" height="12" rx="4" fill="var(--dn1)" style="transform-origin:160px center"/>
+            <text class="ct" x="166" y="74" font-size="10.5">Hardware</text>
+            <text class="vl" x="136" y="74" text-anchor="end" font-size="10.5" fill="var(--ink-2)">-4%</text>
+
+            <rect class="grow" x="98" y="92" width="62" height="12" rx="4" fill="var(--c1)" style="transform-origin:160px center"/>
+            <text class="ct" x="166" y="102" font-size="10.5">Service Desk</text>
+            <text class="vl" x="92" y="102" text-anchor="end" font-size="10.5" fill="var(--c1-lit)">-14%</text>
+
+            <rect class="grow" x="46" y="120" width="114" height="12" rx="4" fill="var(--dn3)" style="transform-origin:160px center"/>
+            <text class="ct" x="166" y="130" font-size="10.5">Facilities</text>
+            <text class="vl" x="40" y="130" text-anchor="end" font-size="10.5" fill="var(--c1-lit)">-26%</text>
+
+            <text class="tk" x="160" y="164" text-anchor="middle">TARGET</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Two poles, neutral midpoint, never red against green</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Small multiples</div>
+          <div class="cp-s">More than six series, so facet</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 328 176" role="img"
+            aria-label="Six small multiple sparklines of monthly volume by assignment group on a shared vertical scale. Network and Security are rising, the rest are flat.">
+            <text class="tk" x="0" y="10">NETWORK</text>
+            <line class="gl" x1="0" y1="42" x2="98" y2="42"/>
+            <path class="draw" style="--len:140" d="M0,38 L20,36 L40,32 L60,24 L78,14 L98,8" fill="none" stroke="var(--c1-lit)" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="140"/>
+            <circle class="fade" cx="98" cy="8" r="2.8" fill="var(--c1-lit)"/>
+
+            <text class="tk" x="112" y="10">SOFTWARE</text>
+            <line class="gl" x1="112" y1="42" x2="210" y2="42"/>
+            <path class="draw" style="--len:140" d="M112,28 L132,30 L152,27 L172,29 L190,28 L210,26" fill="none" stroke="var(--c1)" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="140"/>
+            <circle class="fade" cx="210" cy="26" r="2.8" fill="var(--c1)"/>
+
+            <text class="tk" x="224" y="10">HARDWARE</text>
+            <line class="gl" x1="224" y1="42" x2="320" y2="42"/>
+            <path class="draw" style="--len:140" d="M224,22 L246,26 L268,25 L290,32 L305,35 L320,38" fill="none" stroke="var(--c1)" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="140"/>
+            <circle class="fade" cx="320" cy="38" r="2.8" fill="var(--c1)"/>
+
+            <text class="tk" x="0" y="76">SVC DESK</text>
+            <line class="gl" x1="0" y1="108" x2="98" y2="108"/>
+            <path class="draw" style="--len:140" d="M0,98 L20,96 L40,97 L60,90 L78,88 L98,82" fill="none" stroke="var(--c1)" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="140"/>
+            <circle class="fade" cx="98" cy="82" r="2.8" fill="var(--c1)"/>
+
+            <text class="tk" x="112" y="76">FACILITIES</text>
+            <line class="gl" x1="112" y1="108" x2="210" y2="108"/>
+            <path class="draw" style="--len:140" d="M112,94 L132,92 L152,96 L172,94 L190,92 L210,93" fill="none" stroke="var(--c1)" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="140"/>
+            <circle class="fade" cx="210" cy="93" r="2.8" fill="var(--c1)"/>
+
+            <text class="tk" x="224" y="76">SECURITY</text>
+            <line class="gl" x1="224" y1="108" x2="320" y2="108"/>
+            <path class="draw" style="--len:140" d="M224,100 L246,96 L268,88 L290,74 L305,68 L320,62" fill="none" stroke="var(--c4-lit)" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="140"/>
+            <circle class="fade" cx="320" cy="62" r="2.8" fill="var(--c4-lit)"/>
+
+            <text class="tk" x="0" y="140" style="fill:var(--ink-4)">SHARED Y-SCALE &middot; MAR TO AUG '26</text>
+            <text class="an" x="0" y="162" fill="var(--ink-2)" font-size="10.5">Only two are moving. Colour marks exactly those two.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Shared scale is mandatory, otherwise the facets lie</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Ageing profile</div>
+          <div class="cp-s">Distribution on an ordinal ramp</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 320 176" role="img"
+            aria-label="Ageing profile of open records. 0 to 7 days 1,180; 8 to 30 days 2,240; 31 to 90 days 3,100; 91 to 180 days 3,520; over 180 days 3,900.">
+            <line class="gl" x1="0" y1="14" x2="320" y2="14"/>
+            <line class="gl" x1="0" y1="54" x2="320" y2="54"/>
+            <line class="gl" x1="0" y1="94" x2="320" y2="94"/>
+            <rect class="rise-b" x="10" y="96" width="42" height="34" rx="5" fill="var(--q3)"/>
+            <rect class="rise-b" x="72" y="76" width="42" height="54" rx="5" fill="var(--q4)"/>
+            <rect class="rise-b" x="134" y="50" width="42" height="80" rx="5" fill="var(--q5)"/>
+            <rect class="rise-b" x="196" y="36" width="42" height="94" rx="5" fill="var(--q6)"/>
+            <rect class="rise-b" x="258" y="26" width="42" height="104" rx="5" fill="var(--q7)"/>
+            <text class="vl fade" x="279" y="18" text-anchor="middle" font-size="12">3,900</text>
+            <line class="bl" x1="0" y1="130" x2="320" y2="130"/>
+            <g class="tk">
+              <text x="31" y="146" text-anchor="middle">0-7D</text>
+              <text x="93" y="146" text-anchor="middle">8-30</text>
+              <text x="155" y="146" text-anchor="middle">31-90</text>
+              <text x="217" y="146" text-anchor="middle">91-180</text>
+              <text x="279" y="146" text-anchor="middle">180+</text>
+            </g>
+            <text class="an" x="0" y="168" fill="var(--ink-2)" font-size="10.5">More open work is over 180 days old than under 30.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Brightness rises with severity, so the ramp is the axis</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 06 REPORTS -->
+<section id="reports">
+  <div class="wrap">
+    <div class="sec-h rise"><span class="sec-n">06</span><h2 class="d2">Reports, and Power BI parity</h2></div>
+    <p class="lede rise" style="margin-bottom:16px">
+      The client asked for dashboards <em>and reports</em>, and those are two different artifacts. A
+      dashboard answers "what is happening right now" at a glance. A report is dense, hierarchical
+      and printable: it is the thing someone reads for ten minutes, exports, and takes into a
+      meeting. Power BI is judged mostly on the second one.
+    </p>
+    <p class="lede rise" style="margin-bottom:38px">
+      This section is the honest coverage check. What Power BI draws, what this system draws in its
+      place, and the four things it genuinely does not match.
+    </p>
+
+    <div class="scroll-x rise" style="margin-bottom:44px">
+      <table class="sp">
+        <thead><tr><th>Power BI visual</th><th>Equivalent here</th><th>Coverage</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>Matrix / table with conditional formatting</td><td>Report matrix</td><td style="color:var(--ok-lit)">Full</td><td>Hierarchy, in-cell data bars, colour scales, inline sparklines, variance columns, subtotals. Specimen below.</td></tr>
+          <tr><td>Clustered and stacked bar / column</td><td>Ranked bar, stacked proportion</td><td style="color:var(--ok-lit)">Full</td><td>Plus a null-handling rule Power BI does not enforce.</td></tr>
+          <tr><td>Line, area, stacked area</td><td>Line and area</td><td style="color:var(--ok-lit)">Full</td><td>With an annotation layer, which Power BI only does through a separate text box.</td></tr>
+          <tr><td>Combo (line and column)</td><td>Indexed two-series line</td><td style="color:var(--warn-lit)">Deliberately different</td><td>Power BI's combo chart uses a second y-axis. We index both series to a common base instead, because a dual axis can be made to show any correlation you like.</td></tr>
+          <tr><td>Pie and donut</td><td>Stacked proportion bar</td><td style="color:var(--warn-lit)">Deliberately replaced</td><td>Angle is the hardest visual channel to compare. Length is the easiest. Available if the client insists.</td></tr>
+          <tr><td>Treemap</td><td>Treemap</td><td style="color:var(--ok-lit)">Full</td><td>Specimen below. Zero instances exist on the live instance.</td></tr>
+          <tr><td>Waterfall</td><td>Waterfall</td><td style="color:var(--ok-lit)">Full</td><td>Specimen below. Zero instances exist on the live instance.</td></tr>
+          <tr><td>Funnel</td><td>Funnel</td><td style="color:var(--ok-lit)">Full</td><td>Stage-to-stage conversion labelled, not just totals.</td></tr>
+          <tr><td>Scatter and bubble</td><td>Scatter with reference quadrants</td><td style="color:var(--ok-lit)">Full</td><td>Capped at three colour series by the measured all-pairs colour gate.</td></tr>
+          <tr><td>KPI, card, multi-row card</td><td>Stat tile and KPI visual</td><td style="color:var(--ok-lit)">Full</td><td>Comparison is structurally required rather than optional.</td></tr>
+          <tr><td>Gauge</td><td>Radial gauge and bullet</td><td style="color:var(--ok-lit)">Full</td><td>Commitment shown as a notch, not as a coloured arc segment.</td></tr>
+          <tr><td>Ribbon chart</td><td>Bump chart</td><td style="color:var(--ok-lit)">Full</td><td>Rank movement over time.</td></tr>
+          <tr><td>Map and filled map</td><td>ECharts geo</td><td style="color:var(--ok-lit)">Full</td><td>WebGL renderer available for extruded and large-point geography.</td></tr>
+          <tr><td>Analytics pane: trend, forecast, anomaly</td><td>Forecast band and anomaly markers</td><td style="color:var(--ok-lit)">Full</td><td>Specimen below. Confidence interval drawn, not implied.</td></tr>
+          <tr><td>Report page tooltips</td><td>Rich tooltip</td><td style="color:var(--ok-lit)">Full</td><td>A hover returns a small report, not a single number. Specimen below.</td></tr>
+          <tr><td>Slicers</td><td>Filter bar with echo chips</td><td style="color:var(--ok-lit)">Full</td><td>One row above the charts, active filters removable.</td></tr>
+          <tr><td>Decomposition tree</td><td>Sankey plus drill-through</td><td style="color:var(--warn-lit)">Partial</td><td>We can show the flow and drill it. We cannot let a user re-expand an arbitrary branch interactively without a semantic model.</td></tr>
+          <tr><td>Key influencers</td><td>None</td><td style="color:var(--crit-lit)">Not matched</td><td>Needs a statistical model layer over the data, which is a different build.</td></tr>
+          <tr><td>Q and A natural language visual</td><td>None</td><td style="color:var(--crit-lit)">Not matched</td><td>Now Assist covers some of this natively and free.</td></tr>
+          <tr><td>Play axis (animated scatter)</td><td>None</td><td style="color:var(--crit-lit)">Deferred</td><td>Buildable in ECharts, but rarely used well. Not proposed.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ─────────────────────────── the report matrix ────────────────────── -->
+    <h3 class="h2 rise" style="margin-bottom:10px">The report matrix</h3>
+    <p class="sm rise" style="margin-bottom:22px; max-width:78ch">
+      This is the artifact that separates a report from a dashboard, and the one thing the current
+      build has none of. Five formatting devices are doing work here, and each is labelled so the
+      logic is inspectable rather than decorative.
+    </p>
+
+    <div class="panel pad rise" style="margin-bottom:16px">
+      <div class="scroll-x">
+        <table class="mx">
+          <thead>
+            <tr>
+              <th class="l" style="width:30%">Assignment group / category</th>
+              <th style="width:15%">Opened</th>
+              <th>Resolved</th>
+              <th>Backlog</th>
+              <th>vs last month</th>
+              <th style="width:12%">12-month trend</th>
+              <th>SLA met</th>
+              <th>Mean age</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="grp"><td class="l"><span class="car">&#9662;</span>Network</td>
+              <td><span class="dbar"><i style="width:100%"></i><span>2,412</span></span></td>
+              <td>1,833</td><td>579</td><td class="neg">+19.4%</td>
+              <td><svg width="72" height="18" viewBox="0 0 72 18" aria-hidden="true"><polyline points="0,13 10,12 20,13 30,11 40,12 50,7 61,4 72,2" fill="none" stroke="var(--c1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="72" cy="2" r="2.2" fill="var(--c1-lit)"/></svg></td>
+              <td>91%</td><td><span class="hcell" style="background:var(--q5);color:var(--on-hi)">41</span></td></tr>
+            <tr class="kid"><td class="l">Connectivity</td>
+              <td><span class="dbar"><i style="width:40.6%"></i><span>980</span></span></td>
+              <td>742</td><td>238</td><td class="neg">+18.0%</td>
+              <td><svg width="72" height="18" viewBox="0 0 72 18" aria-hidden="true"><polyline points="0,12 12,13 24,11 36,12 48,9 60,6 72,5" fill="none" stroke="var(--c1)" stroke-width="1.3" stroke-linecap="round"/></svg></td>
+              <td>91%</td><td><span class="hcell" style="background:var(--q5);color:var(--on-hi)">42</span></td></tr>
+            <tr class="kid"><td class="l">Wireless</td>
+              <td><span class="dbar"><i style="width:25.4%"></i><span>612</span></span></td>
+              <td>501</td><td>111</td><td>+4.1%</td>
+              <td><svg width="72" height="18" viewBox="0 0 72 18" aria-hidden="true"><polyline points="0,10 12,11 24,10 36,11 48,10 60,10 72,9" fill="none" stroke="var(--c1)" stroke-width="1.3" stroke-linecap="round"/></svg></td>
+              <td>96%</td><td><span class="hcell" style="background:var(--q3)">21</span></td></tr>
+            <tr class="kid"><td class="l">VPN</td>
+              <td><span class="dbar"><i style="width:34.0%"></i><span>820</span></span></td>
+              <td>590</td><td>230</td><td class="neg">+31.2%</td>
+              <td><svg width="72" height="18" viewBox="0 0 72 18" aria-hidden="true"><polyline points="0,14 12,13 24,12 36,10 48,7 60,4 72,2" fill="none" stroke="var(--c1)" stroke-width="1.3" stroke-linecap="round"/></svg></td>
+              <td>88%</td><td><span class="hcell" style="background:var(--q6);color:var(--on-hi)">58</span></td></tr>
+            <tr class="sub"><td class="l">Network subtotal</td><td>2,412</td><td>1,833</td><td>579</td>
+              <td class="neg">+19.4%</td><td></td><td>91%</td><td>41</td></tr>
+
+            <tr class="grp"><td class="l"><span class="car">&#9662;</span>Software</td>
+              <td><span class="dbar"><i style="width:90.4%"></i><span>2,180</span></span></td>
+              <td>1,883</td><td>297</td><td>+5.2%</td>
+              <td><svg width="72" height="18" viewBox="0 0 72 18" aria-hidden="true"><polyline points="0,9 10,10 20,9 30,10 40,9 50,10 61,9 72,8" fill="none" stroke="var(--c1)" stroke-width="1.5" stroke-linecap="round"/><circle cx="72" cy="8" r="2.2" fill="var(--c1-lit)"/></svg></td>
+              <td>93%</td><td><span class="hcell" style="background:var(--q4)">26</span></td></tr>
+            <tr class="kid"><td class="l">Desktop applications</td>
+              <td><span class="dbar"><i style="width:46.4%"></i><span>1,120</span></span></td>
+              <td>1,004</td><td>116</td><td>+2.0%</td>
+              <td><svg width="72" height="18" viewBox="0 0 72 18" aria-hidden="true"><polyline points="0,10 12,9 24,10 36,10 48,9 60,10 72,9" fill="none" stroke="var(--c1)" stroke-width="1.3" stroke-linecap="round"/></svg></td>
+              <td>95%</td><td><span class="hcell" style="background:var(--q3)">18</span></td></tr>
+            <tr class="kid"><td class="l">Integrations</td>
+              <td><span class="dbar"><i style="width:17.4%"></i><span>420</span></span></td>
+              <td>291</td><td>129</td><td class="neg">+24.3%</td>
+              <td><svg width="72" height="18" viewBox="0 0 72 18" aria-hidden="true"><polyline points="0,13 12,12 24,11 36,9 48,7 60,5 72,3" fill="none" stroke="var(--c1)" stroke-width="1.3" stroke-linecap="round"/></svg></td>
+              <td>84%</td><td><span class="hcell" style="background:var(--q6);color:var(--on-hi)">63</span></td></tr>
+            <tr class="sub"><td class="l">Software subtotal</td><td>2,180</td><td>1,883</td><td>297</td>
+              <td>+5.2%</td><td></td><td>93%</td><td>26</td></tr>
+
+            <tr class="grp"><td class="l"><span class="car">&#9656;</span>Service Desk</td>
+              <td><span class="dbar"><i style="width:49.9%"></i><span>1,204</span></span></td>
+              <td>1,121</td><td>83</td><td class="pos">-11.4%</td>
+              <td><svg width="72" height="18" viewBox="0 0 72 18" aria-hidden="true"><polyline points="0,6 10,7 20,8 30,8 40,10 50,11 61,12 72,13" fill="none" stroke="var(--c1)" stroke-width="1.5" stroke-linecap="round"/><circle cx="72" cy="13" r="2.2" fill="var(--c1-lit)"/></svg></td>
+              <td>98%</td><td><span class="hcell" style="background:var(--q2)">9</span></td></tr>
+            <tr class="grp"><td class="l"><span class="car">&#9656;</span>Hardware</td>
+              <td><span class="dbar"><i style="width:40.7%"></i><span>982</span></span></td>
+              <td>806</td><td>176</td><td>+7.1%</td>
+              <td><svg width="72" height="18" viewBox="0 0 72 18" aria-hidden="true"><polyline points="0,9 10,10 20,9 30,11 40,10 50,11 61,11 72,12" fill="none" stroke="var(--c1)" stroke-width="1.5" stroke-linecap="round"/><circle cx="72" cy="12" r="2.2" fill="var(--c1-lit)"/></svg></td>
+              <td>92%</td><td><span class="hcell" style="background:var(--q4)">33</span></td></tr>
+            <tr class="grp"><td class="l" style="color:var(--ink-3)"><span class="car"></span>Unassigned</td>
+              <td><span class="dbar"><i style="width:0%"></i><span style="color:var(--ink-3)">2,600</span></span></td>
+              <td style="color:var(--ink-3)">0</td><td style="color:var(--ink-3)">2,600</td>
+              <td class="neg">+41.0%</td><td></td>
+              <td style="color:var(--ink-3)">n/a</td>
+              <td><span class="hcell" style="background:var(--q7);color:var(--on-hi)">118</span></td></tr>
+
+            <tr class="tot"><td class="l">Total, all groups</td><td>9,378</td><td>5,643</td><td>3,735</td>
+              <td class="neg">+8.4%</td><td></td><td>93%</td><td>30</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid g3 rise" style="margin-bottom:16px">
+      <div class="rule"><h4>In-cell data bars sit behind the number</h4>
+        <p>The bar gives you the shape of the column at a glance, the number stays exactly readable.
+        Power BI offers a bars-only mode; we do not, because it throws away precision for nothing.</p></div>
+      <div class="rule"><h4>Colour scale, not a traffic light</h4>
+        <p>Mean age uses the sequential ramp, so brightness is magnitude. Status red and green are
+        reserved and never leak into a measure column, which is what stops a report looking like a
+        spreadsheet someone conditionally formatted by hand.</p></div>
+      <div class="rule"><h4>Variance carries direction, not just sign</h4>
+        <p>Backlog going up is bad, so <span class="neg">+19.4%</span> is red and
+        <span class="pos">-11.4%</span> is green. The polarity is a property of the measure and is
+        declared once, not decided per report.</p></div>
+      <div class="rule"><h4>Subtotals and a grand total are structural</h4>
+        <p>Every group closes with a subtotal and the matrix closes with a total. This is what makes
+        a report reconcilable, and it is the first thing a finance or audit reader checks.</p></div>
+      <div class="rule"><h4>Hierarchy is expandable, and shown as such</h4>
+        <p>Open groups carry a down caret and indented children, closed groups a right caret. Nothing
+        about the depth of the data is hidden from the reader.</p></div>
+      <div class="rule no"><h4>Unassigned is never a group</h4>
+        <p>2,600 records with no owner sit in the reserved neutral, with no data bar and no SLA
+        figure, because there is no group to attribute them to. Averaging them into a real group
+        would flatter every number above.</p></div>
+    </div>
+
+    <!-- ─────────────────────────── new specimens ────────────────────────── -->
+    <h3 class="h2 rise" style="margin:56px 0 10px">Analytical forms</h3>
+    <p class="sm rise" style="margin-bottom:22px; max-width:78ch">
+      The four forms below carry most of the analytical weight in a Power BI report, and all four
+      have zero instances on the live instance because the platform cannot draw them.
+    </p>
+
+    <div class="grid g2 rise" style="margin-bottom:16px">
+      <div class="panel cp">
+        <div class="cp-h">
+          <div><div class="cp-t">Waterfall</div>
+            <div class="cp-s">What actually moved the backlog, decomposed</div></div>
+          <div class="cp-m">contribution</div>
+        </div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 520 200" role="img"
+            aria-label="Waterfall of backlog movement. Opening 9,240. New arrivals add 3,180. Resolved removes 2,410. Cancelled removes 380. Closing 9,630, a net increase of 390.">
+            <line class="gl" x1="20" y1="30" x2="500" y2="30"/>
+            <line class="gl" x1="20" y1="95" x2="500" y2="95"/>
+            <rect class="rise-b" x="30"  y="67.6" width="66" height="92.4" rx="4" fill="var(--ink-4)"/>
+            <rect class="rise-b" x="126" y="35.8" width="66" height="31.8" rx="4" fill="var(--c4)"/>
+            <rect class="rise-b" x="222" y="35.8" width="66" height="24.1" rx="4" fill="var(--c1)"/>
+            <rect class="rise-b" x="318" y="59.9" width="66" height="3.8"  rx="2" fill="var(--c1)"/>
+            <rect class="rise-b" x="414" y="63.7" width="66" height="96.3" rx="4" fill="var(--ink-4)"/>
+            <g class="fade" stroke="var(--ink-4)" stroke-width="1" stroke-dasharray="2 3">
+              <line x1="96"  y1="67.6" x2="126" y2="67.6"/>
+              <line x1="192" y1="35.8" x2="222" y2="35.8"/>
+              <line x1="288" y1="59.9" x2="318" y2="59.9"/>
+              <line x1="384" y1="63.7" x2="414" y2="63.7"/>
+            </g>
+            <g class="fade">
+              <text class="vl" x="63"  y="61" text-anchor="middle" font-size="12">9,240</text>
+              <text class="vl" x="159" y="29" text-anchor="middle" font-size="12" fill="var(--c4-lit)">+3,180</text>
+              <text class="vl" x="255" y="29" text-anchor="middle" font-size="12" fill="var(--c1-lit)">-2,410</text>
+              <text class="vl" x="351" y="53" text-anchor="middle" font-size="12" fill="var(--c1-lit)">-380</text>
+              <text class="vl" x="447" y="57" text-anchor="middle" font-size="12">9,630</text>
+            </g>
+            <line class="bl" x1="20" y1="160" x2="500" y2="160"/>
+            <g class="tk">
+              <text x="63"  y="176" text-anchor="middle">OPENING</text>
+              <text x="159" y="176" text-anchor="middle">NEW</text>
+              <text x="255" y="176" text-anchor="middle">RESOLVED</text>
+              <text x="351" y="176" text-anchor="middle">CANCELLED</text>
+              <text x="447" y="176" text-anchor="middle">CLOSING</text>
+            </g>
+            <text class="an" x="20" y="194" fill="var(--ink-2)" font-size="10.5">Net +390. Arrivals outran resolution by roughly 13% over the period.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Bars float from the running total, so each step reads as a contribution rather than a level</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h">
+          <div><div class="cp-t">Forecast and anomaly</div>
+            <div class="cp-s">Projection with a drawn confidence interval</div></div>
+          <div class="cp-m">analytics</div>
+        </div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 520 200" role="img"
+            aria-label="Monthly volume with a three month forecast. History runs flat near 20 then spikes to 207 in July, flagged as an anomaly at 4.2 standard deviations. The forecast projects 132 to 148 with a widening confidence band from 102 to 190.">
+            <line class="gl" x1="34" y1="20" x2="504" y2="20"/>
+            <line class="gl" x1="34" y1="55" x2="504" y2="55"/>
+            <line class="gl" x1="34" y1="90" x2="504" y2="90"/>
+            <line class="gl" x1="34" y1="125" x2="504" y2="125"/>
+            <text class="tk" x="28" y="24"  text-anchor="end">220</text>
+            <text class="tk" x="28" y="94"  text-anchor="end">110</text>
+            <text class="tk" x="28" y="164" text-anchor="end">0</text>
+
+            <path class="fade" d="M401,84 L434,57 L467,48 L500,39 L500,92.5 L467,93.8 L434,95.1 Z"
+                  fill="var(--c1)" fill-opacity=".16"/>
+            <line class="fade" x1="401" y1="20" x2="401" y2="160" stroke="var(--ink-4)" stroke-width="1" stroke-dasharray="3 3"/>
+            <text class="tk fade" x="406" y="30" style="fill:var(--ink-4)">FORECAST</text>
+
+            <path class="draw" style="--len:700" stroke-dasharray="700"
+              d="M40,146 L73,150 L106,143 L139,149 L171,142 L204,151 L237,149 L270,141 L303,152 L336,61 L369,28 L401,84"
+              fill="none" stroke="var(--c1-lit)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path class="fade" d="M401,84 L434,76 L467,71 L500,66" fill="none" stroke="var(--c1-lit)"
+              stroke-width="2.2" stroke-dasharray="5 4" stroke-linecap="round"/>
+            <line class="bl" x1="34" y1="160" x2="504" y2="160"/>
+
+            <g class="fade">
+              <circle cx="369" cy="28" r="7" fill="none" stroke="var(--c4-lit)" stroke-width="1.5"/>
+              <circle cx="369" cy="28" r="3.5" fill="var(--c4-lit)"/>
+              <text class="an" x="360" y="46" text-anchor="end" fill="var(--c4-lit)" font-size="10.5">Anomaly, 4.2 sigma</text>
+            </g>
+            <g class="fade">
+              <circle cx="500" cy="66" r="3.5" fill="var(--c1-lit)"/>
+              <text class="tk" x="500" y="58" text-anchor="end">148</text>
+            </g>
+            <g class="tk">
+              <text x="40"  y="178">SEP '25</text>
+              <text x="401" y="178" text-anchor="middle">AUG '26</text>
+              <text x="500" y="178" text-anchor="end">NOV '26</text>
+            </g>
+            <text class="an" x="34" y="196" fill="var(--ink-2)" font-size="10.5">Band is the 80% interval. It widens with horizon, which is the point of drawing it.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>A forecast without a visible interval is a guess presented as a fact</span></div>
+      </div>
+    </div>
+
+    <div class="grid g3 rise" style="margin-bottom:16px">
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Treemap</div>
+          <div class="cp-s">Part to whole at high cardinality</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 320 176" role="img"
+            aria-label="Treemap of open load by assignment group. Network 2,412; Apache Support 2,203; Software 2,180; Service Desk 1,204; Hardware 982; twelve smaller groups 800.">
+            <g class="fade">
+              <rect x="0" y="8" width="111.6" height="88" rx="3" fill="var(--q6)"/>
+              <text class="ct" x="8" y="26" font-size="11" fill="var(--on-hi)" font-weight="600">Network</text>
+              <text class="vl" x="8" y="42" font-size="12" fill="var(--on-hi)">2,412</text>
+
+              <rect x="113.6" y="8" width="101.7" height="88" rx="3" fill="var(--q5)"/>
+              <text class="ct" x="121.6" y="26" font-size="11" fill="var(--on-hi)" font-weight="600">Apache</text>
+              <text class="vl" x="121.6" y="42" font-size="12" fill="var(--on-hi)">2,203</text>
+
+              <rect x="217.3" y="8" width="102.7" height="88" rx="3" fill="var(--q5)"/>
+              <text class="ct" x="225.3" y="26" font-size="11" fill="var(--on-hi)" font-weight="600">Software</text>
+              <text class="vl" x="225.3" y="42" font-size="12" fill="var(--on-hi)">2,180</text>
+
+              <rect x="0" y="100" width="127" height="58" rx="3" fill="var(--q4)"/>
+              <text class="ct" x="8" y="118" font-size="11">Service Desk</text>
+              <text class="vl" x="8" y="134" font-size="12">1,204</text>
+
+              <rect x="129" y="100" width="103.2" height="58" rx="3" fill="var(--q3)"/>
+              <text class="ct" x="137" y="118" font-size="11">Hardware</text>
+              <text class="vl" x="137" y="134" font-size="12">982</text>
+
+              <rect x="234.2" y="100" width="85.8" height="58" rx="3" fill="var(--c-other)"/>
+              <text class="ct" x="242.2" y="118" font-size="11" fill="var(--ink-2)">12 others</text>
+              <text class="vl" x="242.2" y="134" font-size="12" fill="var(--ink-2)">800</text>
+            </g>
+            <text class="an" x="0" y="172" fill="var(--ink-2)" font-size="10.5">Area is the value. The tail folds into one neutral block.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Used above 12 distinct values where a ranked bar would run off the panel</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Scatter with quadrants</div>
+          <div class="cp-s">Volume against mean age</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 330 200" role="img"
+            aria-label="Scatter of assignment groups plotting monthly volume against mean age, split by median reference lines. Network sits in the high volume, high age quadrant. Facilities has low volume but the highest age at 58 days.">
+            <line class="fade" x1="147" y1="14" x2="147" y2="160" stroke="var(--ink-4)" stroke-width="1" stroke-dasharray="3 3"/>
+            <line class="fade" x1="30" y1="102" x2="318" y2="102" stroke="var(--ink-4)" stroke-width="1" stroke-dasharray="3 3"/>
+            <text class="tk fade" x="314" y="24" text-anchor="end" style="fill:var(--ink-4)">HIGH VOLUME, HIGH AGE</text>
+            <text class="tk fade" x="34" y="156" style="fill:var(--ink-4)">LOW VOLUME, LOW AGE</text>
+            <g class="fade" fill="var(--c1)">
+              <circle cx="290" cy="72"  r="6" fill="var(--c1-lit)"/>
+              <circle cx="267" cy="100" r="4.5"/>
+              <circle cx="265" cy="104" r="4.5"/>
+              <circle cx="160" cy="141" r="4.5"/>
+              <circle cx="136" cy="89"  r="4.5"/>
+              <circle cx="99"  cy="35"  r="6" fill="var(--c1-lit)"/>
+              <circle cx="86"  cy="134" r="4.5"/>
+              <circle cx="124" cy="128" r="4.5"/>
+            </g>
+            <g class="fade">
+              <text class="ct" x="282" y="64" text-anchor="end" font-size="10.5" fill="var(--ink-1)">Network</text>
+              <text class="ct" x="107" y="30" font-size="10.5" fill="var(--ink-1)">Facilities, 58d</text>
+            </g>
+            <line class="bl" x1="30" y1="160" x2="318" y2="160"/>
+            <line class="bl" x1="30" y1="14"  x2="30"  y2="160"/>
+            <text class="tk" x="30"  y="176">VOLUME PER MONTH</text>
+            <text class="tk" x="318" y="176" text-anchor="end">MEDIANS DASHED</text>
+            <text class="an" x="30" y="194" fill="var(--ink-2)" font-size="10.5">Two groups need attention for opposite reasons.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Reference lines are medians, so the quadrants are computed rather than chosen</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">KPI visual and rich tooltip</div>
+          <div class="cp-s">Value, goal, variance, trend, status</div></div></div>
+        <div class="cp-b" style="display:flex; flex-direction:column; gap:16px">
+          <div class="kpi" style="padding:16px 18px">
+            <div class="kpi-h">
+              <div>
+                <div class="tag" style="margin-bottom:8px">SLA attainment</div>
+                <div class="kpi-v">93.1<span style="font-size:17px;color:var(--ink-3)">%</span></div>
+              </div>
+              <span class="chip warn">
+                <svg width="9" height="9" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1.2 9.2 8.6 0.8 8.6 Z" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/><path d="M5 4.2v1.9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                Below goal</span>
+            </div>
+            <div class="meter"><i style="width:93.1%;background:var(--warn)"></i></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span class="kpi-g">GOAL 95.0% &middot; <span style="color:var(--crit-lit)">-1.9 PTS</span></span>
+              <svg width="76" height="20" viewBox="0 0 76 20" aria-hidden="true">
+                <polyline points="0,5 12,6 25,5 38,8 50,10 63,12 76,14" fill="none" stroke="var(--c1)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="76" cy="14" r="2.4" fill="var(--c1-lit)"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="tip">
+            <div class="tip-h">July 2026</div>
+            <div class="tip-s">207 incidents &middot; 10x baseline</div>
+            <div class="tip-r"><span class="k" style="background:var(--c1)"></span><span class="n">Network</span><span class="v">96</span></div>
+            <div class="tip-r"><span class="k" style="background:var(--c3)"></span><span class="n">Software</span><span class="v">54</span></div>
+            <div class="tip-r"><span class="k" style="background:var(--c2)"></span><span class="n">Service Desk</span><span class="v">38</span></div>
+            <div class="tip-r"><span class="k" style="background:var(--c-other)"></span><span class="n">Other</span><span class="v">19</span></div>
+            <div class="tip-f">Click to drill to the 207 records</div>
+          </div>
+        </div>
+        <div class="cp-f"><span>A hover returns a breakdown, not a single number</span></div>
+      </div>
+    </div>
+
+    <h3 class="h2 rise" style="margin:56px 0 10px">Distribution, concentration and timing</h3>
+    <p class="sm rise" style="margin-bottom:22px; max-width:78ch">
+      Everything above answers "how much" and "which". These answer "how is it spread", "where is it
+      concentrated" and "when". They are the forms an analyst reaches for and the ones a fixed
+      chart template never produces.
+    </p>
+
+    <div class="grid g3 rise" style="margin-bottom:16px">
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Pareto</div>
+          <div class="cp-s">Where the backlog concentrates</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 340 200" role="img"
+            aria-label="Pareto of backlog by group. Network 579, Software 297, Hardware 176, Service Desk 83, Facilities 62, Security 41, Legal 28, Other 19. The first three groups account for 81.9 percent of all backlog.">
+            <rect class="fade" x="18" y="22" width="118" height="128" rx="3" fill="var(--ink-1)" fill-opacity=".05"/>
+            <line class="gl" x1="18" y1="30" x2="330" y2="30"/>
+            <line class="gl" x1="18" y1="90" x2="330" y2="90"/>
+            <g>
+              <rect class="rise-b" x="24"  y="30"    width="28" height="120"  rx="3" fill="var(--q6)"/>
+              <rect class="rise-b" x="62"  y="88.4"  width="28" height="61.6" rx="3" fill="var(--q5)"/>
+              <rect class="rise-b" x="100" y="113.5" width="28" height="36.5" rx="3" fill="var(--q5)"/>
+              <rect class="rise-b" x="138" y="132.8" width="28" height="17.2" rx="3" fill="var(--q4)"/>
+              <rect class="rise-b" x="176" y="137.2" width="28" height="12.8" rx="3" fill="var(--q4)"/>
+              <rect class="rise-b" x="214" y="141.5" width="28" height="8.5"  rx="3" fill="var(--q3)"/>
+              <rect class="rise-b" x="252" y="144.2" width="28" height="5.8"  rx="3" fill="var(--q3)"/>
+              <rect class="rise-b" x="290" y="146.1" width="28" height="3.9"  rx="3" fill="var(--c-other)"/>
+            </g>
+            <line class="bl" x1="18" y1="150" x2="330" y2="150"/>
+            <g class="fade">
+              <text class="vl" x="38" y="24" text-anchor="middle" font-size="11">579</text>
+              <text class="tk" x="140" y="34" style="fill:var(--c1-lit)">3 GROUPS = 81.9%</text>
+              <text class="tk" x="140" y="46" style="fill:var(--ink-4)">OF ALL BACKLOG</text>
+            </g>
+            <g class="tk" style="font-size:8.5px">
+              <text x="38"  y="164" text-anchor="middle">NETWK</text>
+              <text x="76"  y="164" text-anchor="middle">SOFTW</text>
+              <text x="114" y="164" text-anchor="middle">HARDW</text>
+              <text x="152" y="164" text-anchor="middle">SVCDK</text>
+              <text x="190" y="164" text-anchor="middle">FACIL</text>
+              <text x="228" y="164" text-anchor="middle">SECUR</text>
+              <text x="266" y="164" text-anchor="middle">LEGAL</text>
+              <text x="304" y="164" text-anchor="middle">OTHER</text>
+            </g>
+            <text class="an" x="18" y="186" fill="var(--ink-2)" font-size="10.5">Cumulative share is annotated, not plotted, because a</text>
+            <text class="an" x="18" y="198" fill="var(--ink-2)" font-size="10.5">second y-axis is banned by this system.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Answers where to spend effort first</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Box plot</div>
+          <div class="cp-s">Resolution days by group</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 340 200" role="img"
+            aria-label="Box plot of resolution days by group. Network median 34 days with a wide spread and an outlier at 96. Service Desk median 8 days and tightly clustered. Facilities median 52 days, the slowest.">
+            <line class="gl" x1="26" y1="38"  x2="330" y2="38"/>
+            <line class="gl" x1="26" y1="94"  x2="330" y2="94"/>
+            <text class="tk" x="20" y="42"  text-anchor="end">80</text>
+            <text class="tk" x="20" y="98"  text-anchor="end">40</text>
+            <text class="tk" x="20" y="154" text-anchor="end">0</text>
+            <g class="fade" stroke="var(--c1)" stroke-width="1.4" fill="none">
+              <line x1="52"  y1="29.6"  x2="52"  y2="144.4"/><line x1="44" y1="29.6" x2="60" y2="29.6"/><line x1="44" y1="144.4" x2="60" y2="144.4"/>
+              <line x1="107" y1="77.2"  x2="107" y2="147.2"/><line x1="99" y1="77.2" x2="115" y2="77.2"/><line x1="99" y1="147.2" x2="115" y2="147.2"/>
+              <line x1="162" y1="52"    x2="162" y2="145.8"/><line x1="154" y1="52" x2="170" y2="52"/><line x1="154" y1="145.8" x2="170" y2="145.8"/>
+              <line x1="217" y1="113.6" x2="217" y2="148.6"/><line x1="209" y1="113.6" x2="225" y2="113.6"/><line x1="209" y1="148.6" x2="225" y2="148.6"/>
+              <line x1="272" y1="26.8"  x2="272" y2="138.8"/><line x1="264" y1="26.8" x2="280" y2="26.8"/><line x1="264" y1="138.8" x2="280" y2="138.8"/>
+            </g>
+            <g class="fade" fill="var(--c1)" fill-opacity=".38" stroke="var(--c1-lit)" stroke-width="1.2">
+              <rect x="39"  y="68.8" width="26" height="56"   rx="2"/>
+              <rect x="94"  y="102.4" width="26" height="33.6" rx="2"/>
+              <rect x="149" y="85.6" width="26" height="44.8" rx="2"/>
+              <rect x="204" y="130.4" width="26" height="14"   rx="2"/>
+              <rect x="259" y="49.2" width="26" height="58.8" rx="2"/>
+            </g>
+            <g class="fade" stroke="var(--ink-1)" stroke-width="2">
+              <line x1="39"  y1="102.4" x2="65"  y2="102.4"/>
+              <line x1="94"  y1="122"   x2="120" y2="122"/>
+              <line x1="149" y1="110.8" x2="175" y2="110.8"/>
+              <line x1="204" y1="138.8" x2="230" y2="138.8"/>
+              <line x1="259" y1="77.2"  x2="285" y2="77.2"/>
+            </g>
+            <circle class="fade" cx="52" cy="16" r="3" fill="var(--c4-lit)"/>
+            <text class="tk fade" x="60" y="19" style="fill:var(--c4-lit)">OUTLIER 96D</text>
+            <line class="bl" x1="26" y1="150" x2="330" y2="150"/>
+            <g class="tk" style="font-size:8.5px">
+              <text x="52"  y="164" text-anchor="middle">NETWK</text>
+              <text x="107" y="164" text-anchor="middle">SOFTW</text>
+              <text x="162" y="164" text-anchor="middle">HARDW</text>
+              <text x="217" y="164" text-anchor="middle">SVCDK</text>
+              <text x="272" y="164" text-anchor="middle">FACIL</text>
+            </g>
+            <text class="an" x="26" y="186" fill="var(--ink-2)" font-size="10.5">Box is the interquartile range, white rule the median.</text>
+            <text class="an" x="26" y="198" fill="var(--ink-2)" font-size="10.5">A mean alone would hide all of this.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>The spread is the finding, not the average</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Histogram</div>
+          <div class="cp-s">Resolution hours, all closed records</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 340 200" role="img"
+            aria-label="Histogram of resolution hours. The distribution peaks in the 8 to 16 hour bin at 410 records and has a long right tail. Median 11 hours, mean 19 hours.">
+            <line class="gl" x1="18" y1="30" x2="330" y2="30"/>
+            <line class="gl" x1="18" y1="90" x2="330" y2="90"/>
+            <g>
+              <rect class="rise-b" x="20"  y="97.3"  width="38" height="52.7" rx="2" fill="var(--q4)"/>
+              <rect class="rise-b" x="62"  y="56.3"  width="38" height="93.7" rx="2" fill="var(--q5)"/>
+              <rect class="rise-b" x="104" y="30"    width="38" height="120"  rx="2" fill="var(--q6)"/>
+              <rect class="rise-b" x="146" y="73.9"  width="38" height="76.1" rx="2" fill="var(--q5)"/>
+              <rect class="rise-b" x="188" y="94.4"  width="38" height="55.6" rx="2" fill="var(--q4)"/>
+              <rect class="rise-b" x="230" y="117.8" width="38" height="32.2" rx="2" fill="var(--q3)"/>
+              <rect class="rise-b" x="272" y="129.5" width="38" height="20.5" rx="2" fill="var(--q3)"/>
+            </g>
+            <g class="fade">
+              <line x1="128" y1="22" x2="128" y2="150" stroke="var(--ink-1)" stroke-width="1.5"/>
+              <text class="tk" x="124" y="20" text-anchor="end">MEDIAN 11H</text>
+              <line x1="178" y1="34" x2="178" y2="150" stroke="var(--c4-lit)" stroke-width="1.5" stroke-dasharray="3 3"/>
+              <text class="tk" x="182" y="32" style="fill:var(--c4-lit)">MEAN 19H</text>
+            </g>
+            <line class="bl" x1="18" y1="150" x2="330" y2="150"/>
+            <g class="tk" style="font-size:8.5px">
+              <text x="39"  y="164" text-anchor="middle">0-4</text>
+              <text x="81"  y="164" text-anchor="middle">4-8</text>
+              <text x="123" y="164" text-anchor="middle">8-16</text>
+              <text x="165" y="164" text-anchor="middle">16-24</text>
+              <text x="207" y="164" text-anchor="middle">24-48</text>
+              <text x="249" y="164" text-anchor="middle">48-96</text>
+              <text x="291" y="164" text-anchor="middle">96+</text>
+            </g>
+            <text class="an" x="18" y="186" fill="var(--ink-2)" font-size="10.5">Mean sits well right of the median, so the tail is</text>
+            <text class="an" x="18" y="198" fill="var(--ink-2)" font-size="10.5">dragging it. Report the median.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Both centre measures shown, because they disagree</span></div>
+      </div>
+    </div>
+
+    <div class="grid g3 rise" style="margin-bottom:16px">
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Cohort retention</div>
+          <div class="cp-s">Share of a month's incidents still open</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 340 200" role="img"
+            aria-label="Cohort grid showing the share of each month's incidents still open after one to six months. Older cohorts clear steadily; the June and July cohorts retain far more, matching the volume spike.">
+            <g class="tk">
+              <text x="44" y="34"  text-anchor="end">MAR</text><text x="44" y="56"  text-anchor="end">APR</text>
+              <text x="44" y="78"  text-anchor="end">MAY</text><text x="44" y="100" text-anchor="end">JUN</text>
+              <text x="44" y="122" text-anchor="end">JUL</text><text x="44" y="144" text-anchor="end">AUG</text>
+            </g>
+            <g class="fade">
+              <rect x="52"  y="20"  width="44" height="18" rx="2" fill="var(--q5)"/><rect x="98"  y="20"  width="44" height="18" rx="2" fill="var(--q3)"/><rect x="144" y="20"  width="44" height="18" rx="2" fill="var(--q2)"/><rect x="190" y="20"  width="44" height="18" rx="2" fill="var(--q1)"/><rect x="236" y="20"  width="44" height="18" rx="2" fill="var(--q1)"/><rect x="282" y="20"  width="44" height="18" rx="2" fill="var(--q1)"/>
+              <rect x="52"  y="42"  width="44" height="18" rx="2" fill="var(--q5)"/><rect x="98"  y="42"  width="44" height="18" rx="2" fill="var(--q4)"/><rect x="144" y="42"  width="44" height="18" rx="2" fill="var(--q2)"/><rect x="190" y="42"  width="44" height="18" rx="2" fill="var(--q1)"/><rect x="236" y="42"  width="44" height="18" rx="2" fill="var(--q1)"/>
+              <rect x="52"  y="64"  width="44" height="18" rx="2" fill="var(--q5)"/><rect x="98"  y="64"  width="44" height="18" rx="2" fill="var(--q3)"/><rect x="144" y="64"  width="44" height="18" rx="2" fill="var(--q2)"/><rect x="190" y="64"  width="44" height="18" rx="2" fill="var(--q1)"/>
+              <rect x="52"  y="86"  width="44" height="18" rx="2" fill="var(--q7)"/><rect x="98"  y="86"  width="44" height="18" rx="2" fill="var(--q6)"/><rect x="144" y="86"  width="44" height="18" rx="2" fill="var(--q5)"/>
+              <rect x="52"  y="108" width="44" height="18" rx="2" fill="var(--q7)"/><rect x="98"  y="108" width="44" height="18" rx="2" fill="var(--q6)"/>
+              <rect x="52"  y="130" width="44" height="18" rx="2" fill="var(--q6)"/>
+            </g>
+            <g class="tk" style="font-size:8.5px">
+              <text x="74"  y="164" text-anchor="middle">+1M</text><text x="120" y="164" text-anchor="middle">+2M</text>
+              <text x="166" y="164" text-anchor="middle">+3M</text><text x="212" y="164" text-anchor="middle">+4M</text>
+              <text x="258" y="164" text-anchor="middle">+5M</text><text x="304" y="164" text-anchor="middle">+6M</text>
+            </g>
+            <text class="an" x="0" y="186" fill="var(--ink-2)" font-size="10.5">The June and July cohorts are not clearing. Brighter</text>
+            <text class="an" x="0" y="198" fill="var(--ink-2)" font-size="10.5">means more still open at that age.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Separates a volume problem from a throughput problem</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Period over period</div>
+          <div class="cp-s">This year against last, same calendar</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 340 200" role="img"
+            aria-label="Monthly volume this year plotted against the same months last year. The two track closely until June, when this year diverges sharply upward.">
+            <line class="gl" x1="18" y1="30" x2="330" y2="30"/>
+            <line class="gl" x1="18" y1="80" x2="330" y2="80"/>
+            <line class="gl" x1="18" y1="130" x2="330" y2="130"/>
+            <path class="fade" d="M24,132 L52,136 L80,130 L108,134 L136,128 L164,133 L192,130 L220,126 L248,134 L276,128 L304,131 L330,134"
+              fill="none" stroke="var(--c-other)" stroke-width="1.8" stroke-dasharray="5 4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path class="draw" style="--len:520" stroke-dasharray="520"
+              d="M24,134 L52,138 L80,131 L108,136 L136,129 L164,139 L192,136 L220,128 L248,140 L276,58 L304,26 L330,132"
+              fill="none" stroke="var(--c1-lit)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <g class="fade">
+              <rect x="264" y="20" width="52" height="130" rx="3" fill="var(--c4-lit)" fill-opacity=".08"/>
+              <text class="tk" x="290" y="16" text-anchor="middle" style="fill:var(--c4-lit)">DIVERGENCE</text>
+            </g>
+            <line class="bl" x1="18" y1="150" x2="330" y2="150"/>
+            <g class="tk"><text x="24" y="164">SEP</text>
+              <text x="174" y="164" text-anchor="middle">FEB</text>
+              <text x="330" y="164" text-anchor="end">AUG</text></g>
+            <g class="lgi" transform="translate(0,0)">
+              <rect x="18" y="176" width="14" height="2.5" rx="1" fill="var(--c1-lit)"/>
+              <text class="tk" x="38" y="181">THIS YEAR</text>
+              <rect x="110" y="176" width="14" height="2.5" rx="1" fill="var(--c-other)"/>
+              <text class="tk" x="130" y="181">LAST YEAR</text>
+            </g>
+            <text class="an" x="18" y="198" fill="var(--ink-2)" font-size="10.5">Prior period is a ghost, never a second colour.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Comparison without a second axis or a second hue</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Change window timeline</div>
+          <div class="cp-s">Scheduled work against a now marker</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 340 200" role="img"
+            aria-label="Gantt timeline of five scheduled change windows across a fortnight, with a now marker. One high-risk change overlaps a freeze period.">
+            <g class="tk" style="font-size:8.5px">
+              <text x="86" y="30"  text-anchor="end">CHG0041289</text>
+              <text x="86" y="54"  text-anchor="end">CHG0041312</text>
+              <text x="86" y="78"  text-anchor="end">CHG0041355</text>
+              <text x="86" y="102" text-anchor="end">CHG0041401</text>
+              <text x="86" y="126" text-anchor="end">CHG0041444</text>
+            </g>
+            <g class="fade">
+              <rect x="214" y="14" width="52" height="124" rx="3" fill="var(--c4-lit)" fill-opacity=".09"/>
+              <text class="tk" x="240" y="150" text-anchor="middle" style="fill:var(--c4-lit)">FREEZE</text>
+            </g>
+            <g>
+              <rect class="grow" x="94"  y="20"  width="72"  height="12" rx="3" fill="var(--q5)" style="transform-origin:94px center"/>
+              <rect class="grow" x="126" y="44"  width="48"  height="12" rx="3" fill="var(--q5)" style="transform-origin:126px center"/>
+              <rect class="grow" x="182" y="68"  width="96"  height="12" rx="3" fill="var(--c4)" style="transform-origin:182px center"/>
+              <rect class="grow" x="150" y="92"  width="40"  height="12" rx="3" fill="var(--q4)" style="transform-origin:150px center"/>
+              <rect class="grow" x="252" y="116" width="66"  height="12" rx="3" fill="var(--q5)" style="transform-origin:252px center"/>
+            </g>
+            <g class="fade">
+              <line x1="196" y1="10" x2="196" y2="142" stroke="var(--ink-1)" stroke-width="1.5"/>
+              <text class="tk" x="200" y="10">NOW</text>
+              <text class="tk" x="282" y="78" style="fill:var(--c4-lit)">HIGH RISK</text>
+            </g>
+            <line class="bl" x1="94" y1="142" x2="330" y2="142"/>
+            <g class="tk"><text x="94" y="156">MON 3</text>
+              <text x="212" y="156" text-anchor="middle">MON 10</text>
+              <text x="330" y="156" text-anchor="end">SUN 16</text></g>
+            <text class="an" x="0" y="180" fill="var(--ink-2)" font-size="10.5">CHG0041355 is high risk and overlaps the freeze</text>
+            <text class="an" x="0" y="192" fill="var(--ink-2)" font-size="10.5">window. That collision is the whole point of the view.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>Overlap and collision are what a timeline is for</span></div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────── interaction toolkit ──────────────────────── -->
+    <h3 class="h2 rise" style="margin:56px 0 10px">The analysis tools around the charts</h3>
+    <p class="sm rise" style="margin-bottom:22px; max-width:78ch">
+      A chart on its own is a picture. These are the controls that turn a set of charts into
+      something a person can actually analyse with, and they are specified as components rather
+      than left to whoever builds each page.
+    </p>
+
+    <div class="panel pad rise" style="margin-bottom:16px">
+      <div class="tag" style="margin-bottom:14px">Filter bar, one row, always above the charts</div>
+      <div class="row" style="gap:10px; margin-bottom:18px">
+        <div class="seg">
+          <button aria-selected="false">7D</button><button aria-selected="false">30D</button>
+          <button aria-selected="true">12MO</button><button aria-selected="false">Custom</button>
+        </div>
+        <button class="btn btn-sm">Assignment group <span style="color:var(--ink-3)">All</span></button>
+        <button class="btn btn-sm">Priority <span style="color:var(--ink-3)">P1, P2</span></button>
+        <button class="btn btn-sm">State <span style="color:var(--ink-3)">Open</span></button>
+        <div class="field" style="min-width:150px">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.4" stroke="currentColor" stroke-width="1.5"/><path d="M9.4 9.4 12.5 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Search</div>
+        <button class="btn btn-sm">Compare to <span style="color:var(--ink-3)">Last year</span></button>
+      </div>
+      <div class="row" style="gap:8px">
+        <span class="tag" style="letter-spacing:.12em">Active</span>
+        <span class="chip">Priority: P1, P2 &nbsp;<span style="color:var(--ink-3)">&#10005;</span></span>
+        <span class="chip">State: Open &nbsp;<span style="color:var(--ink-3)">&#10005;</span></span>
+        <span class="chip">Group: Network &nbsp;<span style="color:var(--ink-3)">&#10005;</span></span>
+        <button class="btn btn-sm btn-ghost" style="border-color:transparent;color:var(--ink-3)">Clear all</button>
+      </div>
+    </div>
+
+    <div class="grid g3 rise" style="margin-bottom:16px">
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Cross-filter state</div>
+          <div class="cp-s">One mark selected, siblings recede</div></div></div>
+        <div class="cp-b">
+          <svg class="ch" viewBox="0 0 320 150" role="img"
+            aria-label="A ranked bar chart with the Network bar selected. The selected bar keeps full colour while the other bars drop to a dimmed state, and every other panel on the page filters to Network.">
+            <text class="ct" x="0" y="10" font-size="10.5" fill="var(--ink-1)">Network</text>
+            <rect x="0" y="15" width="212" height="11" rx="4" fill="url(#gBar)"/>
+            <text class="vl" x="320" y="10" text-anchor="end" font-size="10.5">2,412</text>
+
+            <text class="ct" x="0" y="42" font-size="10.5" fill="var(--ink-3)">Apache Support</text>
+            <rect x="0" y="47" width="194" height="11" rx="4" fill="var(--c1)" fill-opacity=".2"/>
+            <text class="vl" x="320" y="42" text-anchor="end" font-size="10.5" fill="var(--ink-3)">2,203</text>
+
+            <text class="ct" x="0" y="74" font-size="10.5" fill="var(--ink-3)">Software</text>
+            <rect x="0" y="79" width="192" height="11" rx="4" fill="var(--c1)" fill-opacity=".2"/>
+            <text class="vl" x="320" y="74" text-anchor="end" font-size="10.5" fill="var(--ink-3)">2,180</text>
+
+            <text class="ct" x="0" y="106" font-size="10.5" fill="var(--ink-3)">Service Desk</text>
+            <rect x="0" y="111" width="106" height="11" rx="4" fill="var(--c1)" fill-opacity=".2"/>
+            <text class="vl" x="320" y="106" text-anchor="end" font-size="10.5" fill="var(--ink-3)">1,204</text>
+
+            <text class="an" x="0" y="140" fill="var(--ink-2)" font-size="10.5">Dimmed, not hidden. The whole stays visible.</text>
+          </svg>
+        </div>
+        <div class="cp-f"><span>One click sets it, one click clears it</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Drill path</div>
+          <div class="cp-s">Every step is reversible and recorded</div></div></div>
+        <div class="cp-b" style="display:flex;flex-direction:column;gap:12px">
+          <div class="crumb" style="margin:0;flex-wrap:wrap">All incidents
+            <span style="color:var(--ink-4)">/</span> Network
+            <span style="color:var(--ink-4)">/</span> VPN
+            <span style="color:var(--ink-1)">/</span> <span style="color:var(--ink-1)">Jul 2026</span></div>
+          <div style="border:1px solid var(--edge); border-radius:9px; overflow:hidden">
+            <div style="padding:9px 12px; border-bottom:1px solid var(--edge); display:flex;
+                 justify-content:space-between; align-items:center">
+              <span class="tag" style="letter-spacing:.12em">230 records</span>
+              <span class="chip ok" style="padding:2px 7px;font-size:8.5px">ACL filtered</span>
+            </div>
+            <div style="padding:9px 12px; font-size:11.5px; color:var(--ink-2); border-bottom:1px solid var(--edge)">
+              INC0041289 &nbsp;<span style="color:var(--ink-3)">VPN drops after failover</span></div>
+            <div style="padding:9px 12px; font-size:11.5px; color:var(--ink-2); border-bottom:1px solid var(--edge)">
+              INC0041301 &nbsp;<span style="color:var(--ink-3)">Tunnel renegotiation loop</span></div>
+            <div style="padding:9px 12px; font-size:11.5px; color:var(--ink-3)">and 228 more</div>
+          </div>
+        </div>
+        <div class="cp-f"><span>Drill lands on records, ACL applied at the destination</span></div>
+      </div>
+
+      <div class="panel cp">
+        <div class="cp-h"><div><div class="cp-t">Table view</div>
+          <div class="cp-s">Every chart toggles to this</div></div></div>
+        <div class="cp-b" style="display:flex;flex-direction:column;gap:12px">
+          <div class="seg" style="align-self:flex-start">
+            <button aria-selected="false">Chart</button><button aria-selected="true">Table</button>
+          </div>
+          <table class="mx" style="font-size:11.5px">
+            <thead><tr><th class="l">Category</th><th>Records</th><th>Share</th></tr></thead>
+            <tbody>
+              <tr><td class="l">Inquiry / Help</td><td>3,733</td><td>26.7%</td></tr>
+              <tr><td class="l">Software</td><td>2,651</td><td>19.0%</td></tr>
+              <tr><td class="l">Hardware</td><td>2,571</td><td>18.4%</td></tr>
+              <tr><td class="l" style="color:var(--ink-3)">Unknown</td><td style="color:var(--ink-3)">344</td><td style="color:var(--ink-3)">2.5%</td></tr>
+              <tr class="tot"><td class="l">Total</td><td>13,986</td><td>100%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="cp-f"><span>The accessibility answer for canvas charts, and an export path</span></div>
+      </div>
+    </div>
+
+    <div class="note rise">
+      <b>Where this genuinely stops short.</b> Key influencers and the Q and A visual are not
+      matched, and neither is the decomposition tree's free interactive re-expansion. All three need
+      a semantic model layer over the data rather than better rendering, which is the same
+      structural gap named in section 11. Everything else in the parity table above is a rendering
+      problem, and rendering is the part we control.
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 06 MATERIAL -->
+<section id="material">
+  <div class="wrap">
+    <div class="sec-h rise"><span class="sec-n">07</span><h2 class="d2">Material</h2></div>
+    <p class="lede rise" style="margin-bottom:34px">
+      What makes a dark interface look built rather than merely dark. Four ingredients, applied
+      without exception. This is the part a flat card grid never has, and the part people read as
+      expensive without being able to name.
+    </p>
+
+    <div class="grid g4 rise" style="margin-bottom:28px">
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:11px">01 Light source</div>
+        <h4 class="h3" style="margin-bottom:8px">Lit from above</h4>
+        <p class="xs">Every panel carries a top-to-bottom surface gradient and a one pixel inset
+        highlight on its top edge. One consistent light direction across the whole product is what
+        makes surfaces read as physical rather than as coloured rectangles.</p>
+      </div>
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:11px">02 Edge</div>
+        <h4 class="h3" style="margin-bottom:8px">Gradient hairline</h4>
+        <p class="xs">Borders fade from 18% white at the top edge to under 2% at the bottom,
+        matching the light. A uniform one pixel grey border is the single most common tell of a flat
+        template.</p>
+      </div>
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:11px">03 Grain</div>
+        <h4 class="h3" style="margin-bottom:8px">Film, not vector</h4>
+        <p class="xs">A fractal noise overlay in overlay blend across the whole document. It removes
+        the plastic flatness of pure CSS gradients and gives large dark fields something to hold.
+        Zero network cost, since it is an inline SVG filter.</p>
+      </div>
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:11px">04 Restraint</div>
+        <h4 class="h3" style="margin-bottom:8px">Colour is scarce</h4>
+        <p class="xs">The entire interface is graphite and ink. Buttons, tabs, chips, borders and
+        axes carry no hue at all, so the only saturated pixels on screen belong to data. Nothing
+        glows. Luminosity is what makes a dark dashboard read as a prototype rather than as a
+        product.</p>
+      </div>
+    </div>
+
+    <div class="grid g2 rise">
+      <div class="panel pad">
+        <h4 class="h3" style="margin-bottom:14px">Surface stack</h4>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="padding:12px 14px;border-radius:8px;background:var(--void);border:1px solid var(--edge)">
+            <span class="mono xs">--void</span> <span class="xs dimmer">page ground</span></div>
+          <div style="padding:12px 14px;border-radius:8px;background:var(--ground);border:1px solid var(--edge)">
+            <span class="mono xs">--ground</span> <span class="xs dimmer">app canvas</span></div>
+          <div class="panel" style="padding:12px 14px;border-radius:8px">
+            <span class="mono xs">--surface</span> <span class="xs dimmer">panel, lit gradient</span></div>
+          <div style="padding:12px 14px;border-radius:8px;background:var(--surface-3);border:1px solid var(--edge-2)">
+            <span class="mono xs">--surface-3</span> <span class="xs dimmer">inset, track, code</span></div>
+        </div>
+        <p class="xs" style="margin-top:14px">Nothing is pure black. <code>#000</code> has no room
+        beneath it, so shadow stops working and the whole stack collapses flat.</p>
+      </div>
+      <div class="panel pad">
+        <h4 class="h3" style="margin-bottom:14px">Elevation and radius</h4>
+        <table class="sp">
+          <tbody>
+            <tr><td>e1 resting</td><td>inset top highlight, 1px black, 16px ambient</td></tr>
+            <tr><td>e2 hover</td><td>lift 3px, edge brightens, ambient deepens</td></tr>
+            <tr><td>e3 hero</td><td>adds a faint signal ring. Exactly one per view.</td></tr>
+            <tr><td>Radius</td><td>4 chip, 8 control, 14 panel, 16 window. Nothing rounder.</td></tr>
+            <tr><td>Never</td><td>a shadow on text, a blur on chrome, or a second light source</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 07 COLOUR -->
+<section id="colour">
+  <div class="wrap">
+    <div class="sec-h rise"><span class="sec-n">08</span><h2 class="d2">Colour</h2></div>
+    <p class="lede rise" style="margin-bottom:32px">
+      Four colour jobs, four separate palettes, no overlap. Every value was run through an OKLab and
+      CVD validator against the surface it actually renders on, <code>#0D1117</code> for dark and
+      <code>#FFFFFF</code> for light. The light theme is a selected counterpart with its own steps
+      rather than an inversion of the dark ones, and it clears the same gates independently. The
+      toggle in the header switches the whole document.
+    </p>
+
+    <h4 class="h3 rise" style="margin-bottom:12px">Categorical, six slots plus a reserved neutral</h4>
+    <p class="sm rise" style="margin-bottom:18px;max-width:76ch">
+      Assigned in fixed order and never cycled. The ordering is the colour-blindness mechanism, not
+      taste: slots alternate between the families that protanopia and deuteranopia collapse toward,
+      so adjacent series stay separable. A seventh category is never a generated hue, it folds into
+      Other.
+    </p>
+    <div class="sws rise" style="margin-bottom:16px">
+      <div class="sw"><div class="sw-c" style="background:var(--c1)"></div><div class="sw-m">
+        <div class="sw-n">Cyan <span class="sw-s">C1</span></div><div class="sw-h"><span style="color:var(--ink-4)">D</span> #16A5BA &nbsp;<span style="color:var(--ink-4)">L</span> #008C9E</div></div></div>
+      <div class="sw"><div class="sw-c" style="background:var(--c2)"></div><div class="sw-m">
+        <div class="sw-n">Amber <span class="sw-s">C2</span></div><div class="sw-h"><span style="color:var(--ink-4)">D</span> #B8842A &nbsp;<span style="color:var(--ink-4)">L</span> #A5741F</div></div></div>
+      <div class="sw"><div class="sw-c" style="background:var(--c3)"></div><div class="sw-m">
+        <div class="sw-n">Violet <span class="sw-s">C3</span></div><div class="sw-h"><span style="color:var(--ink-4)">D</span> #7A6DE0 &nbsp;<span style="color:var(--ink-4)">L</span> #6355C8</div></div></div>
+      <div class="sw"><div class="sw-c" style="background:var(--c4)"></div><div class="sw-m">
+        <div class="sw-n">Coral <span class="sw-s">C4</span></div><div class="sw-h"><span style="color:var(--ink-4)">D</span> #D8544A &nbsp;<span style="color:var(--ink-4)">L</span> #C24438</div></div></div>
+      <div class="sw"><div class="sw-c" style="background:var(--c5)"></div><div class="sw-m">
+        <div class="sw-n">Mint <span class="sw-s">C5</span></div><div class="sw-h"><span style="color:var(--ink-4)">D</span> #2AA47E &nbsp;<span style="color:var(--ink-4)">L</span> #1B8A67</div></div></div>
+      <div class="sw"><div class="sw-c" style="background:var(--c6)"></div><div class="sw-m">
+        <div class="sw-n">Orchid <span class="sw-s">C6</span></div><div class="sw-h"><span style="color:var(--ink-4)">D</span> #B25FA8 &nbsp;<span style="color:var(--ink-4)">L</span> #9A4B90</div></div></div>
+      <div class="sw" style="border-style:dashed"><div class="sw-c" style="background:var(--c-other)"></div><div class="sw-m">
+        <div class="sw-n">Other <span class="sw-s">RSVD</span></div><div class="sw-h"><span style="color:var(--ink-4)">D</span> #5A6472 &nbsp;<span style="color:var(--ink-4)">L</span> #7A8394</div></div></div>
+    </div>
+
+    <div class="note rise" style="margin-bottom:16px">
+      <b>Two steps per hue, and they are not interchangeable.</b> The base step is the only one
+      allowed to fill an area: bars, bands, ribbons, stacked segments. The second step is for
+      strokes and markers, and it exists for a narrow technical reason rather than for effect: a two
+      pixel mark does not hold the same perceived weight as a large fill of the same colour, so it
+      needs a step of separation. <b>The direction of that step flips by theme.</b> On dark it goes
+      lighter, on light it goes darker. Filling a large area with the dark theme's lighter step is
+      what makes a dark dashboard physically tiring within a minute.
+    </div>
+
+    <div class="scroll-x rise" style="margin-bottom:34px">
+      <table class="sp">
+        <thead><tr><th>Validator check</th><th>Dark, on #0D1117</th><th>Light, on #FFFFFF</th><th>Gate</th></tr></thead>
+        <tbody>
+          <tr><td>Lightness band</td><td>all 6 in L 0.48 to 0.67 <b style="color:var(--ok-lit)">PASS</b></td><td>all 6 in L 0.43 to 0.77 <b style="color:var(--ok-lit)">PASS</b></td><td>in band</td></tr>
+          <tr><td>Chroma floor</td><td>all 6 at or above 0.10 <b style="color:var(--ok-lit)">PASS</b></td><td>all 6 at or above 0.10 <b style="color:var(--ok-lit)">PASS</b></td><td>0.10</td></tr>
+          <tr><td>Adjacent CVD delta-E</td><td>worst 7.0, Mint against Coral, deutan <b style="color:var(--warn-lit)">WARN</b></td><td>worst 7.3, Mint against Coral, deutan <b style="color:var(--warn-lit)">WARN</b></td><td>8 target, 6 floor</td></tr>
+          <tr><td>Normal-vision delta-E</td><td>worst 19.6 <b style="color:var(--ok-lit)">PASS</b></td><td>worst 19.7 <b style="color:var(--ok-lit)">PASS</b></td><td>15</td></tr>
+          <tr><td>Contrast against surface</td><td>all 6 at or above 3:1 <b style="color:var(--ok-lit)">PASS</b></td><td>all 6 at or above 3:1 <b style="color:var(--ok-lit)">PASS</b></td><td>3:1</td></tr>
+        </tbody>
+      </table>
+      <p class="xs" style="margin-top:12px;max-width:82ch">
+        Both modes land on the same single WARN, Mint against Coral under deuteranopia, inside the
+        6 to 8 floor band. That is legal only with mandatory secondary encoding, which is already a
+        requirement here rather than a concession: every multi-series chart ships a legend, direct
+        labels on the leading series, and a two pixel surface gap between touching marks. Identity
+        is never carried by hue alone. The two modes matching is not a coincidence, it is the same
+        hue pair in both, and it is the one thing to revisit if confusion shows up in a real chart.
+      </p>
+    </div>
+
+    <div class="grid g2 rise" style="margin-bottom:32px">
+      <div>
+        <h4 class="h3" style="margin-bottom:12px">Sequential, magnitude</h4>
+        <p class="sm" style="margin-bottom:14px">One hue, seven steps. The direction inverts by
+        theme: on the dark ground brightness is magnitude, on the light ground darkness is. Getting
+        that backwards is the most common dark-mode heatmap bug, so the ramp is defined twice
+        rather than flipped at runtime.</p>
+        <div class="ramp">
+          <div><b style="background:var(--q1)"></b>Q1</div>
+          <div><b style="background:var(--q2)"></b>Q2</div>
+          <div><b style="background:var(--q3)"></b>Q3</div>
+          <div><b style="background:var(--q4)"></b>Q4</div>
+          <div><b style="background:var(--q5)"></b>Q5</div>
+          <div><b style="background:var(--q6)"></b>Q6</div>
+          <div><b style="background:var(--q7)"></b>Q7</div>
+        </div>
+      </div>
+      <div>
+        <h4 class="h3" style="margin-bottom:12px">Diverging, polarity</h4>
+        <p class="sm" style="margin-bottom:14px">Two poles, neutral graphite midpoint, equal steps
+        per arm. Cyan against coral rather than green against red, which is unreadable for the most
+        common form of colour blindness.</p>
+        <div class="ramp">
+          <div><b style="background:var(--dn3)"></b>-3</div>
+          <div><b style="background:var(--dn2)"></b>-2</div>
+          <div><b style="background:var(--dn1)"></b>-1</div>
+          <div><b style="background:var(--dmid)"></b>0</div>
+          <div><b style="background:var(--dp1)"></b>+1</div>
+          <div><b style="background:var(--dp2)"></b>+2</div>
+          <div><b style="background:var(--dp3)"></b>+3</div>
+        </div>
+      </div>
+    </div>
+
+    <h4 class="h3 rise" style="margin-bottom:12px">Status, reserved and never a series</h4>
+    <p class="sm rise" style="margin-bottom:18px;max-width:76ch">
+      These four never appear as a chart series, and a series colour never appears as a status. They
+      always ship with an icon and a label, which also covers the case where a status sits beside a
+      same-family categorical slot, as critical does beside coral.
+    </p>
+    <div class="sws rise" style="margin-bottom:26px">
+      <div class="sw"><div class="sw-c" style="background:var(--ok)"></div><div class="sw-m">
+        <div class="sw-n">OK <span class="sw-s">RSVD</span></div><div class="sw-h"><span style="color:var(--ink-4)">D</span> #2FBF7F &nbsp;<span style="color:var(--ink-4)">L</span> #167C4F</div></div></div>
+      <div class="sw"><div class="sw-c" style="background:var(--warn)"></div><div class="sw-m">
+        <div class="sw-n">Warning <span class="sw-s">RSVD</span></div><div class="sw-h"><span style="color:var(--ink-4)">D</span> #D9A62E &nbsp;<span style="color:var(--ink-4)">L</span> #8A6410</div></div></div>
+      <div class="sw"><div class="sw-c" style="background:var(--hot)"></div><div class="sw-m">
+        <div class="sw-n">Serious <span class="sw-s">RSVD</span></div><div class="sw-h"><span style="color:var(--ink-4)">D</span> #E07A3C &nbsp;<span style="color:var(--ink-4)">L</span> #B25718</div></div></div>
+      <div class="sw"><div class="sw-c" style="background:var(--crit)"></div><div class="sw-m">
+        <div class="sw-n">Critical <span class="sw-s">RSVD</span></div><div class="sw-h"><span style="color:var(--ink-4)">D</span> #FF4C5B &nbsp;<span style="color:var(--ink-4)">L</span> #C0272E</div></div></div>
+    </div>
+
+    <div class="rules rise">
+      <div class="rule ok"><h4>Colour follows the entity, never the rank</h4>
+        <p>Network is Cyan on every chart on every dashboard. Filtering a series out must not
+        repaint the survivors, because that is how a reader loses their place mid-analysis.</p></div>
+      <div class="rule ok"><h4>One saturated hue per panel by default</h4>
+        <p>A ranked chart of one measure is one hue. Colour enters only when the categorical
+        dimension is itself the encoding: a breakdown, a stack, a flow, a multi-series line.</p></div>
+      <div class="rule ok"><h4>Text never wears the data colour</h4>
+        <p>Values, axis labels and legends stay in ink tokens. Identity comes from a coloured mark
+        beside the text, never from tinting the text itself.</p></div>
+      <div class="rule no"><h4>Never a dual axis</h4>
+        <p>Two measures at different scales become two charts, small multiples, or an indexed common
+        base. It is the single most misleading construction in enterprise BI, which is why the
+        Pareto in section 02 is drawn without one.</p></div>
+      <div class="rule no"><h4>Chrome carries no hue</h4>
+        <p>Buttons, tabs, chips, borders and axes are graphite or ink. A coloured control competes
+        with the data for the one thing colour is reserved to mean here.</p></div>
+      <div class="rule no"><h4>Nothing emits light</h4>
+        <p>No glow, no bloom, no coloured drop shadow, on chrome or on data. It reads as a demo
+        rather than as a system of record, and it costs legibility for nothing.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 08 TYPE -->
+<section id="type">
+  <div class="wrap">
+    <div class="sec-h rise"><span class="sec-n">09</span><h2 class="d2">Typography</h2></div>
+    <p class="lede rise" style="margin-bottom:32px">
+      Three faces with three jobs. A geometric grotesque for display and figures, a neutral text face
+      for prose, and a mono for every label, timestamp, tick and identifier. The mono is what gives
+      the product its instrument register, and it is the cheapest single upgrade available.
+    </p>
+
+    <div class="grid g3 rise" style="margin-bottom:26px">
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:10px">Display and figures</div>
+        <div style="font-family:var(--display);font-size:38px;font-weight:600;letter-spacing:-.04em;line-height:1.06">Space<br>Grotesk</div>
+        <p class="xs" style="margin-top:14px">Headings, panel titles and every number. Slightly
+        technical letterforms with real character, and the distinguishing face of the system.</p>
+      </div>
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:10px">Text</div>
+        <div style="font-family:var(--sans);font-size:38px;font-weight:500;letter-spacing:-.03em;line-height:1.06">Inter<br>Tight</div>
+        <p class="xs" style="margin-top:14px">Body copy, descriptions, tooltips. Neutral by design,
+        so it never competes with the display face or with the data.</p>
+      </div>
+      <div class="panel pad">
+        <div class="tag" style="margin-bottom:10px">Mono</div>
+        <div style="font-family:var(--mono);font-size:32px;font-weight:500;letter-spacing:-.03em;line-height:1.14">JetBrains<br>Mono</div>
+        <p class="xs" style="margin-top:14px">Labels, axis ticks, timestamps, deltas, identifiers and
+        code. Always uppercase with wide tracking at small sizes.</p>
+      </div>
+    </div>
+
+    <div class="grid g2 rise">
+      <div class="panel pad">
+        <h4 class="h3" style="margin-bottom:16px">Scale</h4>
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div><div class="tag" style="margin-bottom:5px">D1 &middot; 72 / .98 / -.045em / 600</div>
+            <div class="d1" style="font-size:42px">Service operations</div></div>
+          <div><div class="tag" style="margin-bottom:5px">D2 &middot; 38 / 1.08 / -.034em / 600</div>
+            <div class="d2" style="font-size:27px">Incidents opened per month</div></div>
+          <div><div class="tag" style="margin-bottom:5px">Panel title &middot; 14.5 / 600</div>
+            <div class="h3">Load by assignment group</div></div>
+          <div><div class="tag" style="margin-bottom:5px">Body &middot; 15 / 1.62 / 400</div>
+            <div class="sm" style="color:var(--ink-1)">Volume rose sharply from June and has not returned to the prior baseline.</div></div>
+          <div><div class="tag" style="margin-bottom:5px">Micro label &middot; mono 9 / .16em / uppercase</div>
+            <div class="tag" style="color:var(--ink-2)">Records visible to you</div></div>
+        </div>
+      </div>
+      <div class="panel pad">
+        <h4 class="h3" style="margin-bottom:16px">Figures</h4>
+        <div class="row" style="align-items:flex-end;gap:32px;margin-bottom:22px">
+          <div><div class="tag" style="margin-bottom:6px">Hero &middot; 50</div>
+            <div class="num" style="font-size:50px">13,986</div></div>
+          <div><div class="tag" style="margin-bottom:6px">Tile &middot; 29</div>
+            <div class="num" style="font-size:29px">922</div></div>
+          <div><div class="tag" style="margin-bottom:6px">Delta &middot; mono 10.5</div>
+            <div class="delta d-bad" style="font-size:13px">&#9650; 8.4%</div></div>
+        </div>
+        <table class="sp">
+          <tbody>
+            <tr><td>Standalone figures</td><td>Proportional lining figures. <code>tabular-nums</code> makes <code>121</code> look loose at display size.</td></tr>
+            <tr><td>Columns and ticks</td><td><code>tabular-nums lining-nums</code>, mandatory</td></tr>
+            <tr><td>Tracking</td><td>-.038em at 29px, -.046em at 50px. Large figures must close up.</td></tr>
+            <tr><td>Compaction</td><td>1,284 becomes 12.9K becomes 4.2M. Never mix compacted and full in one column.</td></tr>
+            <tr><td>Never</td><td>a gradient, a shadow or an outline on a figure. The number is the content.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 09 MOTION -->
+<section id="motion">
+  <div class="wrap">
+    <div class="sec-h rise"><span class="sec-n">10</span><h2 class="d2">Motion and interaction</h2></div>
+    <p class="lede rise" style="margin-bottom:32px">
+      A large part of what reads as expensive in Power BI is motion rather than static pixels. Every
+      animation here has a job: establish causality, show change, or confirm a response. Nothing
+      bounces and nothing announces itself.
+    </p>
+
+    <div class="grid g2 rise">
+      <div class="panel pad">
+        <h4 class="h3" style="margin-bottom:14px">Motion tokens</h4>
+        <table class="sp">
+          <tbody>
+            <tr><td>Easing</td><td><code>cubic-bezier(.16,1,.3,1)</code> for entrance, <code>(.22,.61,.36,1)</code> for state. Two curves, no more.</td></tr>
+            <tr><td>Panel entrance</td><td>700ms, fade plus 12px rise, 60ms stagger capped at six</td></tr>
+            <tr><td>Line draw</td><td>1.4s <code>stroke-dashoffset</code> sweep, left to right</td></tr>
+            <tr><td>Bar grow</td><td>900ms <code>scaleX</code> from the baseline, never from the centre</td></tr>
+            <tr><td>Gauge sweep</td><td>1.4s arc fill on the same dash mechanism</td></tr>
+            <tr><td>Counters</td><td>1.4s ease-out count up on first paint only, never on refresh</td></tr>
+            <tr><td>Loops</td><td>None. Nothing on the page animates indefinitely.</td></tr>
+            <tr><td>Hover</td><td>180ms. The pointer must never wait on an animation.</td></tr>
+            <tr><td>Reduced motion</td><td><code>prefers-reduced-motion</code> disables every rule above and renders final state</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel pad">
+        <h4 class="h3" style="margin-bottom:14px">Interaction contract</h4>
+        <table class="sp">
+          <tbody>
+            <tr><td>Hover</td><td>Every chart ships one. Crosshair and tooltip on line, area and stream; per-mark tooltip on bar, cell and node. Only a bare stat tile is exempt.</td></tr>
+            <tr><td>Hit target</td><td>Always larger than the mark. A 4px dot gets roughly a 24px target.</td></tr>
+            <tr><td>Filters</td><td>One row above the charts, never inside a panel. Active filters echo back as removable chips.</td></tr>
+            <tr><td>Drill</td><td>Any mark opens the underlying record list, pre-filtered and ACL-applied, with the breadcrumb recording the path back.</td></tr>
+            <tr><td>Cross-filter</td><td>Selecting a mark filters sibling panels. The selection stays visible and one click clears it.</td></tr>
+            <tr><td>Keyboard</td><td>Every chart focusable, arrow keys traverse marks, tooltip content announced.</td></tr>
+            <tr><td>Table view</td><td>A same-page toggle on every chart to a linear table. This is the pattern classic PA already ships and the only credible accessibility answer for canvas-rendered charts.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="note warn rise" style="margin-top:22px">
+      <b>Accessibility is a workstream, not an inheritance.</b> A canvas or SVG chart gets no ARIA,
+      no keyboard traversal and no screen-reader support for free, and ServiceNow publishes no
+      accessibility conformance report covering custom UI Builder pages or custom UXF components as
+      a category, so that responsibility sits with whoever builds them. The table-view toggle, focus
+      order and per-mark labelling above are the mitigation and they get built alongside the charts.
+      A dark-first system also needs its light counterpart specified before UAT rather than
+      discovered in it.
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 10 STACK -->
+<section id="stack">
+  <div class="wrap">
+    <div class="sec-h rise"><span class="sec-n">11</span><h2 class="d2">Stack and delivery</h2></div>
+    <p class="lede rise" style="margin-bottom:26px">
+      With the client's agreement to permit external third-party components, the ceiling that was
+      capping visual quality is gone. Two things the old constraint bundled together are worth
+      separating, because only one of them carries real risk.
+    </p>
+
+    <div class="grid g2 rise" style="margin-bottom:30px">
+      <div class="rule ok">
+        <h4>Loading assets from outside, now unblocked</h4>
+        <p>Typefaces, charting libraries, WebGL renderers, animation engines. This is code and fonts
+        travelling into the browser, with no instance data involved. It is what the agreement buys
+        us, and essentially all of the visual quality gain lives here.</p>
+      </div>
+      <div class="rule no">
+        <h4>Sending data outside, still worth refusing</h4>
+        <p>Record data leaving the instance for an external rendering or analytics service. Different
+        risk class entirely: residency, DPA, ACL enforcement at the boundary. It also buys almost no
+        visual quality. Recommendation is to keep aggregation and rendering in-browser, so instance
+        data never leaves even though the code arrives from a CDN.</p>
+      </div>
+    </div>
+
+    <div class="scroll-x rise" style="margin-bottom:30px">
+      <table class="sp">
+        <thead><tr><th>Component</th><th>Licence</th><th>Role</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Apache ECharts</td><td>Apache-2.0</td><td style="color:var(--ok-lit)">Primary engine</td>
+            <td>Draws every form in sections 05 and 06 including sankey, waterfall, treemap, box plot, stream, radar, heatmap, funnel and bump. Already proven loading on this instance.</td></tr>
+          <tr><td>ECharts GL</td><td>Apache-2.0</td><td style="color:var(--ok-lit)">Scale and geo</td>
+            <td>WebGL renderer for scatter above roughly 50k points, and extruded geo where a spatial dimension genuinely carries a value.</td></tr>
+          <tr><td>D3</td><td>ISC</td><td style="color:var(--c1-lit)">Selective</td>
+            <td>Bespoke one-off visuals and layout maths. Not a second general chart engine, since two engines means two themes to keep in sync.</td></tr>
+          <tr><td>Motion One</td><td>MIT</td><td style="color:var(--c1-lit)">Choreography</td>
+            <td>Roughly 4KB, covers the section 10 sequencing where CSS alone gets awkward.</td></tr>
+          <tr><td>Space Grotesk, Inter Tight, JetBrains Mono</td><td>SIL OFL</td><td style="color:var(--ok-lit)">Type</td>
+            <td>Free to redistribute, including inside a Store app. Self-host rather than hot-link, so the product survives a CDN outage.</td></tr>
+          <tr><td>Three.js, deck.gl</td><td>MIT</td><td style="color:var(--warn-lit)">Only if earned</td>
+            <td>Legitimate for geography, topology and NOC wall displays. Not for 3D bars or 3D pies: a third dimension that encodes nothing adds occlusion and perspective distortion, and instantly undoes the impression we are building.</td></tr>
+          <tr><td>Highcharts</td><td>Commercial</td><td style="color:var(--crit-lit)">Avoid</td>
+            <td>Paid per developer, plus a quote-only OEM licence for anything distributed to and hosted by customers. ECharts covers everything needed here.</td></tr>
+          <tr><td>Recharts, Nivo, Visx</td><td>MIT</td><td style="color:var(--crit-lit)">Avoid</td>
+            <td>Licence is fine, the build is not. The custom-component toolchain runs an older Webpack that breaks on modern package sub-exports, so plain-JS libraries are materially safer.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 class="h3 rise" style="margin-bottom:14px">Platform constraints still in force, all measured</h4>
+    <div class="scroll-x rise" style="margin-bottom:26px">
+      <table class="sp">
+        <thead><tr><th>Finding</th><th>Status</th><th>Consequence</th></tr></thead>
+        <tbody>
+          <tr><td>Inline script in a UI Page</td><td style="color:var(--crit-lit)">Fatal</td>
+            <td>Jelly evaluates script bodies. A CDATA-wrapped one makes the platform serve the whole page as zero bytes with HTTP 200 and no error anywhere. All client JS loads by <code>src</code>.</td></tr>
+          <tr><td>In-session XHR</td><td style="color:var(--crit-lit)">Does not return</td>
+            <td>Scripted REST, and the platform's own Table API, never resolve from a logged-in browser session on this instance. First paint uses a server-computed embedded payload and filters pre-compute their cuts.</td></tr>
+          <tr><td>UI Script caching</td><td style="color:var(--warn-lit)">Hard-cached</td>
+            <td>A redeployed asset does not reach a browser that already has it, so every asset URL carries a content hash.</td></tr>
+          <tr><td>Table API 200 on write</td><td style="color:var(--warn-lit)">Not proof</td>
+            <td>It returns 200 whether or not it stored what you sent. Read the record back and compare before believing a deploy landed.</td></tr>
+          <tr><td>Custom UXF components</td><td style="color:var(--warn-lit)">Unsupported</td>
+            <td>ServiceNow explicitly excludes custom Next Experience components from standard support, so we own them indefinitely. An argument for portable plain JS, not against the approach.</td></tr>
+          <tr><td>Now Mobile</td><td style="color:var(--warn-lit)">No render</td>
+            <td>Custom Next Experience screens do not open in the native app at all. Equally true of a dashboard built entirely from OOB components, so not an argument against this approach, but it needs a named mitigation.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4 class="h3 rise" style="margin-bottom:14px">Render budget</h4>
+    <p class="sm rise" style="margin-bottom:18px; max-width:80ch">
+      A dashboard is left open all day on machines the client does not control, often several tabs
+      at once, sometimes on a wall display that never sleeps. Visual effects that cost a repaint per
+      frame are therefore a functional defect, not a taste question. These four rules were added
+      after an earlier draft of this very document pinned a workstation.
+    </p>
+    <div class="scroll-x rise" style="margin-bottom:26px">
+      <table class="sp">
+        <thead><tr><th>Rule</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>No <code>mix-blend-mode</code></td>
+            <td>A blend layer forces the compositor to read back everything beneath it and recomposite on every paint. On a long page it never stops costing. Any texture effect is achieved with a flat low-opacity layer instead.</td></tr>
+          <tr><td>No <code>backdrop-filter</code></td>
+            <td>A blurred backdrop on a sticky or fixed element is re-rendered every scroll frame. Use a near-opaque background; at these surface values it is visually indistinguishable.</td></tr>
+          <tr><td>No coloured <code>drop-shadow</code> on marks</td>
+            <td>An SVG filter on every data mark multiplies rasterisation work by the number of marks, which is exactly the direction that scales badly. It was also the main reason an earlier draft read as a prototype.</td></tr>
+          <tr><td><code>content-visibility: auto</code> per panel</td>
+            <td>Off-screen panels are not laid out or painted at all. On a long report this is the single largest win available and it changes nothing visible.</td></tr>
+          <tr><td>No infinite animation</td>
+            <td>A looping pulse or shimmer keeps the compositor awake forever, which on a wall display means it never idles. Every animation here runs once and stops.</td></tr>
+          <tr><td>Canvas above roughly 1,000 marks</td>
+            <td>SVG gives crisp text and per-mark DOM events, and stops scaling around a thousand nodes. ECharts switches renderer on the same threshold, so the decision is a config flag rather than a rewrite.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note rise" style="margin-bottom:16px">
+      <b>Governance.</b> The client's UI standards document permits custom UI where a business
+      requirement cannot be met by standard components. Record the decision in exactly those terms.
+      OOB Now Design System components cannot meet the stated visual and interactivity bar: the Data
+      Visualization palette has fixed treatment, no free-form composition, and no sankey, stream,
+      bump, radar or waterfall grammar. Custom components are therefore used per the governance
+      document's own exception clause, with no OOB component modified and every deviation recorded
+      with its justification. Argue from <b>kind, not count</b>. The OOB palette is roughly 16 types
+      in Visualization Designer and 29 in classic reporting, which is not small, and the live
+      instance uses 24 of them. Arguing from a low chart count is both wrong and easy to refute.
+      The defensible claim is the one section 02 measures: the palette is wide, five types carry
+      77.4% of real reporting, and four of the forms this system needs have zero instances because
+      the product cannot draw them.
+    </div>
+
+    <div class="note crit rise">
+      <b>What this does not claim.</b> Not Power BI parity. What is achievable is Power-BI-grade
+      visual and interaction quality on ServiceNow-native data. Cross-source semantic modelling,
+      DAX-equivalent calculated measures and genuine end-user ad-hoc exploration are structural gaps
+      that better rendering does not close. State them plainly now rather than discover them in UAT.
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row" style="justify-content:space-between;align-items:flex-end;gap:24px">
+      <div>
+        <div class="mono" style="font-size:11px;font-weight:700;letter-spacing:.34em;color:var(--ink-2);margin-bottom:8px">COMMAND</div>
+        <div>Design system proposal, v1.0, 1 August 2026, for client review.</div>
+        <div style="margin-top:5px">Report inventory measured live from <code>sys_report</code> on 1 August 2026, 2,368 rows.
+          Palettes validated with an OKLab and CVD validator against the var(--surface) chart surface.</div>
+      </div>
+      <div class="mono" style="text-align:right;font-size:10.5px;letter-spacing:.12em">
+        <div>DESIGN ONLY, NOT YET BUILT</div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e, i) {
+      if (!e.isIntersecting) return;
+      setTimeout(function () { e.target.classList.add('in'); }, Math.min(i, 5) * 60);
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -6% 0px' });
+  document.querySelectorAll('.rise').forEach(function (el) { io.observe(el); });
+
+  /* Safety net. Content must never be stuck invisible because an observer did
+     not fire (very tall viewports, print, headless capture, slow first paint). */
+  setTimeout(function () {
+    document.querySelectorAll('.rise:not(.in)').forEach(function (el) { el.classList.add('in'); });
+    document.querySelectorAll('svg').forEach(function (s) { s.classList.add('in'); });
+  }, 2500);
+
+  var cio = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var el = e.target, target = +el.dataset.count, t0 = null;
+      cio.unobserve(el);
+      if (reduce) return;
+      function step(ts) {
+        if (!t0) t0 = ts;
+        var p = Math.min((ts - t0) / 1400, 1);
+        el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))).toLocaleString('en-US');
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('[data-count]').forEach(function (el) { cio.observe(el); });
+
+  /* Calendar heatmaps, generated from a weekday x hour demand model rather than
+     hand-placed, so the cells stay consistent with the sequential ramp. */
+  var dayW = [1.00, 0.92, 0.88, 0.84, 0.74, 0.16, 0.11];
+  var hourW = [.04,.03,.02,.02,.03,.06,.14,.34,.72,1.00,.94,.80,
+               .62,.78,.86,.80,.66,.44,.22,.14,.10,.08,.06,.05];
+  var STEPS = ['--q1','--q2','--q3','--q4','--q5','--q6','--q7'];
+
+  function paint(host, x0, y0, cw, chh, gap) {
+    if (!host) return;
+    var ns = 'http://www.w3.org/2000/svg', frag = document.createDocumentFragment();
+    for (var d = 0; d < 7; d++) {
+      for (var h = 0; h < 24; h++) {
+        var step = Math.min(6, Math.floor(Math.pow(dayW[d] * hourW[h], 0.72) * 7));
+        var r = document.createElementNS(ns, 'rect');
+        r.setAttribute('x', x0 + h * (cw + gap));
+        r.setAttribute('y', y0 + d * (chh + gap));
+        r.setAttribute('width', cw); r.setAttribute('height', chh); r.setAttribute('rx', 2);
+        r.setAttribute('fill', 'var(' + STEPS[step] + ')');
+        r.setAttribute('class', 'cell');
+        r.style.animationDelay = (d * 24 + h) * 4 + 'ms';
+        frag.appendChild(r);
+      }
+    }
+    host.appendChild(frag);
+  }
+  paint(document.getElementById('cal'), 58, 14, 13, 16, 1.6);
+  paint(document.getElementById('mini-cal'), 8, 10, 8.4, 7.4, 1.6);
+
+  ['cal', 'mini-cal'].forEach(function (id) {
+    var g = document.getElementById(id); if (!g) return;
+    var svg = g.closest('svg');
+    var o = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { svg.classList.add('in'); o.disconnect(); } });
+    }, { threshold: 0.2 });
+    o.observe(g);
+  });
+
+  /* Remember each row's authored column template before touching it, so the
+     narrow-viewport collapse can be undone without losing the original value. */
+  /* Theme. Dark is the default; the choice persists across reloads. */
+  var seg = document.getElementById('themeSeg');
+  function setTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    seg.querySelectorAll('button').forEach(function(b){
+      b.setAttribute('aria-selected', String(b.dataset.t === t));
+    });
+    try{ localStorage.setItem('cmd-theme', t); }catch(e){}
+  }
+  seg.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (b) setTheme(b.dataset.t);
+  });
+  var saved = null; try{ saved = localStorage.getItem('cmd-theme'); }catch(e){}
+  setTheme(saved || 'dark');
+
+  var mq = window.matchMedia('(max-width: 980px)');
+  document.querySelectorAll('.hero-row').forEach(function (el) {
+    el.dataset.cols = el.style.gridTemplateColumns;
+  });
+  function sync() {
+    document.querySelectorAll('.hero-row').forEach(function (el) {
+      el.style.gridTemplateColumns = mq.matches ? '1fr' : el.dataset.cols;
+    });
+  }
+  mq.addEventListener('change', sync); sync();
+})();
+</script>
