@@ -53,7 +53,17 @@ drift. Beautiful first. AI as the differentiator layered on top.
    must not see a card for data they cannot read, which makes entitlement
    correctness a catalog-membership concern as well as a cell-value one.
 
-5. **Different report types get different visual grammars.** The client's tool
+5. **Multi-level drilldown, at the level a custom analysis tool offers.** Added
+   2026-08-03 after the client review. They want what Power BI gives them: click a
+   value, keep going down through sub-layers, plus cross-filtering, a reversible
+   and shareable drill path, and drill-through to the underlying records. This is a
+   first-class requirement now, not a polish item. The terminal drill target is the
+   **standard platform list view**, which is the one place being inside ServiceNow
+   beats Power BI: the platform enforces row-level ACLs on that list, so we neither
+   build a record grid nor have to get its security right.
+   Full detail in `docs/use-case-2/10-client-review-and-revised-scope.md`.
+
+6. **Different report types get different visual grammars.** The client's tool
    already does this — an approval-state breakdown draws part-to-whole, a ranked
    task list draws sorted bars, a trend draws a time series. A fixed chart set for
    every subject is the specific failure they identified in our build. Chart form
@@ -65,6 +75,13 @@ Full detail in `docs/use-case-2/07-scope-catalog-and-report-types.md`.
 **What is NOT constrained:** the *build process*. Design tools, external LLMs, any charting
 library, any AI model used during generation are all fair game — the constraint is only on the
 **delivered runtime artifact**, which must be ServiceNow-native.
+
+**The design is approved.** As of 2026-08-03 the client has seen
+`design/command-brand-kit.html` and accepted it, in their words: ServiceNow could
+never do this natively. So the visual bar is no longer a proposal to be argued for,
+it is the agreed target to be reproduced inside the platform. The remaining job on
+requirement 1 is fidelity, not persuasion. Published for client review at
+https://santhan-kumar.github.io/command-analytics-design-system/
 
 ---
 
@@ -214,6 +231,30 @@ scratch and do not treat it as an absolute ban on custom charting. The resolved 
   served the old record. **Correction:** read the record back and compare byte for
   byte. Never report something as fixed on the strength of a status code.
 
+- **DRIFT: building drilldown off the dictionary's declared hierarchies without measuring
+  whether they hold in the data.** `sys_dictionary.dependent_on` says someone *intended* a
+  hierarchy, exactly as `sys_report.type` says someone *picked* a chart. Neither is a property
+  of the rows. Measured on this instance: `incident.subcategory` is set on **42 of 13,986
+  records**, so the declared category-to-subcategory drill is 99.7% empty, while
+  `change_request` category-to-type is fully populated. **Correction:** a drill level is offered
+  only after passing fill-rate and cardinality gates *on the viewer's permitted rows*, and a
+  rejected level shows its reason rather than a dead-end click. Same profiler, same discipline,
+  one question further down. See section 2 of `10-client-review-and-revised-scope.md`.
+
+- **DRIFT: letting anything reach the runtime over a CDN.** External libraries and fonts are
+  permitted in the *build*, and the client agreed to that, but a runtime request to an outside
+  host sends every viewer's IP to a third party on every dashboard load. That is a
+  data-protection exposure, not a licensing one, and it is the rule the whole engagement rests
+  on: **code and fonts travel in, data does not travel out.** **Correction:** self-host and
+  inline everything; the brand kit now makes zero external requests and the app must too.
+
+- **DRIFT: reaching for a component without checking its licence against the allowlist.**
+  Permitted: MIT, ISC, BSD-2/3, Apache-2.0, SIL OFL 1.1, CC0, Unlicense. Denied: GPL/LGPL/AGPL,
+  SSPL, source-available, non-commercial, and anything commercial without a signed
+  redistribution right on file. This was the client's **first and most emphatic** concern.
+  **Correction:** it is a CI gate on the app repo plus a generated `THIRD-PARTY.md` register,
+  not a habit of being careful.
+
 - **DRIFT: overclaiming the ceiling.** Do not describe the product, internally or to the client,
   as achieving true Power BI parity. The honest ceiling is high on visual/interaction richness and
   low on cross-source modeling and ad-hoc self-service exploration. State it that way.
@@ -282,6 +323,24 @@ this use case, and neither has been built yet.
   every tier.
 - Licensing default: ECharts (Apache-2.0). Confirm OEM licensing cost before using Highcharts for
   anything shipped in a distributable Store app.
+- Typography is settled and verified: Space Grotesk, Inter Tight and JetBrains Mono, all SIL OFL
+  1.1, **none declaring a Reserved Font Name**, which is what makes subsetting them while keeping
+  the family name compliant. Licence texts are checked in at `design/LICENSES/` and must ship
+  inside the scoped app, not be linked from it.
+- **AI is optional, defaults to off, and never sees a record.** The client's priority order is
+  explicit: get the approved design live first, AI is good-to-have. When it does ship it is a
+  pluggable adapter over Now Assist or the client's own LLM tenant, and its input type carries no
+  record payload by construction, only schema statistics and the aggregates already on screen.
+  Direct outbound to a third-party API is not on the table for a good-to-have feature. MCP is a
+  build-time tool on a dev instance and never part of the delivered artifact.
+- **Performance is a named client concern with a budget**, not an implicit quality. First paint
+  under 1.2s, interactive under 2.5s, initial payload at or under 250 KB gzipped, drill round trip
+  under 400ms. The chart engine is the biggest lever: custom ECharts build, used chart types and
+  one renderer only, measured rather than assumed.
+- The phase 1 UXF spike is a **gate, not a de-risking exercise**. The measured XHR failure was on
+  the UI Page surface with raw XHR; a UXF component fetches through the platform data broker,
+  which is a different mechanism and untested here. Whether on-demand fetch works there decides
+  whether drilldown is buildable as specified, so that answer is owed in week two.
 - ServiceNow is pushing AI analytics systemwide (Now Assist bundled into every tier as of April
   2026; Otto; Pyramid-Analytics-fueled autonomous data analytics). Treat this as a closing window,
   not a settled one — re-check native capability against new release notes periodically, and don't
