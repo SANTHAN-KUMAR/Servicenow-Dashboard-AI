@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:34:18",
+ "generated": "2026-08-03 06:49:03",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -148,5 +148,5 @@
    "declaredParentLabel": "Company"
   }
  ],
- "timingMs": 323
+ "timingMs": 74
 }

@@ -25,6 +25,17 @@ function Node(tag, ns) {
     this.parentNode = null;
     this._text = '';
     this._listeners = {};
+    /* Form controls carry an empty string, not undefined. The catalog reads
+       `input.value.toLowerCase()` on first draw, which is correct against a real
+       DOM and threw against the first version of this shim. A shim that models the
+       platform wrongly produces failures that are about the shim, and those are
+       worse than no test because they train you to ignore the output. */
+    this.value = '';
+    this.type = '';
+    this.checked = false;
+    this.disabled = false;
+    this.title = '';
+    this.href = '';
 }
 
 Node.prototype.appendChild = function (child) {

@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:34:12",
+ "generated": "2026-08-03 06:48:55",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -9,14 +9,14 @@
   "table": "task",
   "label": "Task",
   "query": "",
-  "rows": 910,
+  "rows": 1300,
   "listUrl": "/task_list.do?sysparm_query=&sysparm_view="
  },
  "acl": {
   "mode": "BOUNDED",
   "aggregate": 7505,
-  "secure": 910,
-  "delta": 6595,
+  "secure": 1300,
+  "delta": 6205,
   "capped": true
  },
  "path": [],
@@ -35,7 +35,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 330 records you can read. 7,175 more exist that you do not have access to."
+     "text": "Filtered to the 350 records you can read. 7,155 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -48,12 +48,12 @@
      {
       "key": "2",
       "label": "2 - Medium",
-      "count": 188
+      "count": 200
      },
      {
       "key": "3",
       "label": "3 - Low",
-      "count": 135
+      "count": 143
      },
      {
       "key": "1",
@@ -66,8 +66,8 @@
    "shape": {
     "distinct": 3,
     "fill": 1,
-    "topShare": 0.57,
-    "concentration": 0.57
+    "topShare": 0.571,
+    "concentration": 0.571
    },
    "ordinal": true,
    "span": 1
@@ -86,7 +86,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 330 records you can read. 7,175 more exist that you do not have access to."
+     "text": "Filtered to the 350 records you can read. 7,155 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -99,7 +99,7 @@
      {
       "key": "not requested",
       "label": "Not Yet Requested",
-      "count": 306
+      "count": 325
      },
      {
       "key": "requested",
@@ -109,7 +109,7 @@
      {
       "key": "approved",
       "label": "Approved",
-      "count": 11
+      "count": 12
      }
     ],
     "other": null
@@ -117,8 +117,8 @@
    "shape": {
     "distinct": 3,
     "fill": 1,
-    "topShare": 0.927,
-    "concentration": 0.927
+    "topShare": 0.929,
+    "concentration": 0.929
    },
    "ordinal": false,
    "span": 1
@@ -137,7 +137,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 330 records you can read. 7,175 more exist that you do not have access to."
+     "text": "Filtered to the 350 records you can read. 7,155 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -150,7 +150,7 @@
      {
       "key": "0",
       "label": "0",
-      "count": 322
+      "count": 341
      },
      {
       "key": "",
@@ -160,7 +160,7 @@
      {
       "key": "1",
       "label": "1",
-      "count": 3
+      "count": 4
      },
      {
       "key": "2",
@@ -172,9 +172,9 @@
    },
    "shape": {
     "distinct": 3,
-    "fill": 0.9878787878787879,
-    "topShare": 0.976,
-    "concentration": 0.976
+    "fill": 0.9885714285714285,
+    "topShare": 0.974,
+    "concentration": 0.974
    },
    "ordinal": false,
    "span": 1
@@ -193,7 +193,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 330 records you can read. 7,175 more exist that you do not have access to."
+     "text": "Filtered to the 350 records you can read. 7,155 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -211,26 +211,31 @@
      {
       "key": "",
       "label": "",
-      "count": 89
+      "count": 92
      },
      {
       "key": "\n    ",
       "label": "\n    ",
-      "count": 53
+      "count": 56
      },
      {
       "key": "02826bf03710200044e0bfc8bcbe5d3f",
       "label": "Lucius Bagnoli",
-      "count": 15
+      "count": 18
      },
      {
       "key": "005d500b536073005e0addeeff7b12f4",
       "label": "survey user",
-      "count": 14
+      "count": 16
      },
      {
       "key": "06826bf03710200044e0bfc8bcbe5d57",
       "label": "Cherie Fuhri",
+      "count": 14
+     },
+     {
+      "key": "06826bf03710200044e0bfc8bcbe5d41",
+      "label": "Jess Assad",
       "count": 14
      },
      {
@@ -244,14 +249,14 @@
       "count": 13
      },
      {
-      "key": "06826bf03710200044e0bfc8bcbe5d41",
-      "label": "Jess Assad",
-      "count": 13
+      "key": "02826bf03710200044e0bfc8bcbe5d6d",
+      "label": "Sean Bonnet",
+      "count": 12
      },
      {
       "key": "02826bf03710200044e0bfc8bcbe5d5e",
       "label": "Melinda Carleton",
-      "count": 11
+      "count": 12
      },
      {
       "key": "0382abf03710200044e0bfc8bcbe5d42",
@@ -262,23 +267,18 @@
       "key": "02826bf03710200044e0bfc8bcbe5d64",
       "label": "Jewel Agresta",
       "count": 11
-     },
-     {
-      "key": "02826bf03710200044e0bfc8bcbe5d6d",
-      "label": "Sean Bonnet",
-      "count": 10
      }
     ],
     "other": {
-     "count": 62,
+     "count": 67,
      "groups": 13
     }
    },
    "shape": {
     "distinct": 24,
-    "fill": 0.7303030303030303,
-    "topShare": 0.27,
-    "concentration": 0.561
+    "fill": 0.7371428571428571,
+    "topShare": 0.263,
+    "concentration": 0.56
    },
    "ordinal": false,
    "span": 1
@@ -294,7 +294,136 @@
   "Drill options were not computed, to keep this page inside its time budget."
  ],
  "kpis": [],
- "matrix": null,
+ "matrix": {
+  "id": "matrix_impact",
+  "kind": "matrix",
+  "form": "matrix",
+  "question": "Impact, in full",
+  "reason": "the dense read: every value with its share, its shape over time and its movement against the last complete period",
+  "field": "impact",
+  "fieldLabel": "Impact",
+  "rows": [
+   {
+    "key": "2",
+    "label": "2 - Medium",
+    "count": 200,
+    "share": 0.571,
+    "spark": [
+     66,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "delta": 0,
+    "change": null
+   },
+   {
+    "key": "3",
+    "label": "3 - Low",
+    "count": 143,
+    "share": 0.409,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "1",
+    "label": "1 - High",
+    "count": 7,
+    "share": 0.02,
+    "spark": [
+     1,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "delta": 0,
+    "change": null
+   }
+  ],
+  "total": 350,
+  "periods": [
+   {
+    "period": "2025-09",
+    "label": "Sep '25",
+    "partial": false
+   },
+   {
+    "period": "2025-10",
+    "label": "Oct '25",
+    "partial": false
+   },
+   {
+    "period": "2025-11",
+    "label": "Nov '25",
+    "partial": false
+   },
+   {
+    "period": "2025-12",
+    "label": "Dec '25",
+    "partial": false
+   },
+   {
+    "period": "2026-01",
+    "label": "Jan '26",
+    "partial": false
+   },
+   {
+    "period": "2026-02",
+    "label": "Feb '26",
+    "partial": false
+   },
+   {
+    "period": "2026-03",
+    "label": "Mar '26",
+    "partial": false
+   },
+   {
+    "period": "2026-04",
+    "label": "Apr '26",
+    "partial": false
+   },
+   {
+    "period": "2026-05",
+    "label": "May '26",
+    "partial": false
+   },
+   {
+    "period": "2026-06",
+    "label": "Jun '26",
+    "partial": false
+   },
+   {
+    "period": "2026-07",
+    "label": "Jul '26",
+    "partial": false
+   },
+   {
+    "period": "2026-08",
+    "label": "Aug '26",
+    "partial": true
+   }
+  ],
+  "grain": "month",
+  "span": 2,
+  "caveats": []
+ },
  "declared": [],
- "timingMs": 7613
+ "timingMs": 8939
 }

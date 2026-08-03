@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:34:31",
+ "generated": "2026-08-03 06:49:15",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -9,48 +9,478 @@
   "table": "cmdb_ci",
   "label": "Configuration Item",
   "query": "",
-  "rows": 3260,
+  "rows": 3581,
   "listUrl": "/cmdb_ci_list.do?sysparm_query=&sysparm_view="
  },
  "acl": {
-  "mode": "BOUNDED",
+  "mode": "VERIFIED",
   "aggregate": 3581,
-  "secure": 3260,
-  "delta": 321,
-  "capped": true
+  "secure": 3581,
+  "delta": 0,
+  "capped": false
  },
  "path": [],
  "panels": [
   {
-   "id": "dim_asset",
-   "kind": "dimension",
-   "question": "Asset, ranked",
-   "field": "asset",
-   "fieldLabel": "Asset",
-   "form": "ranked_bar_top_n",
-   "selectedForm": "ranked_bar_top_n",
-   "demoted": false,
-   "reason": "many categories but the mass is concentrated at the head, so rank the head and fold the tail",
+   "id": "dist_cost",
+   "kind": "distribution",
+   "form": "histogram",
+   "question": "How is cost distributed?",
+   "reason": "24 equal-width bins over 895 values, sized by the interquartile range rather than by a fixed count",
+   "field": "cost",
+   "fieldLabel": "Cost",
+   "bins": [
+    {
+     "from": 0,
+     "to": 1898.229,
+     "count": 631
+    },
+    {
+     "from": 1898.229,
+     "to": 3796.458,
+     "count": 233
+    },
+    {
+     "from": 3796.458,
+     "to": 5694.688,
+     "count": 2
+    },
+    {
+     "from": 5694.688,
+     "to": 7592.917,
+     "count": 3
+    },
+    {
+     "from": 7592.917,
+     "to": 9491.146,
+     "count": 15
+    },
+    {
+     "from": 9491.146,
+     "to": 11389.375,
+     "count": 6
+    },
+    {
+     "from": 11389.375,
+     "to": 13287.604,
+     "count": 0
+    },
+    {
+     "from": 13287.604,
+     "to": 15185.833,
+     "count": 0
+    },
+    {
+     "from": 15185.833,
+     "to": 17084.063,
+     "count": 1
+    },
+    {
+     "from": 17084.063,
+     "to": 18982.292,
+     "count": 0
+    },
+    {
+     "from": 18982.292,
+     "to": 20880.521,
+     "count": 0
+    },
+    {
+     "from": 20880.521,
+     "to": 22778.75,
+     "count": 0
+    },
+    {
+     "from": 22778.75,
+     "to": 24676.979,
+     "count": 0
+    },
+    {
+     "from": 24676.979,
+     "to": 26575.208,
+     "count": 0
+    },
+    {
+     "from": 26575.208,
+     "to": 28473.438,
+     "count": 0
+    },
+    {
+     "from": 28473.438,
+     "to": 30371.667,
+     "count": 0
+    },
+    {
+     "from": 30371.667,
+     "to": 32269.896,
+     "count": 0
+    },
+    {
+     "from": 32269.896,
+     "to": 34168.125,
+     "count": 0
+    },
+    {
+     "from": 34168.125,
+     "to": 36066.354,
+     "count": 0
+    },
+    {
+     "from": 36066.354,
+     "to": 37964.583,
+     "count": 0
+    },
+    {
+     "from": 37964.583,
+     "to": 39862.813,
+     "count": 0
+    },
+    {
+     "from": 39862.813,
+     "to": 41761.042,
+     "count": 0
+    },
+    {
+     "from": 41761.042,
+     "to": 43659.271,
+     "count": 0
+    },
+    {
+     "from": 43659.271,
+     "to": 45557.5,
+     "count": 4
+    }
+   ],
+   "lo": 0,
+   "hi": 45557.5,
+   "n": 895,
+   "mean": 2097.569,
+   "median": 1599.99,
+   "q1": 1329,
+   "q3": 2499.99,
+   "span": 1,
+   "caveats": []
+  },
+  {
+   "id": "cycle_sys_created_on",
+   "kind": "cycle",
+   "form": "heatmap",
+   "question": "When in the week does this happen?",
+   "reason": "a repeating cycle rather than a trend, so the honest form is a grid of day against hour, not a line",
+   "dateField": "sys_created_on",
+   "grid": [
+    [
+     4,
+     30,
+     9,
+     0,
+     30,
+     0,
+     0,
+     3,
+     1,
+     0,
+     2,
+     1,
+     5,
+     0,
+     0,
+     0,
+     0,
+     6,
+     5,
+     4,
+     84,
+     8,
+     6,
+     0
+    ],
+    [
+     4,
+     291,
+     0,
+     0,
+     1,
+     0,
+     0,
+     4,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     0,
+     1,
+     6,
+     1,
+     1,
+     0,
+     26,
+     18,
+     774,
+     717
+    ],
+    [
+     0,
+     4,
+     1,
+     5,
+     2,
+     2,
+     1,
+     0,
+     1,
+     0,
+     1,
+     61,
+     19,
+     8,
+     3,
+     7,
+     18,
+     10,
+     1,
+     2,
+     2,
+     96,
+     2,
+     237
+    ],
+    [
+     2,
+     0,
+     5,
+     0,
+     0,
+     2,
+     20,
+     1,
+     0,
+     4,
+     17,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0,
+     4,
+     42,
+     0,
+     4,
+     9,
+     1,
+     7
+    ],
+    [
+     2,
+     3,
+     0,
+     0,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0,
+     16,
+     3,
+     0,
+     0,
+     0,
+     18,
+     4,
+     6,
+     0,
+     0,
+     12,
+     24,
+     0,
+     19
+    ],
+    [
+     3,
+     0,
+     78,
+     0,
+     9,
+     6,
+     0,
+     0,
+     654,
+     3,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0,
+     0,
+     4,
+     0,
+     1,
+     5,
+     0,
+     1,
+     13,
+     30,
+     0,
+     2,
+     14,
+     0,
+     2
+    ]
+   ],
+   "maxCell": 774,
+   "total": 3581,
+   "rowLabels": [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
+   ],
+   "span": 2,
    "caveats": [
     {
-     "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 340 records you can read. 3,241 more exist that you do not have access to."
-    },
-    {
-     "code": "capped",
-     "severity": "warn",
-     "text": "Counts are a lower bound. The permission-checked scan stopped at 20,000 records."
-    },
+     "text": "Hours are UTC as stored on the record, not your local time."
+    }
+   ]
+  },
+  {
+   "id": "dim_install_status",
+   "kind": "dimension",
+   "question": "Install Status across the scale",
+   "field": "install_status",
+   "fieldLabel": "Install Status",
+   "form": "stacked_ordinal",
+   "selectedForm": "stacked_ordinal",
+   "demoted": false,
+   "reason": "an ordered scale, so the sequence is preserved and the parts are shown against the whole",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "1",
+      "label": "Installed",
+      "count": 3445
+     },
+     {
+      "key": "",
+      "label": "",
+      "count": 117
+     },
+     {
+      "key": "6",
+      "label": "In Stock",
+      "count": 8
+     },
+     {
+      "key": "800",
+      "label": "(800)",
+      "count": 7
+     },
+     {
+      "key": "500",
+      "label": "(500)",
+      "count": 2
+     },
+     {
+      "key": "810",
+      "label": "(810)",
+      "count": 1
+     },
+     {
+      "key": "1000",
+      "label": "(1000)",
+      "count": 1
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 6,
+    "fill": 0.9673275621334823,
+    "topShare": 0.962,
+    "concentration": 0.995
+   },
+   "ordinal": true,
+   "span": 1
+  },
+  {
+   "id": "dim_attested",
+   "kind": "dimension",
+   "question": "Share by attested",
+   "field": "attested",
+   "fieldLabel": "Attested",
+   "form": "stacked_proportion",
+   "selectedForm": "stacked_proportion",
+   "demoted": false,
+   "reason": "a boolean split, where the share matters and the absolute pair does not",
+   "caveats": [],
+   "rows": {
+    "series": [
+     {
+      "key": "false",
+      "label": "false",
+      "count": 3034
+     },
+     {
+      "key": "false",
+      "label": "false",
+      "count": 547
+     }
+    ],
+    "other": null
+   },
+   "shape": {
+    "distinct": 2,
+    "fill": 1,
+    "topShare": 0.847,
+    "concentration": 0.847
+   },
+   "ordinal": false,
+   "span": 1
+  },
+  {
+   "id": "dim_cost",
+   "kind": "dimension",
+   "question": "Distribution of cost",
+   "field": "cost",
+   "fieldLabel": "Cost",
+   "form": "histogram",
+   "selectedForm": "histogram",
+   "demoted": false,
+   "reason": "a numeric distribution with enough levels to bin",
+   "caveats": [
     {
      "code": "sparse",
      "severity": "warn",
-     "text": "Asset is empty on 80.9% of these records. The chart covers the 65 that have a value."
-    },
-    {
-     "code": "truncated",
-     "severity": "info",
-     "text": "Showing the top 12 of 64. The remaining 52 are grouped as Other."
+     "text": "Cost is empty on 75% of these records. The chart covers the 895 that have a value."
     }
    ],
    "rows": {
@@ -58,74 +488,233 @@
      {
       "key": "",
       "label": "",
-      "count": 275
+      "count": 2686
      },
      {
-      "key": "41a9ee83c4604300964ff7fd890f5537",
-      "label": "41a9ee83c4604300964ff7fd890f5537",
-      "count": 2
+      "key": "2499.99",
+      "label": "2,499.99",
+      "count": 173
      },
      {
-      "key": "77c13e8837f3100044e0bfc8bcbe5d2e",
-      "label": "Unknown",
-      "count": 1
+      "key": "1799.99",
+      "label": "1,799.99",
+      "count": 149
      },
      {
-      "key": "bfc13e8837f3100044e0bfc8bcbe5d2f",
-      "label": "Unknown",
-      "count": 1
+      "key": "1599.99",
+      "label": "1,599.99",
+      "count": 143
      },
      {
-      "key": "f7c13e8837f3100044e0bfc8bcbe5d31",
-      "label": "Unknown",
-      "count": 1
+      "key": "1329",
+      "label": "1,329",
+      "count": 87
      },
      {
-      "key": "77c13e8837f3100044e0bfc8bcbe5d38",
-      "label": "Unknown",
-      "count": 1
+      "key": "839.99",
+      "label": "839.99",
+      "count": 36
      },
      {
-      "key": "bfc13e8837f3100044e0bfc8bcbe5d39",
-      "label": "Unknown",
-      "count": 1
+      "key": "3665",
+      "label": "3,665",
+      "count": 27
      },
      {
-      "key": "f7c13e8837f3100044e0bfc8bcbe5d3b",
-      "label": "Unknown",
-      "count": 1
+      "key": "1699.99",
+      "label": "1,699.99",
+      "count": 25
      },
      {
-      "key": "33c13e8837f3100044e0bfc8bcbe5d3d",
-      "label": "Unknown",
-      "count": 1
+      "key": "49.99",
+      "label": "49.99",
+      "count": 23
      },
      {
-      "key": "00c13e8837f3100044e0bfc8bcbe5d4d",
-      "label": "Unknown",
-      "count": 1
+      "key": "1379",
+      "label": "1,379",
+      "count": 23
      },
      {
-      "key": "84c13e8837f3100044e0bfc8bcbe5d53",
-      "label": "P1000892 - Unknown",
-      "count": 1
+      "key": "399.5",
+      "label": "399.5",
+      "count": 18
      },
      {
-      "key": "0cd196e66c220010fa9bc116032a832d",
-      "label": "0cd196e66c220010fa9bc116032a832d",
-      "count": 1
+      "key": "695",
+      "label": "695",
+      "count": 17
+     },
+     {
+      "key": "1390",
+      "label": "1,390",
+      "count": 16
+     },
+     {
+      "key": "9344",
+      "label": "9,344",
+      "count": 13
+     },
+     {
+      "key": "0",
+      "label": "0",
+      "count": 11
+     },
+     {
+      "key": "499.99",
+      "label": "499.99",
+      "count": 11
+     },
+     {
+      "key": "2160",
+      "label": "2,160",
+      "count": 10
+     },
+     {
+      "key": "1345",
+      "label": "1,345",
+      "count": 9
+     },
+     {
+      "key": "2249.99",
+      "label": "2,249.99",
+      "count": 9
+     },
+     {
+      "key": "1596",
+      "label": "1,596",
+      "count": 8
+     },
+     {
+      "key": "2839.99",
+      "label": "2,839.99",
+      "count": 8
+     },
+     {
+      "key": "1099.99",
+      "label": "1,099.99",
+      "count": 6
+     },
+     {
+      "key": "1200",
+      "label": "1,200",
+      "count": 5
+     },
+     {
+      "key": "699.99",
+      "label": "699.99",
+      "count": 4
      }
     ],
     "other": {
-     "count": 53,
-     "groups": 53
+     "count": 64,
+     "groups": 39
     }
    },
    "shape": {
-    "distinct": 64,
-    "fill": 0.19117647058823528,
-    "topShare": 0.809,
-    "concentration": 0.847
+    "distinct": 62,
+    "fill": 0.2499301870985758,
+    "topShare": 0.75,
+    "concentration": 0.956
+   },
+   "ordinal": false,
+   "span": 1
+  },
+  {
+   "id": "dim_assigned_to",
+   "kind": "dimension",
+   "question": "Assigned to, ranked",
+   "field": "assigned_to",
+   "fieldLabel": "Assigned to",
+   "form": "ranked_bar_top_n",
+   "selectedForm": "ranked_bar_top_n",
+   "demoted": false,
+   "reason": "many categories but the mass is concentrated at the head, so rank the head and fold the tail",
+   "caveats": [
+    {
+     "code": "sparse",
+     "severity": "warn",
+     "text": "Assigned to is empty on 81.5% of these records. The chart covers the 593 that have a value."
+    },
+    {
+     "code": "truncated",
+     "severity": "info",
+     "text": "Showing the top 12 of 199. The remaining 187 are grouped as Other."
+    }
+   ],
+   "rows": {
+    "series": [
+     {
+      "key": "",
+      "label": "",
+      "count": 2604
+     },
+     {
+      "key": "46c32549a9fe198101a84f3c2036e26b",
+      "label": "Ted Keppel",
+      "count": 33
+     },
+     {
+      "key": "5137153cc611227c000bbd1bd8cd2007",
+      "label": "David Loo",
+      "count": 29
+     },
+     {
+      "key": "46bbf3daa9fe1981001fd0ccdd391f83",
+      "label": "Ted Bozelle",
+      "count": 27
+     },
+     {
+      "key": "0a826bf03710200044e0bfc8bcbe5d7a",
+      "label": "Adela Cervantsz",
+      "count": 13
+     },
+     {
+      "key": "46ca0887a9fe19810191e08e51927ebf",
+      "label": "Howard Johnson",
+      "count": 13
+     },
+     {
+      "key": "46d44a23a9fe19810012d100cca80666",
+      "label": "Beth Anglin",
+      "count": 10
+     },
+     {
+      "key": "62826bf03710200044e0bfc8bcbe5df1",
+      "label": "Abel Tuter",
+      "count": 8
+     },
+     {
+      "key": "3e82abf03710200044e0bfc8bcbe5d1b",
+      "label": "Bradly Hasselvander",
+      "count": 7
+     },
+     {
+      "key": "f6826bf03710200044e0bfc8bcbe5df4",
+      "label": "Mariano Maury",
+      "count": 6
+     },
+     {
+      "key": "31826bf03710200044e0bfc8bcbe5d1a",
+      "label": "Peggy Hohlstein",
+      "count": 6
+     },
+     {
+      "key": "46c1293aa9fe1981000dc753e75ebeee",
+      "label": "Carol Coughlin",
+      "count": 5
+     }
+    ],
+    "other": {
+     "count": 436,
+     "groups": 188
+    }
+   },
+   "shape": {
+    "distinct": 199,
+    "fill": 0.18548639349390053,
+    "topShare": 0.815,
+    "concentration": 0.893
    },
    "ordinal": false,
    "span": 1
@@ -136,12 +725,231 @@
   "options": []
  },
  "notes": [
-  "Stopped after examining 9 of 53 fields, to keep this page inside its time budget. This table is expensive to permission-check.",
-  "8 further analysis panels were not built, to keep this page inside its time budget. This table is expensive to permission-check.",
+  "2 further analysis panels were not built, to keep this page inside its time budget. This table is expensive to permission-check.",
   "Drill options were not computed, to keep this page inside its time budget."
  ],
- "kpis": [],
- "matrix": null,
+ "kpis": [
+  {
+   "id": "kpi_count",
+   "kind": "kpi",
+   "span": 1,
+   "question": "How many records, and is that more or fewer than before?",
+   "fieldLabel": "Records",
+   "value": 3581,
+   "capped": false,
+   "form": "stat_tile_delta",
+   "reason": "compared with the previous month on sys_created_on",
+   "delta": {
+    "current": 0,
+    "previous": 231,
+    "currentLabel": "Aug '26",
+    "previousLabel": "Jul '26",
+    "elapsedFraction": 0.083,
+    "paceAdjusted": 0,
+    "delta": -231,
+    "change": -1,
+    "rawDelta": -231,
+    "rawChange": -1,
+    "partial": true,
+    "mode": "VERIFIED",
+    "capped": false
+   },
+   "caveats": [
+    {
+     "severity": "info",
+     "text": "This month is 8% elapsed, so the comparison is projected to a full month. Actual so far is 0 against 231 last month."
+    }
+   ]
+  },
+  {
+   "id": "kpi_duration",
+   "kind": "kpi",
+   "span": 1,
+   "form": "stat_tile",
+   "question": "How long does one take, from created to assigned?",
+   "fieldLabel": "Mean hours, Created to Assigned",
+   "value": 121729.6,
+   "unit": "h",
+   "median": 114406.8,
+   "n": 891,
+   "reason": "measured over 891 records where both dates are set",
+   "caveats": [
+    {
+     "severity": "warn",
+     "text": "3 records were excluded because the end date is before the start date, which is dirty data rather than a fast resolution."
+    }
+   ],
+   "capped": false
+  },
+  {
+   "id": "kpi_sum_cost",
+   "kind": "kpi",
+   "span": 1,
+   "form": "stat_tile",
+   "question": "What does cost total?",
+   "fieldLabel": "Total cost",
+   "field": "cost",
+   "value": 1877324.21,
+   "mean": 2097.569,
+   "median": 1599.99,
+   "n": 895,
+   "reason": "summed over 895 records where the field is set",
+   "capped": false
+  }
+ ],
+ "matrix": {
+  "id": "matrix_install_status",
+  "kind": "matrix",
+  "form": "matrix",
+  "question": "Install Status, in full",
+  "reason": "the dense read: every value with its share, its shape over time and its movement against the last complete period",
+  "field": "install_status",
+  "fieldLabel": "Install Status",
+  "rows": [
+   {
+    "key": "1",
+    "label": "Installed",
+    "count": 3445,
+    "share": 0.962,
+    "spark": [
+     0,
+     0,
+     0,
+     60,
+     0,
+     0,
+     0,
+     0,
+     17,
+     0,
+     231,
+     0
+    ],
+    "delta": 231,
+    "change": null
+   },
+   {
+    "key": "",
+    "label": "(not set)",
+    "count": 117,
+    "share": 0.033,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "6",
+    "label": "In Stock",
+    "count": 8,
+    "share": 0.002,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "800",
+    "label": "(800)",
+    "count": 7,
+    "share": 0.002,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "500",
+    "label": "(500)",
+    "count": 2,
+    "share": 0.001,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "810",
+    "label": "(810)",
+    "count": 1,
+    "share": 0,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "1000",
+    "label": "(1000)",
+    "count": 1,
+    "share": 0,
+    "spark": null,
+    "delta": null,
+    "change": null
+   }
+  ],
+  "total": 3581,
+  "periods": [
+   {
+    "period": "2025-09",
+    "label": "Sep '25",
+    "partial": false
+   },
+   {
+    "period": "2025-10",
+    "label": "Oct '25",
+    "partial": false
+   },
+   {
+    "period": "2025-11",
+    "label": "Nov '25",
+    "partial": false
+   },
+   {
+    "period": "2025-12",
+    "label": "Dec '25",
+    "partial": false
+   },
+   {
+    "period": "2026-01",
+    "label": "Jan '26",
+    "partial": false
+   },
+   {
+    "period": "2026-02",
+    "label": "Feb '26",
+    "partial": false
+   },
+   {
+    "period": "2026-03",
+    "label": "Mar '26",
+    "partial": false
+   },
+   {
+    "period": "2026-04",
+    "label": "Apr '26",
+    "partial": false
+   },
+   {
+    "period": "2026-05",
+    "label": "May '26",
+    "partial": false
+   },
+   {
+    "period": "2026-06",
+    "label": "Jun '26",
+    "partial": false
+   },
+   {
+    "period": "2026-07",
+    "label": "Jul '26",
+    "partial": false
+   },
+   {
+    "period": "2026-08",
+    "label": "Aug '26",
+    "partial": true
+   }
+  ],
+  "grain": "month",
+  "span": 2,
+  "caveats": []
+ },
  "declared": [],
- "timingMs": 7627
+ "timingMs": 6752
 }

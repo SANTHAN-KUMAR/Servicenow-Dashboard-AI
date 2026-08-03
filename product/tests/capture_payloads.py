@@ -75,7 +75,7 @@ def capture(inst, tables):
     # The catalog is a different surface with a different payload shape, and it
     # has its own renderer, so it needs its own fixture.
     try:
-        cat = inst.run_json(SCRIPT % "out = new CmdCatalog().catalog();")
+        cat = inst.run_json(SCRIPT % "out = new CmdCatalog().build();")
         (OUT / "catalog.json").write_text(json.dumps(cat, indent=1), encoding="utf-8")
         print(f"  {'catalog':<28} {len(cat.get('cards', []))} cards")
         written.append("catalog")

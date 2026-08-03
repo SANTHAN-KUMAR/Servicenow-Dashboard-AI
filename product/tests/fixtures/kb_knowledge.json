@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:34:22",
+ "generated": "2026-08-03 06:49:07",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -9,14 +9,14 @@
   "table": "kb_knowledge",
   "label": "Knowledge",
   "query": "",
-  "rows": 500,
+  "rows": 700,
   "listUrl": "/kb_knowledge_list.do?sysparm_query=&sysparm_view="
  },
  "acl": {
   "mode": "BOUNDED",
   "aggregate": 757,
-  "secure": 500,
-  "delta": 257,
+  "secure": 700,
+  "delta": 57,
   "capped": true
  },
  "path": [],
@@ -35,7 +35,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 410 records you can read. 347 more exist that you do not have access to."
+     "text": "Filtered to the 470 records you can read. 287 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -48,7 +48,7 @@
      {
       "key": "6816f79cc0a8016401c5a33be04be441",
       "label": "Santhan K",
-      "count": 390
+      "count": 445
      },
      {
       "key": "62d78687c0a8010e00b3d84178adc913",
@@ -56,33 +56,38 @@
       "count": 6
      },
      {
+      "key": "a6826bf03710200044e0bfc8bcbe5de6",
+      "label": "Boris Catino",
+      "count": 6
+     },
+     {
+      "key": "46d85d4aa9fe198101e36eb956587fe7",
+      "label": "Sam Sorokin",
+      "count": 5
+     },
+     {
       "key": "46d14f04a9fe19810142e40c6b071512",
       "label": "Wayne Webb",
       "count": 5
      },
      {
-      "key": "46d85d4aa9fe198101e36eb956587fe7",
-      "label": "Sam Sorokin",
-      "count": 4
-     },
-     {
-      "key": "a6826bf03710200044e0bfc8bcbe5de6",
-      "label": "Boris Catino",
-      "count": 4
-     },
-     {
       "key": "46bbf3daa9fe1981001fd0ccdd391f83",
       "label": "Ted Bozelle",
+      "count": 2
+     },
+     {
+      "key": "ee826bf03710200044e0bfc8bcbe5de6",
+      "label": "Bernard Laboy",
       "count": 1
      }
     ],
     "other": null
    },
    "shape": {
-    "distinct": 6,
+    "distinct": 7,
     "fill": 1,
-    "topShare": 0.951,
-    "concentration": 0.966
+    "topShare": 0.947,
+    "concentration": 0.96
    },
    "ordinal": false,
    "span": 1
@@ -98,7 +103,159 @@
   "Drill options were not computed, to keep this page inside its time budget."
  ],
  "kpis": [],
- "matrix": null,
+ "matrix": {
+  "id": "matrix_author",
+  "kind": "matrix",
+  "form": "matrix",
+  "question": "Author, in full",
+  "reason": "the dense read: every value with its share, its shape over time and its movement against the last complete period",
+  "field": "author",
+  "fieldLabel": "Author",
+  "rows": [
+   {
+    "key": "6816f79cc0a8016401c5a33be04be441",
+    "label": "Santhan K",
+    "count": 445,
+    "share": 0.947,
+    "spark": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     2,
+     474,
+     8
+    ],
+    "delta": 472,
+    "change": 236
+   },
+   {
+    "key": "62d78687c0a8010e00b3d84178adc913",
+    "label": "Ron Kettering",
+    "count": 6,
+    "share": 0.013,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "a6826bf03710200044e0bfc8bcbe5de6",
+    "label": "Boris Catino",
+    "count": 6,
+    "share": 0.013,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "46d85d4aa9fe198101e36eb956587fe7",
+    "label": "Sam Sorokin",
+    "count": 5,
+    "share": 0.011,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "46d14f04a9fe19810142e40c6b071512",
+    "label": "Wayne Webb",
+    "count": 5,
+    "share": 0.011,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "46bbf3daa9fe1981001fd0ccdd391f83",
+    "label": "Ted Bozelle",
+    "count": 2,
+    "share": 0.004,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "ee826bf03710200044e0bfc8bcbe5de6",
+    "label": "Bernard Laboy",
+    "count": 1,
+    "share": 0.002,
+    "spark": null,
+    "delta": null,
+    "change": null
+   }
+  ],
+  "total": 470,
+  "periods": [
+   {
+    "period": "2025-09",
+    "label": "Sep '25",
+    "partial": false
+   },
+   {
+    "period": "2025-10",
+    "label": "Oct '25",
+    "partial": false
+   },
+   {
+    "period": "2025-11",
+    "label": "Nov '25",
+    "partial": false
+   },
+   {
+    "period": "2025-12",
+    "label": "Dec '25",
+    "partial": false
+   },
+   {
+    "period": "2026-01",
+    "label": "Jan '26",
+    "partial": false
+   },
+   {
+    "period": "2026-02",
+    "label": "Feb '26",
+    "partial": false
+   },
+   {
+    "period": "2026-03",
+    "label": "Mar '26",
+    "partial": false
+   },
+   {
+    "period": "2026-04",
+    "label": "Apr '26",
+    "partial": false
+   },
+   {
+    "period": "2026-05",
+    "label": "May '26",
+    "partial": false
+   },
+   {
+    "period": "2026-06",
+    "label": "Jun '26",
+    "partial": false
+   },
+   {
+    "period": "2026-07",
+    "label": "Jul '26",
+    "partial": false
+   },
+   {
+    "period": "2026-08",
+    "label": "Aug '26",
+    "partial": true
+   }
+  ],
+  "grain": "month",
+  "span": 2,
+  "caveats": []
+ },
  "declared": [],
- "timingMs": 7561
+ "timingMs": 8871
 }

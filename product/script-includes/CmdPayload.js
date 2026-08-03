@@ -258,8 +258,23 @@ CmdPayload.prototype = {
          * Always last, because it is the detail you drop to after the charts have
          * told you where to look.
          */
+        /* Part of the floor, not of the optional work.
+         *
+         * It was budget-gated like the analysis panels, and the consequence was that
+         * `incident` -- the largest and most-looked-at subject on the instance -- was
+         * the one page that never got a matrix, because it is the page most likely to
+         * be over budget by the time the matrix is reached. The panels a page drops
+         * under load should be the marginal ones, and this is the opposite of
+         * marginal: it is the dense, printable read that a grid of charts cannot
+         * substitute for, and the specific artifact the client's existing tool gives
+         * them.
+         *
+         * Affordable as a floor item because its inputs are largely already paid
+         * for: the profile is memoised from the dimension pass and the sparkline
+         * series is one bounded reduction that the trend panel has usually already
+         * run for the same field and window. */
         payload.matrix = null;
-        if (lead.primary && !this._overBudget(t0)) {
+        if (lead.primary) {
             payload.matrix = this.analysis.reportMatrix(
                 table, query, lead.primary, dateField,
                 opts.grain || 'month', opts.months || 12, CmdData.GROUP_MS);

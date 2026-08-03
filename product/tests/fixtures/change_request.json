@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:34:02",
+ "generated": "2026-08-03 06:48:46",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -1329,9 +1329,9 @@
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
     "elapsedFraction": 0.083,
-    "paceAdjusted": 2151,
-    "delta": 2001,
-    "change": 13.34,
+    "paceAdjusted": 2142,
+    "delta": 1992,
+    "change": 13.28,
     "rawDelta": 28,
     "rawChange": 0.187,
     "partial": true,
@@ -1714,5 +1714,5 @@
    "declaredParentLabel": "Phase"
   }
  ],
- "timingMs": 3101
+ "timingMs": 2968
 }

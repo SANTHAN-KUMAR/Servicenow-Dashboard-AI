@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:33:55",
+ "generated": "2026-08-03 06:48:39",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -768,9 +768,9 @@
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
     "elapsedFraction": 0.083,
-    "paceAdjusted": 6369,
-    "delta": 5877,
-    "change": 11.945,
+    "paceAdjusted": 6343,
+    "delta": 5851,
+    "change": 11.892,
     "rawDelta": 35,
     "rawChange": 0.071,
     "partial": true,
@@ -806,18 +806,18 @@
    "form": "stat_tile",
    "question": "How long does one take, from created to opened?",
    "fieldLabel": "Mean hours, Created to Opened",
-   "value": 25.2,
+   "value": 23.7,
    "unit": "h",
    "median": 0,
-   "n": 3466,
-   "reason": "measured over 3466 records where both dates are set",
+   "n": 4216,
+   "reason": "measured over 4216 records where both dates are set",
    "caveats": [
     {
      "severity": "warn",
-     "text": "44 records were excluded because the end date is before the start date, which is dirty data rather than a fast resolution."
+     "text": "48 records were excluded because the end date is before the start date, which is dirty data rather than a fast resolution."
     }
    ],
-   "capped": true
+   "capped": false
   },
   {
    "id": "kpi_sum_child_incidents",
@@ -835,7 +835,193 @@
    "capped": false
   }
  ],
- "matrix": null,
+ "matrix": {
+  "id": "matrix_incident_state",
+  "kind": "matrix",
+  "form": "matrix",
+  "question": "Incident state, in full",
+  "reason": "the dense read: every value with its share, its shape over time and its movement against the last complete period",
+  "field": "incident_state",
+  "fieldLabel": "Incident state",
+  "rows": [
+   {
+    "key": "2",
+    "label": "In Progress",
+    "count": 2085,
+    "share": 0.489,
+    "spark": [
+     93,
+     104,
+     85,
+     104,
+     29,
+     176,
+     172,
+     228,
+     272,
+     350,
+     201,
+     270
+    ],
+    "delta": -149,
+    "change": -0.426
+   },
+   {
+    "key": "1",
+    "label": "New",
+    "count": 1453,
+    "share": 0.341,
+    "spark": [
+     74,
+     98,
+     59,
+     89,
+     57,
+     41,
+     119,
+     165,
+     146,
+     174,
+     243,
+     177
+    ],
+    "delta": 69,
+    "change": 0.397
+   },
+   {
+    "key": "3",
+    "label": "On Hold",
+    "count": 513,
+    "share": 0.12,
+    "spark": [
+     73,
+     92,
+     5,
+     16,
+     45,
+     49,
+     6,
+     43,
+     34,
+     60,
+     29,
+     55
+    ],
+    "delta": -31,
+    "change": -0.517
+   },
+   {
+    "key": "8",
+    "label": "Canceled",
+    "count": 186,
+    "share": 0.044,
+    "spark": [
+     3,
+     0,
+     2,
+     17,
+     29,
+     39,
+     0,
+     4,
+     9,
+     39,
+     19,
+     25
+    ],
+    "delta": -20,
+    "change": -0.513
+   },
+   {
+    "key": "7",
+    "label": "Closed",
+    "count": 27,
+    "share": 0.006,
+    "spark": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     17,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    "delta": -1,
+    "change": -1
+   }
+  ],
+  "total": 4264,
+  "periods": [
+   {
+    "period": "2025-09",
+    "label": "Sep '25",
+    "partial": false
+   },
+   {
+    "period": "2025-10",
+    "label": "Oct '25",
+    "partial": false
+   },
+   {
+    "period": "2025-11",
+    "label": "Nov '25",
+    "partial": false
+   },
+   {
+    "period": "2025-12",
+    "label": "Dec '25",
+    "partial": false
+   },
+   {
+    "period": "2026-01",
+    "label": "Jan '26",
+    "partial": false
+   },
+   {
+    "period": "2026-02",
+    "label": "Feb '26",
+    "partial": false
+   },
+   {
+    "period": "2026-03",
+    "label": "Mar '26",
+    "partial": false
+   },
+   {
+    "period": "2026-04",
+    "label": "Apr '26",
+    "partial": false
+   },
+   {
+    "period": "2026-05",
+    "label": "May '26",
+    "partial": false
+   },
+   {
+    "period": "2026-06",
+    "label": "Jun '26",
+    "partial": false
+   },
+   {
+    "period": "2026-07",
+    "label": "Jul '26",
+    "partial": false
+   },
+   {
+    "period": "2026-08",
+    "label": "Aug '26",
+    "partial": true
+   }
+  ],
+  "grain": "month",
+  "span": 2,
+  "caveats": []
+ },
  "declared": [],
- "timingMs": 6687
+ "timingMs": 6222
 }

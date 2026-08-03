@@ -1,0 +1,1085 @@
+{
+ "areas": [
+  {
+   "area": "Assets and configuration",
+   "cards": [
+    {
+     "table": "ast_contract",
+     "label": "Contract",
+     "area": "Assets and configuration",
+     "rows": 122,
+     "capped": false,
+     "atLeast": 120,
+     "reports": 16,
+     "dimensions": 67,
+     "dates": 9,
+     "leadDimension": "Agreement type",
+     "leadDate": "Created",
+     "preview": null,
+     "url": "/cmd_dashboard.do?table=ast_contract"
+    },
+    {
+     "table": "cmdb_ci_computer",
+     "label": "Computer",
+     "area": "Assets and configuration",
+     "rows": 640,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 12,
+     "dimensions": 79,
+     "dates": 15,
+     "leadDimension": "Attestation Status",
+     "leadDate": "Created",
+     "preview": null,
+     "url": "/cmd_dashboard.do?table=cmdb_ci_computer"
+    },
+    {
+     "table": "alm_asset",
+     "label": "Asset",
+     "area": "Assets and configuration",
+     "rows": 470,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 12,
+     "dimensions": 66,
+     "dates": 19,
+     "leadDimension": "Acquisition method",
+     "leadDate": "Created",
+     "preview": null,
+     "url": "/cmd_dashboard.do?table=alm_asset"
+    },
+    {
+     "table": "cmdb_ci",
+     "label": "Configuration Item",
+     "area": "Assets and configuration",
+     "rows": 640,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 9,
+     "dimensions": 53,
+     "dates": 15,
+     "leadDimension": "Attestation Status",
+     "leadDate": "Created",
+     "preview": null,
+     "url": "/cmd_dashboard.do?table=cmdb_ci"
+    },
+    {
+     "table": "samp_sw_reclamation_candidate",
+     "label": "Removal Candidate",
+     "area": "Assets and configuration",
+     "rows": 510,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 8,
+     "dimensions": 58,
+     "dates": 11,
+     "leadDimension": "Applies to",
+     "leadDate": "Created",
+     "preview": {
+      "field": "justification",
+      "fieldLabel": "Justification",
+      "distinct": 5,
+      "top": [
+       {
+        "label": "Low Usage",
+        "count": 442,
+        "share": 0.8666666666666667
+       },
+       {
+        "label": "Overlapping",
+        "count": 47,
+        "share": 0.09215686274509804
+       },
+       {
+        "label": "Unlicensed",
+        "count": 13,
+        "share": 0.025490196078431372
+       }
+      ],
+      "restShare": 0.01568627450980392,
+      "fill": 1,
+      "sampled": true,
+      "scanned": 510
+     },
+     "url": "/cmd_dashboard.do?table=samp_sw_reclamation_candidate"
+    },
+    {
+     "table": "cmdb_sam_sw_install",
+     "label": "Software Installation",
+     "area": "Assets and configuration",
+     "rows": 810,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 4,
+     "dimensions": 44,
+     "dates": 5,
+     "leadDimension": "Cloud host type",
+     "leadDate": "Created",
+     "preview": null,
+     "url": "/cmd_dashboard.do?table=cmdb_sam_sw_install"
+    }
+   ],
+   "rows": 3192
+  },
+  {
+   "area": "IT service management",
+   "cards": [
+    {
+     "table": "change_request",
+     "label": "Change Request",
+     "area": "IT service management",
+     "rows": 300,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 73,
+     "dimensions": 56,
+     "dates": 18,
+     "leadDimension": "Approval",
+     "leadDate": "Created",
+     "preview": {
+      "field": "category",
+      "fieldLabel": "Category",
+      "distinct": 8,
+      "top": [
+       {
+        "label": "Network",
+        "count": 95,
+        "share": 0.31666666666666665
+       },
+       {
+        "label": "Software",
+        "count": 61,
+        "share": 0.20333333333333334
+       },
+       {
+        "label": "Hardware",
+        "count": 35,
+        "share": 0.11666666666666667
+       }
+      ],
+      "restShare": 0.36333333333333334,
+      "fill": 1,
+      "sampled": true,
+      "scanned": 300
+     },
+     "url": "/cmd_dashboard.do?table=change_request"
+    },
+    {
+     "table": "incident",
+     "label": "Incident",
+     "area": "IT service management",
+     "rows": 710,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 72,
+     "dimensions": 49,
+     "dates": 13,
+     "leadDimension": "Approval",
+     "leadDate": "Created",
+     "preview": {
+      "field": "contact_type",
+      "fieldLabel": "Contact type",
+      "distinct": 6,
+      "top": [
+       {
+        "label": "Walk-in",
+        "count": 132,
+        "share": 0.18803418803418803
+       },
+       {
+        "label": "Phone",
+        "count": 126,
+        "share": 0.1794871794871795
+       },
+       {
+        "label": "Self-service",
+        "count": 119,
+        "share": 0.16951566951566951
+       }
+      ],
+      "restShare": 0.46296296296296297,
+      "fill": 0.9887323943661972,
+      "sampled": true,
+      "scanned": 710
+     },
+     "url": "/cmd_dashboard.do?table=incident"
+    },
+    {
+     "table": "problem",
+     "label": "Problem",
+     "area": "IT service management",
+     "rows": 544,
+     "capped": false,
+     "atLeast": 120,
+     "reports": 28,
+     "dimensions": 53,
+     "dates": 17,
+     "leadDimension": "Approval",
+     "leadDate": "Created",
+     "preview": null,
+     "url": "/cmd_dashboard.do?table=problem"
+    },
+    {
+     "table": "task",
+     "label": "Task",
+     "area": "IT service management",
+     "rows": 50,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 8,
+     "dimensions": 33,
+     "dates": 11,
+     "leadDimension": "Approval",
+     "leadDate": "Created",
+     "preview": {
+      "field": "approval",
+      "fieldLabel": "Approval",
+      "distinct": 3,
+      "top": [
+       {
+        "label": "Not Yet Requested",
+        "count": 47,
+        "share": 0.94
+       },
+       {
+        "label": "Approved",
+        "count": 2,
+        "share": 0.04
+       },
+       {
+        "label": "Requested",
+        "count": 1,
+        "share": 0.02
+       }
+      ],
+      "restShare": 0,
+      "fill": 1,
+      "sampled": true,
+      "scanned": 50
+     },
+     "url": "/cmd_dashboard.do?table=task"
+    }
+   ],
+   "rows": 1604
+  },
+  {
+   "area": "Other",
+   "cards": [
+    {
+     "table": "csdm_dashboard_reports_result",
+     "label": "Application Services Dashboard Result",
+     "area": "Other",
+     "rows": 70,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 6,
+     "dimensions": 6,
+     "dates": 2,
+     "leadDimension": "Report type",
+     "leadDate": "Created",
+     "preview": {
+      "field": "report_type",
+      "fieldLabel": "Report type",
+      "distinct": 3,
+      "top": [
+       {
+        "label": "(3)",
+        "count": 59,
+        "share": 0.8428571428571429
+       },
+       {
+        "label": "(2)",
+        "count": 10,
+        "share": 0.14285714285714285
+       },
+       {
+        "label": "(1)",
+        "count": 1,
+        "share": 0.014285714285714285
+       }
+      ],
+      "restShare": 0,
+      "fill": 1,
+      "sampled": true,
+      "scanned": 70
+     },
+     "url": "/cmd_dashboard.do?table=csdm_dashboard_reports_result"
+    },
+    {
+     "table": "sp_log",
+     "label": "Service Portal Log Entry",
+     "area": "Other",
+     "rows": 370,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 5,
+     "dimensions": 8,
+     "dates": 2,
+     "leadDimension": "ID",
+     "leadDate": "Created",
+     "preview": null,
+     "url": "/cmd_dashboard.do?table=sp_log"
+    },
+    {
+     "table": "cert_follow_on_task",
+     "label": "Follow On Task",
+     "area": "Other",
+     "rows": 280,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 5,
+     "dimensions": 35,
+     "dates": 11,
+     "leadDimension": "Approval",
+     "leadDate": "Created",
+     "preview": {
+      "field": "short_description",
+      "fieldLabel": "Short description",
+      "distinct": 5,
+      "top": [
+       {
+        "label": "Remedy the discrepancies listed in the Audit Results below",
+        "count": 122,
+        "share": 0.4357142857142857
+       },
+       {
+        "label": "See the audit results below for the discrepancies that must be addressed",
+        "count": 91,
+        "share": 0.325
+       },
+       {
+        "label": "Ensure this database has all support staff listed, manager, support group, etc.",
+        "count": 31,
+        "share": 0.11071428571428571
+       }
+      ],
+      "restShare": 0.12857142857142856,
+      "fill": 1,
+      "sampled": true,
+      "scanned": 280
+     },
+     "url": "/cmd_dashboard.do?table=cert_follow_on_task"
+    },
+    {
+     "table": "cert_audit_result",
+     "label": "Audit Result",
+     "area": "Other",
+     "rows": 330,
+     "capped": false,
+     "atLeast": 120,
+     "reports": 4,
+     "dimensions": 13,
+     "dates": 2,
+     "leadDimension": "Audit type",
+     "leadDate": "Created",
+     "preview": {
+      "field": "threshold",
+      "fieldLabel": "Threshold",
+      "distinct": 3,
+      "top": [
+       {
+        "label": "In Limit",
+        "count": 265,
+        "share": 0.803030303030303
+       },
+       {
+        "label": "Pending",
+        "count": 35,
+        "share": 0.10606060606060606
+       },
+       {
+        "label": "Exceeded",
+        "count": 30,
+        "share": 0.09090909090909091
+       }
+      ],
+      "restShare": 0,
+      "fill": 1,
+      "sampled": false,
+      "scanned": 330
+     },
+     "url": "/cmd_dashboard.do?table=cert_audit_result"
+    }
+   ],
+   "rows": 1050
+  },
+  {
+   "area": "Assessments and surveys",
+   "cards": [
+    {
+     "table": "asmt_metric_result",
+     "label": "Metric Result",
+     "area": "Assessments and surveys",
+     "rows": 200,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 17,
+     "dimensions": 17,
+     "dates": 2,
+     "leadDimension": "NPS value",
+     "leadDate": "Created",
+     "preview": {
+      "field": "nps_value",
+      "fieldLabel": "NPS value",
+      "distinct": 3,
+      "top": [
+       {
+        "label": "Detractor",
+        "count": 47,
+        "share": 0.3533834586466165
+       },
+       {
+        "label": "Passive",
+        "count": 44,
+        "share": 0.3308270676691729
+       },
+       {
+        "label": "Promoter",
+        "count": 42,
+        "share": 0.3157894736842105
+       }
+      ],
+      "restShare": 0,
+      "fill": 0.665,
+      "sampled": true,
+      "scanned": 200
+     },
+     "url": "/cmd_dashboard.do?table=asmt_metric_result"
+    },
+    {
+     "table": "asmt_metric",
+     "label": "Assessment Metric",
+     "area": "Assessments and surveys",
+     "rows": 100,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 4,
+     "dimensions": 38,
+     "dates": 0,
+     "leadDimension": "Ask question",
+     "leadDate": null,
+     "preview": null,
+     "url": "/cmd_dashboard.do?table=asmt_metric"
+    },
+    {
+     "table": "asmt_category_result",
+     "label": "Assessment Category Result",
+     "area": "Assessments and surveys",
+     "rows": 30,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 3,
+     "dimensions": 6,
+     "dates": 2,
+     "leadDimension": "Assessment group",
+     "leadDate": "Created",
+     "preview": {
+      "field": "category",
+      "fieldLabel": "Category",
+      "distinct": 5,
+      "top": [
+       {
+        "label": "NPS category",
+        "count": 15,
+        "share": 0.5
+       },
+       {
+        "label": "Service Desk Satisfaction Survey",
+        "count": 8,
+        "share": 0.26666666666666666
+       },
+       {
+        "label": "Politeness",
+        "count": 3,
+        "share": 0.1
+       }
+      ],
+      "restShare": 0.13333333333333333,
+      "fill": 1,
+      "sampled": true,
+      "scanned": 30
+     },
+     "url": "/cmd_dashboard.do?table=asmt_category_result"
+    }
+   ],
+   "rows": 330
+  },
+  {
+   "area": "Knowledge",
+   "cards": [
+    {
+     "table": "kb_knowledge",
+     "label": "Knowledge",
+     "area": "Knowledge",
+     "rows": 130,
+     "capped": true,
+     "atLeast": 120,
+     "reports": 8,
+     "dimensions": 36,
+     "dates": 6,
+     "leadDimension": "Article type",
+     "leadDate": "Created",
+     "preview": {
+      "field": "topic",
+      "fieldLabel": "Topic",
+      "distinct": 3,
+      "top": [
+       {
+        "label": "General",
+        "count": 125,
+        "share": 0.9615384615384616
+       },
+       {
+        "label": "Policies",
+        "count": 3,
+        "share": 0.023076923076923078
+       },
+       {
+        "label": "Email",
+        "count": 2,
+        "share": 0.015384615384615385
+       }
+      ],
+      "restShare": 0,
+      "fill": 1,
+      "sampled": true,
+      "scanned": 130
+     },
+     "url": "/cmd_dashboard.do?table=kb_knowledge"
+    }
+   ],
+   "rows": 130
+  }
+ ],
+ "cards": [
+  {
+   "table": "change_request",
+   "label": "Change Request",
+   "area": "IT service management",
+   "rows": 300,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 73,
+   "dimensions": 56,
+   "dates": 18,
+   "leadDimension": "Approval",
+   "leadDate": "Created",
+   "preview": {
+    "field": "category",
+    "fieldLabel": "Category",
+    "distinct": 8,
+    "top": [
+     {
+      "label": "Network",
+      "count": 95,
+      "share": 0.31666666666666665
+     },
+     {
+      "label": "Software",
+      "count": 61,
+      "share": 0.20333333333333334
+     },
+     {
+      "label": "Hardware",
+      "count": 35,
+      "share": 0.11666666666666667
+     }
+    ],
+    "restShare": 0.36333333333333334,
+    "fill": 1,
+    "sampled": true,
+    "scanned": 300
+   },
+   "url": "/cmd_dashboard.do?table=change_request"
+  },
+  {
+   "table": "incident",
+   "label": "Incident",
+   "area": "IT service management",
+   "rows": 710,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 72,
+   "dimensions": 49,
+   "dates": 13,
+   "leadDimension": "Approval",
+   "leadDate": "Created",
+   "preview": {
+    "field": "contact_type",
+    "fieldLabel": "Contact type",
+    "distinct": 6,
+    "top": [
+     {
+      "label": "Walk-in",
+      "count": 132,
+      "share": 0.18803418803418803
+     },
+     {
+      "label": "Phone",
+      "count": 126,
+      "share": 0.1794871794871795
+     },
+     {
+      "label": "Self-service",
+      "count": 119,
+      "share": 0.16951566951566951
+     }
+    ],
+    "restShare": 0.46296296296296297,
+    "fill": 0.9887323943661972,
+    "sampled": true,
+    "scanned": 710
+   },
+   "url": "/cmd_dashboard.do?table=incident"
+  },
+  {
+   "table": "problem",
+   "label": "Problem",
+   "area": "IT service management",
+   "rows": 544,
+   "capped": false,
+   "atLeast": 120,
+   "reports": 28,
+   "dimensions": 53,
+   "dates": 17,
+   "leadDimension": "Approval",
+   "leadDate": "Created",
+   "preview": null,
+   "url": "/cmd_dashboard.do?table=problem"
+  },
+  {
+   "table": "asmt_metric_result",
+   "label": "Metric Result",
+   "area": "Assessments and surveys",
+   "rows": 200,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 17,
+   "dimensions": 17,
+   "dates": 2,
+   "leadDimension": "NPS value",
+   "leadDate": "Created",
+   "preview": {
+    "field": "nps_value",
+    "fieldLabel": "NPS value",
+    "distinct": 3,
+    "top": [
+     {
+      "label": "Detractor",
+      "count": 47,
+      "share": 0.3533834586466165
+     },
+     {
+      "label": "Passive",
+      "count": 44,
+      "share": 0.3308270676691729
+     },
+     {
+      "label": "Promoter",
+      "count": 42,
+      "share": 0.3157894736842105
+     }
+    ],
+    "restShare": 0,
+    "fill": 0.665,
+    "sampled": true,
+    "scanned": 200
+   },
+   "url": "/cmd_dashboard.do?table=asmt_metric_result"
+  },
+  {
+   "table": "ast_contract",
+   "label": "Contract",
+   "area": "Assets and configuration",
+   "rows": 122,
+   "capped": false,
+   "atLeast": 120,
+   "reports": 16,
+   "dimensions": 67,
+   "dates": 9,
+   "leadDimension": "Agreement type",
+   "leadDate": "Created",
+   "preview": null,
+   "url": "/cmd_dashboard.do?table=ast_contract"
+  },
+  {
+   "table": "cmdb_ci_computer",
+   "label": "Computer",
+   "area": "Assets and configuration",
+   "rows": 640,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 12,
+   "dimensions": 79,
+   "dates": 15,
+   "leadDimension": "Attestation Status",
+   "leadDate": "Created",
+   "preview": null,
+   "url": "/cmd_dashboard.do?table=cmdb_ci_computer"
+  },
+  {
+   "table": "alm_asset",
+   "label": "Asset",
+   "area": "Assets and configuration",
+   "rows": 470,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 12,
+   "dimensions": 66,
+   "dates": 19,
+   "leadDimension": "Acquisition method",
+   "leadDate": "Created",
+   "preview": null,
+   "url": "/cmd_dashboard.do?table=alm_asset"
+  },
+  {
+   "table": "cmdb_ci",
+   "label": "Configuration Item",
+   "area": "Assets and configuration",
+   "rows": 640,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 9,
+   "dimensions": 53,
+   "dates": 15,
+   "leadDimension": "Attestation Status",
+   "leadDate": "Created",
+   "preview": null,
+   "url": "/cmd_dashboard.do?table=cmdb_ci"
+  },
+  {
+   "table": "samp_sw_reclamation_candidate",
+   "label": "Removal Candidate",
+   "area": "Assets and configuration",
+   "rows": 510,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 8,
+   "dimensions": 58,
+   "dates": 11,
+   "leadDimension": "Applies to",
+   "leadDate": "Created",
+   "preview": {
+    "field": "justification",
+    "fieldLabel": "Justification",
+    "distinct": 5,
+    "top": [
+     {
+      "label": "Low Usage",
+      "count": 442,
+      "share": 0.8666666666666667
+     },
+     {
+      "label": "Overlapping",
+      "count": 47,
+      "share": 0.09215686274509804
+     },
+     {
+      "label": "Unlicensed",
+      "count": 13,
+      "share": 0.025490196078431372
+     }
+    ],
+    "restShare": 0.01568627450980392,
+    "fill": 1,
+    "sampled": true,
+    "scanned": 510
+   },
+   "url": "/cmd_dashboard.do?table=samp_sw_reclamation_candidate"
+  },
+  {
+   "table": "kb_knowledge",
+   "label": "Knowledge",
+   "area": "Knowledge",
+   "rows": 130,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 8,
+   "dimensions": 36,
+   "dates": 6,
+   "leadDimension": "Article type",
+   "leadDate": "Created",
+   "preview": {
+    "field": "topic",
+    "fieldLabel": "Topic",
+    "distinct": 3,
+    "top": [
+     {
+      "label": "General",
+      "count": 125,
+      "share": 0.9615384615384616
+     },
+     {
+      "label": "Policies",
+      "count": 3,
+      "share": 0.023076923076923078
+     },
+     {
+      "label": "Email",
+      "count": 2,
+      "share": 0.015384615384615385
+     }
+    ],
+    "restShare": 0,
+    "fill": 1,
+    "sampled": true,
+    "scanned": 130
+   },
+   "url": "/cmd_dashboard.do?table=kb_knowledge"
+  },
+  {
+   "table": "task",
+   "label": "Task",
+   "area": "IT service management",
+   "rows": 50,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 8,
+   "dimensions": 33,
+   "dates": 11,
+   "leadDimension": "Approval",
+   "leadDate": "Created",
+   "preview": {
+    "field": "approval",
+    "fieldLabel": "Approval",
+    "distinct": 3,
+    "top": [
+     {
+      "label": "Not Yet Requested",
+      "count": 47,
+      "share": 0.94
+     },
+     {
+      "label": "Approved",
+      "count": 2,
+      "share": 0.04
+     },
+     {
+      "label": "Requested",
+      "count": 1,
+      "share": 0.02
+     }
+    ],
+    "restShare": 0,
+    "fill": 1,
+    "sampled": true,
+    "scanned": 50
+   },
+   "url": "/cmd_dashboard.do?table=task"
+  },
+  {
+   "table": "csdm_dashboard_reports_result",
+   "label": "Application Services Dashboard Result",
+   "area": "Other",
+   "rows": 70,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 6,
+   "dimensions": 6,
+   "dates": 2,
+   "leadDimension": "Report type",
+   "leadDate": "Created",
+   "preview": {
+    "field": "report_type",
+    "fieldLabel": "Report type",
+    "distinct": 3,
+    "top": [
+     {
+      "label": "(3)",
+      "count": 59,
+      "share": 0.8428571428571429
+     },
+     {
+      "label": "(2)",
+      "count": 10,
+      "share": 0.14285714285714285
+     },
+     {
+      "label": "(1)",
+      "count": 1,
+      "share": 0.014285714285714285
+     }
+    ],
+    "restShare": 0,
+    "fill": 1,
+    "sampled": true,
+    "scanned": 70
+   },
+   "url": "/cmd_dashboard.do?table=csdm_dashboard_reports_result"
+  },
+  {
+   "table": "sp_log",
+   "label": "Service Portal Log Entry",
+   "area": "Other",
+   "rows": 370,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 5,
+   "dimensions": 8,
+   "dates": 2,
+   "leadDimension": "ID",
+   "leadDate": "Created",
+   "preview": null,
+   "url": "/cmd_dashboard.do?table=sp_log"
+  },
+  {
+   "table": "cert_follow_on_task",
+   "label": "Follow On Task",
+   "area": "Other",
+   "rows": 280,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 5,
+   "dimensions": 35,
+   "dates": 11,
+   "leadDimension": "Approval",
+   "leadDate": "Created",
+   "preview": {
+    "field": "short_description",
+    "fieldLabel": "Short description",
+    "distinct": 5,
+    "top": [
+     {
+      "label": "Remedy the discrepancies listed in the Audit Results below",
+      "count": 122,
+      "share": 0.4357142857142857
+     },
+     {
+      "label": "See the audit results below for the discrepancies that must be addressed",
+      "count": 91,
+      "share": 0.325
+     },
+     {
+      "label": "Ensure this database has all support staff listed, manager, support group, etc.",
+      "count": 31,
+      "share": 0.11071428571428571
+     }
+    ],
+    "restShare": 0.12857142857142856,
+    "fill": 1,
+    "sampled": true,
+    "scanned": 280
+   },
+   "url": "/cmd_dashboard.do?table=cert_follow_on_task"
+  },
+  {
+   "table": "cmdb_sam_sw_install",
+   "label": "Software Installation",
+   "area": "Assets and configuration",
+   "rows": 810,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 4,
+   "dimensions": 44,
+   "dates": 5,
+   "leadDimension": "Cloud host type",
+   "leadDate": "Created",
+   "preview": null,
+   "url": "/cmd_dashboard.do?table=cmdb_sam_sw_install"
+  },
+  {
+   "table": "cert_audit_result",
+   "label": "Audit Result",
+   "area": "Other",
+   "rows": 330,
+   "capped": false,
+   "atLeast": 120,
+   "reports": 4,
+   "dimensions": 13,
+   "dates": 2,
+   "leadDimension": "Audit type",
+   "leadDate": "Created",
+   "preview": {
+    "field": "threshold",
+    "fieldLabel": "Threshold",
+    "distinct": 3,
+    "top": [
+     {
+      "label": "In Limit",
+      "count": 265,
+      "share": 0.803030303030303
+     },
+     {
+      "label": "Pending",
+      "count": 35,
+      "share": 0.10606060606060606
+     },
+     {
+      "label": "Exceeded",
+      "count": 30,
+      "share": 0.09090909090909091
+     }
+    ],
+    "restShare": 0,
+    "fill": 1,
+    "sampled": false,
+    "scanned": 330
+   },
+   "url": "/cmd_dashboard.do?table=cert_audit_result"
+  },
+  {
+   "table": "asmt_metric",
+   "label": "Assessment Metric",
+   "area": "Assessments and surveys",
+   "rows": 100,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 4,
+   "dimensions": 38,
+   "dates": 0,
+   "leadDimension": "Ask question",
+   "leadDate": null,
+   "preview": null,
+   "url": "/cmd_dashboard.do?table=asmt_metric"
+  },
+  {
+   "table": "asmt_category_result",
+   "label": "Assessment Category Result",
+   "area": "Assessments and surveys",
+   "rows": 30,
+   "capped": true,
+   "atLeast": 120,
+   "reports": 3,
+   "dimensions": 6,
+   "dates": 2,
+   "leadDimension": "Assessment group",
+   "leadDate": "Created",
+   "preview": {
+    "field": "category",
+    "fieldLabel": "Category",
+    "distinct": 5,
+    "top": [
+     {
+      "label": "NPS category",
+      "count": 15,
+      "share": 0.5
+     },
+     {
+      "label": "Service Desk Satisfaction Survey",
+      "count": 8,
+      "share": 0.26666666666666666
+     },
+     {
+      "label": "Politeness",
+      "count": 3,
+      "share": 0.1
+     }
+    ],
+    "restShare": 0.13333333333333333,
+    "fill": 1,
+    "sampled": true,
+    "scanned": 30
+   },
+   "url": "/cmd_dashboard.do?table=asmt_category_result"
+  }
+ ],
+ "stats": {
+  "ms": 8389,
+  "user": "Santhan K",
+  "userName": "admin",
+  "offered": 18,
+  "considered": 40,
+  "denied": 1,
+  "tooSmall": 20
+ }
+}
