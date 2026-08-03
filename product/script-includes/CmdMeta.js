@@ -69,6 +69,7 @@ CmdMeta.prototype = {
     initialize: function () {
         this._tables = {};   // table -> descriptor, memoised per request
         this._fields = {};   // table -> field array
+        this._choices = {};  // table|field -> declared choices, in sequence
     },
 
     /**
@@ -173,6 +174,49 @@ CmdMeta.prototype = {
             if (all[i].name === name) return all[i];
         }
         return null;
+    },
+
+    /**
+     * The declared choices for a field, in the sequence somebody declared them in.
+     *
+     * Sequence is the point. Everywhere else in this product a value's order comes
+     * from measuring the rows, because a declaration records an intention and the
+     * rows record a fact. A funnel is the one case where the declared order is the
+     * fact being asked about: "does volume shed in the order this field says the
+     * work is meant to flow". Without the sequence there is no funnel to test for,
+     * only a set of counts.
+     *
+     * It stays a claim, not a conclusion. CmdAnalysis.funnel() still requires the
+     * counts to decline monotonically across this order before it will draw one, so
+     * a field whose declared sequence is decorative is rejected on the data.
+     */
+    choices: function (table, field) {
+        var ck = table + '|' + field;
+        if (this._choices[ck]) return this._choices[ck];
+
+        var out = [], seen = {};
+        var gr = new GlideRecord('sys_choice');
+        gr.addQuery('name', 'IN', this._hierarchy(table).join(','));
+        gr.addQuery('element', field);
+        gr.addQuery('inactive', '!=', true);
+        /* Choices are per language; without this a bilingual instance returns each
+           value once per installed language and the funnel gets duplicate stages. */
+        gr.addQuery('language', 'en');
+        gr.orderBy('sequence');
+        gr.query();
+        while (gr.next()) {
+            var v = gr.getValue('value');
+            if (v === null || v === '' || seen[v]) continue;
+            seen[v] = true;
+            out.push({
+                value: v,
+                label: gr.getValue('label') || v,
+                sequence: parseInt(gr.getValue('sequence'), 10) || 0
+            });
+        }
+
+        this._choices[ck] = out;
+        return out;
     },
 
     /**

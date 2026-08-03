@@ -44,6 +44,7 @@ SCRIPT_INCLUDES = [
     "CmdMeta.js",
     "CmdData.js",
     "CmdDrill.js",
+    "CmdAnalysis.js",
     "CmdCatalog.js",
     "CmdPayload.js",
 ]

@@ -28,7 +28,14 @@ CmdPayload.VERSION = 1;
 /* Panels per dashboard. Each one costs a grouped query, and the point of
    diminishing returns is well before the point where the page stops fitting on a
    screen. Six plus the header and the series is a dense, readable page. */
-CmdPayload.MAX_PANELS = 6;
+CmdPayload.MAX_PANELS = 4;
+
+/* Rich analysis panels per page, on top of the single-dimension breakdowns.
+ *
+ * Five is a page you read; ten is a page you scroll past. The builders are ordered
+ * by what they add, so a cap here drops the least useful rather than a random tail,
+ * and what was dropped is reported. */
+CmdPayload.MAX_ANALYSIS = 5;
 
 /* Candidate dimensions examined to fill those panels. Higher gives better panels
    and costs more; each rejected candidate still costs its profile. */
@@ -86,6 +93,12 @@ CmdPayload.prototype = {
         this.meta = new CmdMeta();
         this.form = new CmdForm();
         this.drill = new CmdDrill(this.data, this.meta);
+        /* Shares the same CmdData, so every reduction the analysis panels run is
+           memoised alongside the profiles the dimension panels already computed and
+           the ACL verdict established once for the request. Handing it a fresh
+           CmdData instead would double the cost of every page. */
+        this.analysis = new CmdAnalysis(this.data, this.meta, this.form);
+        this._dateField = {};
     },
 
     /**
@@ -151,8 +164,17 @@ CmdPayload.prototype = {
 
         /* ── the series. A dashboard over a task-like table without a trend is
               missing the one question every leader asks first. ── */
+        var dateField = this._pickDateField(table, query, opts);
+
         var series = this._seriesPanel(table, query, total, opts);
-        if (series) payload.panels.push(series);
+        if (series) {
+            /* The analytics pane, in the one place it belongs. A trend without a
+               fitted line is a picture; with one it is a claim about direction that
+               the reader can check. The method is stated on the panel so nobody
+               mistakes least squares over twelve points for a forecasting model. */
+            series.annotation = this.analysis.annotate(series.points);
+            payload.panels.push(series);
+        }
 
         /* ── dimension panels, selected for variety of question ──
          *
@@ -187,8 +209,45 @@ CmdPayload.prototype = {
                 ' fields, to keep this page inside its time budget. This table is ' +
                 'expensive to permission-check.');
         }
+        var dimPanels = this._diversify(candidates, CmdPayload.MAX_PANELS);
+
+        /* ── the analysis grid ──
+         *
+         * Everything above answers "how does one field break down". This is the part
+         * that answers the questions a leader actually asks next: how did that move,
+         * what drove the change, where do two things coincide, how much does it vary,
+         * does one thing track another.
+         *
+         * Built as a list of thunks rather than a sequence of calls so the budget can
+         * govern it. Each builder costs at most one bounded reduction, each returns
+         * null rather than a degenerate chart, and the page takes them in order of
+         * how much they add until either the panel cap or the clock stops it. What
+         * was skipped is reported, never silently dropped.
+         */
+        payload.kpis = this._overBudget(t0)
+            ? []
+            : this.analysis.kpiRow(table, query, total, dateField, CmdData.GROUP_MS);
+
+        var lead = this._leadDims(candidates, dims, used);
         payload.panels = payload.panels.concat(
-            this._diversify(candidates, CmdPayload.MAX_PANELS));
+            this._analysisGrid(table, query, dateField, lead, opts, t0, payload));
+
+        payload.panels = payload.panels.concat(dimPanels);
+
+        /* ── the report matrix ──
+         *
+         * The artifact that separates a report from a dashboard, and the thing the
+         * client's own tool gives them that a chart grid does not: dense,
+         * hierarchical, printable, read for ten minutes rather than glanced at.
+         * Always last, because it is the detail you drop to after the charts have
+         * told you where to look.
+         */
+        payload.matrix = null;
+        if (lead.primary && !this._overBudget(t0)) {
+            payload.matrix = this.analysis.reportMatrix(
+                table, query, lead.primary, dateField,
+                opts.grain || 'month', opts.months || 12, CmdData.GROUP_MS);
+        }
 
         /* ── drill options for the slice we are looking at ── */
         if (payload.drill.atMax) {
@@ -211,6 +270,170 @@ CmdPayload.prototype = {
         return payload;
     },
 
+    /* ── the analysis grid ──────────────────────────────────────────────── */
+
+    /**
+     * The dimensions the rich panels crossed, split and ranked by.
+     *
+     * Reuses the profiles the dimension pass already paid for, so choosing these
+     * costs nothing. `primary` is the most informative field on the subject, which
+     * is the one worth putting a trend, a matrix and a breakdown behind; `secondary`
+     * is the best field that is not it, for the one panel that needs two.
+     *
+     * Deliberately taken from the same scored candidate list the visible panels come
+     * from, rather than picked independently. A page whose heatmap crosses two
+     * fields that appear nowhere else reads as two unrelated dashboards stapled
+     * together.
+     */
+    _leadDims: function (candidates, dims, used) {
+        var out = { primary: null, secondary: null, ordinal: null, concentrated: null };
+        if (!candidates.length) return out;
+
+        var scored = candidates.slice();
+        var self = this;
+        scored.sort(function (a, b) {
+            return self._informativeness(b) - self._informativeness(a);
+        });
+
+        var byName = {}, i;
+        for (i = 0; i < dims.length; i++) byName[dims[i].name] = dims[i];
+
+        for (i = 0; i < scored.length; i++) {
+            var d = byName[scored[i].field];
+            if (!d || this._contains(used, d.name)) continue;
+            if (!out.primary) { out.primary = d; continue; }
+            if (!out.secondary) { out.secondary = d; }
+            if (!out.ordinal && d.isOrdinal) { out.ordinal = d; }
+        }
+        if (!out.ordinal && out.primary && out.primary.isOrdinal) {
+            out.ordinal = out.primary;
+        }
+
+        /* The most concentrated dimension, which is the one a Pareto is about. Not
+           necessarily the most informative: informativeness deliberately penalises
+           concentration, because a chart where one bar is everything says little,
+           and a Pareto is the one form for which that shape is the subject. */
+        var best = -1;
+        for (i = 0; i < scored.length; i++) {
+            var c = scored[i];
+            if (!c.shape || this._contains(used, c.field)) continue;
+            if (c.shape.concentration > best) {
+                best = c.shape.concentration;
+                out.concentrated = byName[c.field] || null;
+            }
+        }
+        return out;
+    },
+
+    /**
+     * Builds the rich panels, in value order, until the cap or the clock stops it.
+     *
+     * Order is a judgement about what a leader wants after the headline: how the
+     * breakdown moved, what drove the change, then spread, coincidence and
+     * concentration. A builder that returns null costs its reduction and yields
+     * nothing, which is the correct outcome when the data does not support the
+     * form and is why the order matters more than the count.
+     */
+    _analysisGrid: function (table, query, dateField, lead, opts, t0, payload) {
+        var self = this;
+        var grain = opts.grain || 'month';
+        var months = opts.months || 12;
+        var budget = CmdData.GROUP_MS;
+        var out = [];
+
+        var builders = [];
+
+        if (dateField && lead.primary) {
+            builders.push({ name: 'trend by ' + lead.primary.label, fn: function () {
+                return self.analysis.trendByGroup(table, query, dateField,
+                    lead.primary, grain, months, budget);
+            }});
+            builders.push({ name: 'change breakdown', fn: function () {
+                return self.analysis.changeBreakdown(table, query, dateField,
+                    lead.primary, grain, budget);
+            }});
+        }
+
+        if (lead.primary && lead.secondary) {
+            builders.push({ name: 'crosstab', fn: function () {
+                return self.analysis.crossHeat(table, query, lead.primary,
+                    lead.secondary, budget);
+            }});
+        }
+
+        var measures = this.meta.measures(table);
+        if (measures.length) {
+            builders.push({ name: 'distribution', fn: function () {
+                return self.analysis.distribution(table, query, measures[0], budget);
+            }});
+            if (lead.primary) {
+                builders.push({ name: 'spread by group', fn: function () {
+                    return self.analysis.spreadByGroup(table, query, measures[0],
+                        lead.primary, budget);
+                }});
+            }
+        }
+        if (measures.length >= 2) {
+            builders.push({ name: 'relationship', fn: function () {
+                return self.analysis.relationship(table, query, measures[0],
+                    measures[1], lead.primary, budget);
+            }});
+        }
+
+        if (lead.concentrated) {
+            builders.push({ name: 'pareto', fn: function () {
+                return self.analysis.pareto(table, query, lead.concentrated);
+            }});
+        }
+        if (lead.ordinal) {
+            builders.push({ name: 'funnel', fn: function () {
+                return self.analysis.funnel(table, query, lead.ordinal);
+            }});
+        }
+        if (dateField) {
+            builders.push({ name: 'week cycle', fn: function () {
+                return self.analysis.weekCycle(table, query, dateField, budget);
+            }});
+            if (lead.primary) {
+                builders.push({ name: 'rank shift', fn: function () {
+                    return self.analysis.rankShift(table, query, dateField,
+                        lead.primary, grain, months, budget);
+                }});
+            }
+            builders.push({ name: 'calendar', fn: function () {
+                return self.analysis.calendar(table, query, dateField, 182, budget);
+            }});
+        }
+
+        var attempted = 0, skipped = 0, i;
+        for (i = 0; i < builders.length; i++) {
+            if (out.length >= CmdPayload.MAX_ANALYSIS) { skipped++; continue; }
+            if (this._overBudget(t0)) { skipped++; continue; }
+            attempted++;
+            var p = null;
+            try {
+                p = builders[i].fn();
+            } catch (e) {
+                /* One failing builder must not take the page with it. The panel is
+                   dropped and the fault is surfaced as a note rather than a stack
+                   trace in place of a dashboard. */
+                payload.notes.push('The ' + builders[i].name + ' panel could not be ' +
+                    'built: ' + (e.message || e));
+            }
+            if (p) out.push(p);
+        }
+
+        if (skipped > 0) {
+            payload.notes.push(skipped + ' further analysis panel' +
+                (skipped === 1 ? ' was' : 's were') + ' not built, ' +
+                (out.length >= CmdPayload.MAX_ANALYSIS
+                    ? 'because the page already holds as many as it can read well.'
+                    : 'to keep this page inside its time budget. This table is ' +
+                      'expensive to permission-check.'));
+        }
+        return out;
+    },
+
     /* ── panels ─────────────────────────────────────────────────────────── */
 
     /**
@@ -229,6 +452,51 @@ CmdPayload.prototype = {
      * an install date, a discovery date, a due date. And where no date field has
      * spread, there is no trend to draw and the panel is dropped rather than faked.
      */
+    /**
+     * The date field a page draws its time from, chosen once and reused.
+     *
+     * Extracted from _seriesPanel because five things now need the same answer —
+     * the trend, the KPI comparison, the week cycle, the calendar and the matrix's
+     * sparkline column — and each of them independently re-deciding it would both
+     * cost five times as much and risk a page where the trend is drawn on one
+     * column and the variance beside it on another.
+     */
+    _pickDateField: function (table, query, opts) {
+        if (opts && opts.dateField) return opts.dateField;
+
+        var ck = table + '|' + (query || '');
+        if (this._dateField && this._dateField[ck] !== undefined) {
+            return this._dateField[ck];
+        }
+        if (!this._dateField) this._dateField = {};
+
+        var dates = this.meta.dates(table);
+        var buckets = (opts && opts.months) || 12;
+        var field = null, bestSpan = 0, i;
+
+        /* One MIN/MAX query per candidate decides which field to draw, and only
+           the winner pays for its buckets. Bucketing every candidate to count
+           occupancy was sixty queries and measurably slower than the problem it
+           solved. */
+        for (i = 0; i < dates.length && i < CmdPayload.DATE_CANDIDATES; i++) {
+            var sp = this.data.dateSpread(table, dates[i].name, query);
+            if (sp.nonEmpty === 0) continue;
+            /* The newest value has to be inside the window, or the trend is
+               drawn entirely in the past and every bucket is empty. */
+            if (sp.monthsSinceMax >= buckets) continue;
+            /* Capped at the window: a field spanning eight years is not better
+               than one spanning twelve months when the window is twelve months.
+               Ties break toward the earlier candidate, which is the better name. */
+            var span = Math.min(sp.monthsSpanned, buckets);
+            if (span > bestSpan) { bestSpan = span; field = dates[i].name; }
+            if (bestSpan >= buckets) break;
+        }
+        if (bestSpan < CmdPayload.MIN_OCCUPIED_BUCKETS) field = null;
+
+        this._dateField[ck] = field;
+        return field;
+    },
+
     _seriesPanel: function (table, query, total, opts) {
         var dates = this.meta.dates(table);
         if (!dates.length) return null;
@@ -236,31 +504,11 @@ CmdPayload.prototype = {
         var grain = opts.grain || 'month';
         var buckets = opts.months || 12;
 
-        var field = opts.dateField || null;
+        var field = this._pickDateField(table, query, opts);
         var pts = null;
         var i;
 
-        if (!field) {
-            /* One MIN/MAX query per candidate decides which field to draw, and only
-               the winner pays for its buckets. Bucketing every candidate to count
-               occupancy was sixty queries and measurably slower than the problem it
-               solved. */
-            var bestSpan = 0;
-            for (i = 0; i < dates.length && i < CmdPayload.DATE_CANDIDATES; i++) {
-                var sp = this.data.dateSpread(table, dates[i].name, query);
-                if (sp.nonEmpty === 0) continue;
-                /* The newest value has to be inside the window, or the trend is
-                   drawn entirely in the past and every bucket is empty. */
-                if (sp.monthsSinceMax >= buckets) continue;
-                /* Capped at the window: a field spanning eight years is not better
-                   than one spanning twelve months when the window is twelve months.
-                   Ties break toward the earlier candidate, which is the better name. */
-                var span = Math.min(sp.monthsSpanned, buckets);
-                if (span > bestSpan) { bestSpan = span; field = dates[i].name; }
-                if (bestSpan >= buckets) break;
-            }
-            if (bestSpan < CmdPayload.MIN_OCCUPIED_BUCKETS) return null;
-        }
+        if (!field) return null;
 
         pts = this.data.periodSeries(table, field, grain, buckets, query);
 

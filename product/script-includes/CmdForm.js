@@ -62,7 +62,14 @@ CmdForm.FORMS = [
     'waterfall',
     'pareto',
     'slope',
-    'matrix'
+    'matrix',
+    /* Added with the analysis layer. These are not selected by selectForm(): they
+       belong to panels that know their own form by construction, because the form
+       is implied by the shape of the reduction that produced them. A crosstab is a
+       heatmap; a sequence that sheds volume is a funnel. They are declared here so
+       the renderer-coverage assertion still governs them. */
+    'funnel',
+    'bump'
 ];
 
 /* Thresholds. Named, in one place, so a reviewer can argue with the numbers
