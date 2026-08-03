@@ -399,9 +399,14 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
 #cmd-wrap td.down{color:var(--down)}
 
 /* ── hover report ────────────────────────────────────────────────────────── */
-/* The one rule not scoped to the mount. It is appended to <body> on purpose: a
-   tooltip inside the panel is clipped by the panel's own overflow, and inside
-   the mobile horizontal-scroll container it scrolls away from its mark. */
+/* The one rule not scoped to the mount. The element is appended to the document
+   body on purpose: a tooltip inside the panel is clipped by the panel's own
+   overflow, and inside the mobile horizontal-scroll container it scrolls away
+   from the mark it belongs to.
+
+   Note for anyone editing this file: an angle bracket in a CSS comment is an open
+   tag to the XML parser, because this stylesheet is inlined into a Jelly page.
+   Writing the element name in brackets here cost one deploy. */
 .cmd-tip{
   position:absolute; z-index:9999; pointer-events:none; opacity:0;
   transform:translateY(3px); transition:opacity .12s var(--ease-out),

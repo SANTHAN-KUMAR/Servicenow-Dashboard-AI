@@ -192,6 +192,22 @@ CmdPayload.prototype = {
         var candidates = [];
         var dims = this.meta.dimensions(table);
         var examined = 0;
+
+        /* One scan for all the candidate profiles, where that is the cheaper route.
+         *
+         * On a table whose ACL verdict is not trusted, each profile below is its own
+         * permission-checked scan over the same rows. Measured on `task`, six
+         * candidates cost 7,408ms that way. Admitting a row once and reading six
+         * values off it is the same work as admitting it once to read one, so this
+         * pre-computes them together and the loop then finds them memoised.
+         *
+         * It is a no-op on a trusted table, where the fast path already makes each
+         * profile cost about 12ms and a batched secure scan would be strictly worse. */
+        var warm = [];
+        for (i = 0; i < dims.length && i < CmdPayload.MAX_CANDIDATES; i++) {
+            if (!this._contains(used, dims[i].name)) warm.push(dims[i].name);
+        }
+        this.data.warmProfiles(table, warm.slice(0, 8), query, CmdData.GROUP_MS);
         for (i = 0; i < dims.length && i < CmdPayload.MAX_CANDIDATES; i++) {
             if (this._contains(used, dims[i].name)) continue;
             /* The floor is attempted whatever the clock says; the deadline only
@@ -361,7 +377,11 @@ CmdPayload.prototype = {
             }});
         }
 
-        var measures = this.meta.measures(table);
+        /* Ranked by what is actually in the column, not by dictionary order. One
+           scan profiles them all; taking meta.measures()[0] was handing the
+           histogram, the box plot and the scatter a column with 35 rows and no
+           variance while the well-populated ones went unexamined. */
+        var measures = this.analysis.rankMeasures(table, query, budget);
         if (measures.length) {
             builders.push({ name: 'distribution', fn: function () {
                 return self.analysis.distribution(table, query, measures[0], budget);

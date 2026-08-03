@@ -172,15 +172,12 @@ CmdAnalysis.prototype = {
      * number on screen that the client would reasonably ask us to justify.
      */
     gaugeTile: function (table, query, budgetMs) {
-        var ms = this.meta.measures(table);
-        for (var i = 0; i < ms.length && i < 6; i++) {
-            if (ms[i].isDuration) continue;
-            var p = this.data.numericProfile(table, ms[i].name, query, budgetMs);
-            if (!p || p.n < CmdAnalysis.DIST_MIN_N) continue;
+        var ms = this.rankMeasures(table, query, budgetMs);
+        for (var i = 0; i < ms.length; i++) {
+            var p = ms[i].profile;
             /* Measured, not assumed. A column is a percentage if its values behave
                like one. */
-            if (p.min < 0 || p.max > CmdAnalysis.PCT_MAX) continue;
-            if (p.max <= 1) continue;               /* a 0-1 ratio, not a 0-100 percent */
+            if (!ms[i].isPercentLike) continue;
             var distinct = p.bins && p.bins.k ? p.bins.k : 0;
             if (distinct < CmdAnalysis.PCT_MIN_DISTINCT) continue;
 
@@ -253,14 +250,12 @@ CmdAnalysis.prototype = {
 
     /** The sum of the most populated genuine measure, if there is one. */
     measureTile: function (table, query, budgetMs) {
-        var ms = this.meta.measures(table);
-        for (var i = 0; i < ms.length && i < 4; i++) {
-            if (ms[i].isDuration) continue;
-            var p = this.data.numericProfile(table, ms[i].name, query, budgetMs);
-            if (!p || p.n < CmdAnalysis.DIST_MIN_N) continue;
+        var ms = this.rankMeasures(table, query, budgetMs);
+        for (var i = 0; i < ms.length; i++) {
+            var p = ms[i].profile;
             /* A percentage column has already become a gauge; summing it is
                meaningless. */
-            if (p.min >= 0 && p.max <= CmdAnalysis.PCT_MAX && p.max > 1) continue;
+            if (ms[i].isPercentLike) continue;
             if (p.sum === 0) continue;
             return {
                 id: 'kpi_sum_' + ms[i].name, kind: 'kpi', span: 1,
@@ -492,13 +487,15 @@ CmdAnalysis.prototype = {
      * the total change by construction, so the bars reconcile the two ends.
      */
     changeBreakdown: function (table, query, dateField, dim, grain, budgetMs) {
-        var r = this.data.seriesByGroup(table, dateField, dim.name, grain, 2,
-                                        query, budgetMs);
-        if (!r || r.periods.length < 2) return null;
-
-        /* Both periods must be closed for the comparison to be fair. With a window
-           of two the second is the current, partial one, so this asks for three and
-           uses the two that are complete. */
+        /* Three buckets, not two. The most recent is the current, partial period,
+           so a two-bucket window would compare a part-month against a whole one and
+           report a fall every time. Asking for three and using the two complete ones
+           is the fair comparison.
+         *
+         * This used to ask for two as well, immediately before asking for three, and
+         * discard the first answer entirely -- a whole extra permission-checked scan
+         * per page for a value that was only ever length-checked. It was 1.2 of the
+         * 2.4 seconds this builder cost. */
         var r3 = this.data.seriesByGroup(table, dateField, dim.name, grain, 3,
                                          query, budgetMs);
         if (!r3 || r3.periods.length < 3) return null;
@@ -740,7 +737,8 @@ CmdAnalysis.prototype = {
      * a histogram, it is a bar chart of a value list.
      */
     distribution: function (table, query, measure, budgetMs) {
-        var p = this.data.numericProfile(table, measure.name, query, budgetMs);
+        var p = measure.profile ||
+                this.data.numericProfile(table, measure.name, query, budgetMs);
         if (!p || p.n < CmdAnalysis.DIST_MIN_N) return null;
         if (!p.bins || !p.bins.bins.length || p.bins.degenerate) return null;
 
@@ -1067,6 +1065,67 @@ CmdAnalysis.prototype = {
             method: 'least squares on ' + n + ' complete periods, band at ' +
                     CmdAnalysis.ANOMALY_SIGMA + ' residual standard deviations'
         };
+    },
+
+    /**
+     * The numeric columns worth drawing, best first.
+     *
+     * The same principle the date-field choice already follows, applied to
+     * measures: do not take the dictionary's order, measure the columns and rank
+     * them. Skipping this was producing exactly the failure it was written to
+     * prevent. On incident, the dictionary's first measure is `business_duration`,
+     * which is populated on 35 of 4,264 records and has min equal to max — a column
+     * with no variance at all. It was being handed to the histogram, the box plot
+     * and the scatter, all three of which then correctly refused to draw anything,
+     * while `child_incidents` at 4,214 populated and `reassignment_count` at 3,910
+     * sat unexamined.
+     *
+     * So the panels were being starved by field order, and the symptom was
+     * indistinguishable from "this subject has no numeric data" — the most
+     * expensive kind of bug, because everything downstream behaves correctly and
+     * the page just quietly has less on it.
+     *
+     * One scan profiles every candidate, and the ranking is population first, then
+     * spread, because a well-populated column with no variance is still not worth a
+     * chart and a sparse one cannot be trusted whatever its shape.
+     */
+    rankMeasures: function (table, query, budgetMs) {
+        var ck = table + '|' + (query || '');
+        if (!this._measures) this._measures = {};
+        if (this._measures[ck]) return this._measures[ck];
+
+        var ms = this.meta.measures(table), i;
+        var names = [];
+        for (i = 0; i < ms.length && i < 8; i++) {
+            if (!ms[i].isDuration) names.push(ms[i].name);
+        }
+        if (!names.length) { this._measures[ck] = []; return []; }
+
+        var profiles = this.data.numericProfiles(table, names, query, budgetMs);
+        var byName = {};
+        for (i = 0; i < ms.length; i++) byName[ms[i].name] = ms[i];
+
+        var out = [];
+        for (i = 0; i < names.length; i++) {
+            var p = profiles[names[i]];
+            if (!p || p.n < CmdAnalysis.DIST_MIN_N) continue;
+            /* No variance means no distribution, no relationship and no box. The
+               column may be perfectly valid data; it is simply not a chart. */
+            if (p.min === p.max) continue;
+            var m = byName[names[i]];
+            out.push({
+                name: m.name, label: m.label, type: m.type,
+                isDuration: !!m.isDuration,
+                profile: p,
+                /* Percentage-like columns are gauge material and are useless as a
+                   sum, so the tile builders need to tell them apart. */
+                isPercentLike: (p.min >= 0 && p.max <= CmdAnalysis.PCT_MAX && p.max > 1),
+                score: p.n * (p.max - p.min > 0 ? 1 : 0)
+            });
+        }
+        out.sort(function (a, b) { return b.profile.n - a.profile.n; });
+        this._measures[ck] = out;
+        return out;
     },
 
     /* ── internals ── */

@@ -107,6 +107,36 @@ near('elapsed hours across a month boundary',
 near('elapsed hours across a leap day',
      (epochSecOf('2024-03-01 00:00:00') - epochSecOf('2024-02-28 00:00:00')) / 3600, 48);
 
+console.log('platform strings — the Rhino java.lang.String trap');
+/* GlideDateTime.getValue() hands back a java.lang.String, and on one of those
+ * `length` resolves to the Java method rather than to the JS property. So
+ * `s.length < 10` compares a function with a number, Rhino cannot coerce it, and
+ * the page dies with "Cannot find default value for object" on a line that reads
+ * as obviously correct. It cost a deployment.
+ *
+ * A plain JS string can never reproduce it, which is exactly why the Node suite
+ * was green while the instance was failing. This fake has the shape that matters:
+ * a `length` that is callable rather than numeric, and a working toString. */
+function javaish(value) {
+    return {
+        length: function () { return value.length; },
+        substr: function (a, b) { return value.substr(a, b); },
+        toString: function () { return value; }
+    };
+}
+eq('epochSecOf survives a java-style string',
+   epochSecOf(javaish('1970-01-02 00:00:00')), 86400);
+eq('bucketKeyOf survives a java-style string',
+   bucketKeyOf(javaish('2026-08-03 11:22:33'), 'month'), '2026-08');
+eq('dowMondayFirst survives a java-style string',
+   dowMondayFirst(javaish('2026-08-03 09:00:00')), 0);
+/* And the guards still reject genuinely absent input rather than coercing it to
+   the string "null" and reading a year out of it. */
+eq('null is still rejected', epochSecOf(null), null);
+eq('undefined is still rejected', epochSecOf(undefined), null);
+eq('null is still rejected by bucketKeyOf', bucketKeyOf(null, 'month'), null);
+eq('undefined is still rejected by dowMondayFirst', dowMondayFirst(undefined), -1);
+
 console.log('bucketKeyOf — must match what _bucketBounds keys on');
 eq('month', bucketKeyOf('2026-08-03 11:22:33', 'month'), '2026-08');
 eq('day', bucketKeyOf('2026-08-03 11:22:33', 'day'), '2026-08-03');
