@@ -422,7 +422,7 @@ CmdAnalysis.prototype = {
         for (i = 0; i < byFrom.length; i++) byFrom[i].rankFrom = i + 1;
         for (i = 0; i < byTo.length; i++) byTo[i].rankTo = i + 1;
 
-        return {
+        var out = {
             id: 'rank_' + dim.name,
             kind: 'rank',
             form: 'slope',
@@ -439,6 +439,49 @@ CmdAnalysis.prototype = {
             span: 1,
             caveats: []
         };
+
+        /* With enough closed periods the path between the endpoints is itself the
+         * story, and a slope chart throws it away: two categories can finish in the
+         * same order having crossed twice in between. Where the periods exist to
+         * show that, rank every one of them and draw the whole path.
+         *
+         * Only where a crossing actually happened, though. A bump chart of lines
+         * that never touch is a slope chart with redundant ink. */
+        if (closed.length >= 4) {
+            var path = [], p, ranked;
+            for (p = 0; p < closed.length; p++) {
+                ranked = series.slice().sort(function (a, b) {
+                    return (b.counts[closed[p]] || 0) - (a.counts[closed[p]] || 0);
+                });
+                var at = {};
+                for (i = 0; i < ranked.length; i++) at[ranked[i].key] = i + 1;
+                path.push({ label: r.periods[closed[p]].label, rank: at });
+            }
+
+            var crossed = false;
+            for (p = 1; p < path.length && !crossed; p++) {
+                for (i = 0; i < series.length; i++) {
+                    if (path[p].rank[series[i].key] !== path[p - 1].rank[series[i].key]) {
+                        crossed = true; break;
+                    }
+                }
+            }
+
+            if (crossed) {
+                out.form = 'bump';
+                out.reason = 'rank position at every complete period, because these ' +
+                             'categories change places during the window and only ' +
+                             'the endpoints would hide that';
+                out.path = path;
+                out.keys = [];
+                for (i = 0; i < series.length; i++) {
+                    out.keys.push({ key: series[i].key, label: series[i].label });
+                }
+                out.span = 2;
+            }
+        }
+
+        return out;
     },
 
     /**

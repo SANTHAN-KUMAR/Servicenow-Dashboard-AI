@@ -315,17 +315,36 @@ if (failures.length) {
     console.log('');
 }
 
-/* Structural: which declared forms can the rule table never produce? */
-var unreachable = m.FORMS.filter(function (f) { return !emitted[f]; });
+/* Forms chosen by construction rather than by the rule table.
+ *
+ * These belong to CmdAnalysis panels whose form is implied by the shape of the
+ * reduction that produced them: a crosstab is a heatmap, a sequence that sheds
+ * volume at every stage is a funnel, a rank path with a crossing in it is a bump.
+ * selectForm() is never asked, so it correctly never emits them, and listing them
+ * here is what keeps "not reached" meaning "the rule table has a dead branch"
+ * rather than slowly becoming a list nobody reads.
+ *
+ * They are not exempt from coverage: test_render_coverage.js asserts every one of
+ * them has a distinct renderer, and the gate that decides whether each is drawn is
+ * asserted in CmdAnalysis's own tests. */
+var BY_CONSTRUCTION = ['funnel', 'bump'];
+
+var unreachable = m.FORMS.filter(function (f) {
+    return !emitted[f] && BY_CONSTRUCTION.indexOf(f) === -1;
+});
 var undeclared = Object.keys(emitted).filter(function (f) { return m.FORMS.indexOf(f) === -1; });
 
 console.log('  forms declared            ' + m.FORMS.length);
-console.log('  forms reached by tests    ' + Object.keys(emitted).length);
+console.log('  reached by the rule table ' + Object.keys(emitted).length);
+console.log('  chosen by construction    ' + BY_CONSTRUCTION.join(', '));
 console.log('  not reached               ' + (unreachable.length ? unreachable.join(', ') : 'none'));
 console.log('  emitted but not declared  ' + (undeclared.length ? undeclared.join(', ') : 'none'));
 
 if (undeclared.length) {
     console.log('\n  ## An undeclared form is a blank panel in production.');
 }
+if (unreachable.length) {
+    console.log('\n  ## A declared form the rule table cannot produce is a dead branch.');
+}
 console.log('');
-process.exit(fail || undeclared.length ? 1 : 0);
+process.exit(fail || undeclared.length || unreachable.length ? 1 : 0);

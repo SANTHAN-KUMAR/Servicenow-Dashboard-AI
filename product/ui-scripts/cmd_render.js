@@ -161,9 +161,22 @@
     var s = svgRoot(W, h);
     if (!pts.length) return s;
 
-    var max = niceMax(Math.max.apply(null, pts.map(function (p) { return p.count; })));
+    /* The forecast extends the x-domain, so the scale has to know about it before
+       anything is placed. Fitting the axis to the observations and then drawing a
+       projection past the right edge is how a forecast ends up outside its own box. */
+    var ann = panel.annotation || null;
+    var ahead = (ann && ann.forecast) ? ann.forecast.length : 0;
+    var slots = pts.length + ahead;
+
+    var peak = Math.max.apply(null, pts.map(function (p) { return p.count; }));
+    if (ann && ann.forecast) {
+      for (var fi = 0; fi < ann.forecast.length; fi++) {
+        if (ann.forecast[fi].hi > peak) peak = ann.forecast[fi].hi;
+      }
+    }
+    var max = niceMax(peak);
     var iw = W - padL - padR, ih = h - padT - padB;
-    var x = function (i) { return padL + (pts.length === 1 ? iw / 2 : (i / (pts.length - 1)) * iw); };
+    var x = function (i) { return padL + (slots <= 1 ? iw / 2 : (i / (slots - 1)) * iw); };
     var y = function (c) { return padT + ih - (c / max) * ih; };
 
     // gridlines and y labels
@@ -196,11 +209,66 @@
         'stroke-width': 2, 'stroke-dasharray': '3 3', opacity: 0.65 }));
     }
 
+    /* ── the analytics layer ──
+     *
+     * Fitted line, projection with a widening band, and anomaly rings. Drawn under
+     * the observations so the data stays the foreground, and every element is
+     * labelled: this is least squares over the closed buckets, not a model, and the
+     * panel caption says so. The band widens with distance because the uncertainty
+     * three periods out is not the uncertainty one period out, and drawing it at a
+     * constant width would be the more confident-looking lie. */
+    if (ann) {
+      if (ann.forecast && ann.forecast.length) {
+        var lastPt = pts.length - 1;
+        var upper = [[x(lastPt), y(pts[lastPt].count)]];
+        var lower = [[x(lastPt), y(pts[lastPt].count)]];
+        var mid = [[x(lastPt), y(pts[lastPt].count)]];
+        for (var q = 0; q < ann.forecast.length; q++) {
+          var f = ann.forecast[q];
+          upper.push([x(f.index), y(Math.min(max, f.hi))]);
+          lower.push([x(f.index), y(f.lo)]);
+          mid.push([x(f.index), y(f.value)]);
+        }
+        var band = 'M' + upper[0][0] + ',' + upper[0][1];
+        for (var u = 1; u < upper.length; u++) band += 'L' + upper[u][0] + ',' + upper[u][1];
+        for (var l = lower.length - 1; l >= 0; l--) band += 'L' + lower[l][0] + ',' + lower[l][1];
+        band += 'Z';
+        s.appendChild(svgEl('path', { d: band, fill: v('--c1'), opacity: 0.12 }));
+        s.appendChild(svgEl('path', { d: poly(mid), fill: 'none', stroke: v('--c1'),
+          'stroke-width': 1.6, 'stroke-dasharray': '5 4', opacity: 0.75 }));
+        var lastF = ann.forecast[ann.forecast.length - 1];
+        s.appendChild(valueLabel(x(lastF.index), y(lastF.value) - 9,
+          'projected ' + fmt(lastF.value), 'tk'));
+      }
+
+      s.appendChild(svgEl('line', {
+        x1: x(ann.fitFrom.index), y1: y(Math.max(0, ann.fitFrom.value)),
+        x2: x(ann.fitTo.index), y2: y(Math.max(0, ann.fitTo.value)),
+        stroke: v('--ink-3'), 'stroke-width': 1.4, 'stroke-dasharray': '2 3',
+        opacity: 0.8 }));
+    }
+
     // markers, and a direct label on the last closed point only
     for (var m = 0; m < pts.length; m++) {
-      s.appendChild(svgEl('circle', { cx: x(m), cy: y(pts[m].count), r: 3.4,
+      var mk = svgEl('circle', { cx: x(m), cy: y(pts[m].count), r: 3.4,
         fill: v('--surface'), stroke: v('--c1'), 'stroke-width': 2,
-        opacity: pts[m].partial ? 0.6 : 1 }));
+        opacity: pts[m].partial ? 0.6 : 1 });
+      tip(mk, [pts[m].label, fmt(pts[m].count) + ' records',
+               pts[m].partial ? 'this period is still open' : 'complete period']);
+      s.appendChild(mk);
+    }
+
+    if (ann && ann.anomalies) {
+      for (var a = 0; a < ann.anomalies.length; a++) {
+        var an = ann.anomalies[a];
+        var ring = svgEl('circle', { cx: x(an.index), cy: y(an.value), r: 8,
+          fill: 'none', stroke: v('--c4'), 'stroke-width': 2, opacity: 0.9 });
+        tip(ring, [pts[an.index] ? pts[an.index].label : 'Period',
+                   fmt(an.value) + ' against an expected ' + fmt(an.expected),
+                   an.sigma + ' standard deviations from the fitted trend',
+                   'A marker to look at, not a significance test.']);
+        s.appendChild(ring);
+      }
     }
     s.appendChild(valueLabel(x(lastClosed), y(pts[lastClosed].count) - 10,
       fmt(pts[lastClosed].count), 'vl'));
@@ -209,7 +277,7 @@
     /* Thinned, and the final label is only forced when it is not adjacent to one
        already drawn. Forcing it unconditionally overlapped "Jul '26" with
        "Aug '26" into an unreadable smear. */
-    var every = Math.max(1, Math.ceil(pts.length / (W >= 800 ? 9 : 6)));
+    var every = Math.max(1, Math.ceil(slots / (W >= 800 ? 9 : 6)));
     var last = pts.length - 1;
     for (var t = 0; t < pts.length; t++) {
       var onStep = (t % every === 0);
@@ -577,24 +645,1237 @@
     return wrap;
   }
 
-  /* The honest list of what renders. A form the engine can emit that is missing
-     here falls back to the table view with a note, rather than a blank panel. */
+  // ── shared plot scaffolding ──────────────────────────────────────────────
+
+  /**
+   * A plot box with its scales. Every form below draws into one of these rather
+   * than recomputing padding and mapping functions, which is what keeps the axis
+   * type, the gridline weight and the baseline position identical across fifteen
+   * charts that were otherwise written separately.
+   */
+  function plot(h, padL, padR, padT, padB) {
+    var s = svgRoot(W, h);
+    var iw = W - padL - padR, ih = h - padT - padB;
+    return {
+      s: s, h: h, iw: iw, ih: ih,
+      padL: padL, padR: padR, padT: padT, padB: padB,
+      x0: padL, y0: padT, x1: padL + iw, y1: padT + ih,
+      xAt: function (i, n) {
+        return padL + (n <= 1 ? iw / 2 : (i / (n - 1)) * iw);
+      },
+      band: function (i, n) { return padL + (iw / n) * (i + 0.5); },
+      bandW: function (n) { return iw / n; }
+    };
+  }
+
+  /** Horizontal gridlines with labels, and the baseline. */
+  function yAxis(p, max, steps, fmtFn) {
+    steps = steps || 4;
+    fmtFn = fmtFn || compact;
+    for (var g = 0; g <= steps; g++) {
+      var gy = p.y0 + (g / steps) * p.ih;
+      p.s.appendChild(svgEl('line', { x1: p.x0, y1: gy, x2: p.x1, y2: gy, 'class': 'gl' }));
+      p.s.appendChild(text(p.x0 - 8, gy + 3, fmtFn(max - (g / steps) * max), 'tk', 'end'));
+    }
+    p.s.appendChild(svgEl('line', { x1: p.x0, y1: p.y1, x2: p.x1, y2: p.y1, 'class': 'bl' }));
+  }
+
+  /**
+   * A legend row. Present whenever there are two or more series, because identity
+   * must never be carried by colour alone — that is the accessibility floor, and it
+   * is also just easier to read.
+   */
+  function legendRow(p, items, y) {
+    var lx = p.x0, i;
+    for (i = 0; i < items.length; i++) {
+      var txt = truncate(items[i].label, 18);
+      if (lx + 14 + txt.length * 6.1 > p.x1 - 40 && i < items.length - 1) {
+        p.s.appendChild(text(lx, y, '+' + (items.length - i) + ' more', 'tk', 'start'));
+        break;
+      }
+      p.s.appendChild(svgEl('rect', { x: lx, y: y - 8, width: 9, height: 9, rx: 2,
+        fill: items[i].colour }));
+      p.s.appendChild(text(lx + 14, y, txt, 'ct', 'start'));
+      lx += 14 + txt.length * 6.1 + 18;
+    }
+  }
+
+  /**
+   * Attaches a hover report to a mark.
+   *
+   * The brand kit's specification is that a hover returns a small report rather
+   * than a single number, so `lines` is a list and the tooltip renders it as rows.
+   * Carried as a data attribute rather than a JS property because the handler is
+   * delegated at the panel, which means it keeps working for marks added later and
+   * costs one listener per panel instead of one per mark.
+   */
+  function tip(node, lines) {
+    node.setAttribute('data-tip', lines.join('\n'));
+    node.setAttribute('tabindex', '0');
+    return node;
+  }
+
+  /** Marks a mark as a drill target, so a click filters rather than navigates. */
+  function drillable(node, field, key) {
+    if (field === null || field === undefined) return node;
+    node.setAttribute('data-drill-field', field);
+    node.setAttribute('data-drill-key', key === null || key === undefined ? '' : key);
+    node.setAttribute('class', (node.getAttribute('class') || '') + ' hit');
+    return node;
+  }
+
+  function seriesColour(i, isOther) {
+    return isOther ? v(OTHER) : catColour(i);
+  }
+
+  /** A sequential step for a magnitude between 0 and 1. Never a rainbow. */
+  function seqStep(t) {
+    if (t <= 0) return v('--q0');
+    var i = Math.min(SEQ.length - 1, Math.max(0, Math.round(t * (SEQ.length - 1))));
+    return v(SEQ[i]);
+  }
+
+  /** Ink that stays legible on a sequential fill. */
+  function onSeq(t) { return t > 0.55 ? 'vlOn' : 'vl'; }
+
+  // ── time by category ─────────────────────────────────────────────────────
+
+  /**
+   * Several series over time, each with its own baseline.
+   *
+   * This used to be aliased to the single-series line renderer, which drew the
+   * first series and silently discarded the rest. It was the worst class of bug in
+   * a chart: the output looked correct and was answering a different question.
+   */
+  function drawLineMulti(panel) {
+    var periods = panel.periods || [];
+    var series = (panel.series || []).slice();
+    if (panel.other) series.push(panel.other);
+    if (!periods.length || !series.length) return svgRoot(W, 60);
+
+    var p = plot(240, 44, 14, 16, 54);
+    var max = 0, i, j;
+    for (i = 0; i < series.length; i++) {
+      for (j = 0; j < series[i].counts.length; j++) {
+        if (series[i].counts[j] > max) max = series[i].counts[j];
+      }
+    }
+    max = niceMax(max);
+    yAxis(p, max, 4);
+
+    var y = function (c) { return p.y0 + p.ih - (c / max) * p.ih; };
+
+    var lastClosed = periods.length - 1;
+    while (lastClosed > 0 && periods[lastClosed].partial) lastClosed--;
+
+    var items = [];
+    for (i = 0; i < series.length; i++) {
+      var colour = seriesColour(i, series[i].isOther);
+      items.push({ label: series[i].label || '(not set)', colour: colour });
+
+      var solid = [], dashed = [];
+      for (j = 0; j <= lastClosed; j++) solid.push([p.xAt(j, periods.length), y(series[i].counts[j] || 0)]);
+      for (j = lastClosed; j < periods.length; j++) dashed.push([p.xAt(j, periods.length), y(series[i].counts[j] || 0)]);
+
+      p.s.appendChild(svgEl('path', { d: poly(solid), fill: 'none', stroke: colour,
+        'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+      if (dashed.length > 1) {
+        p.s.appendChild(svgEl('path', { d: poly(dashed), fill: 'none', stroke: colour,
+          'stroke-width': 2, 'stroke-dasharray': '3 3', opacity: 0.65 }));
+      }
+      for (j = 0; j < periods.length; j++) {
+        var mk = svgEl('circle', {
+          cx: p.xAt(j, periods.length), cy: y(series[i].counts[j] || 0), r: 3.2,
+          fill: v('--surface'), stroke: colour, 'stroke-width': 2,
+          opacity: periods[j].partial ? 0.6 : 1
+        });
+        tip(mk, [series[i].label || '(not set)', periods[j].label,
+                 fmt(series[i].counts[j] || 0) + ' records' +
+                 (periods[j].partial ? '  (period still open)' : '')]);
+        drillable(mk, panel.field, series[i].key);
+        p.s.appendChild(mk);
+      }
+    }
+
+    xTicks(p, periods);
+    legendRow(p, items, p.h - 10);
+    return p.s;
+  }
+
+  /** Thinned period labels along the bottom of a time plot. */
+  function xTicks(p, periods) {
+    var every = Math.max(1, Math.ceil(periods.length / (W >= 800 ? 9 : 6)));
+    var last = periods.length - 1;
+    for (var t = 0; t < periods.length; t++) {
+      var onStep = (t % every === 0);
+      if (!onStep && t !== last) continue;
+      if (t === last && !onStep && (last - Math.floor(last / every) * every) < 2) continue;
+      p.s.appendChild(valueLabel(p.xAt(t, periods.length), p.y1 + 16, periods[t].label, 'tk'));
+    }
+  }
+
+  /**
+   * Share over time, stacked to 100%.
+   *
+   * The form for "too many categories to separate as lines". Because it is
+   * normalised, the question it answers is genuinely different from the multi-line:
+   * how the mix moved, not how the volume moved. Total volume is shown as a caption
+   * so the reader is not left to infer it from a chart that deliberately hides it.
+   */
+  function drawStream(panel) {
+    var periods = panel.periods || [];
+    var series = (panel.series || []).slice();
+    if (panel.other) series.push(panel.other);
+    if (!periods.length || !series.length) return svgRoot(W, 60);
+
+    var p = plot(240, 44, 14, 16, 54);
+    var n = periods.length, i, j;
+
+    var totals = [];
+    for (j = 0; j < n; j++) {
+      var t = 0;
+      for (i = 0; i < series.length; i++) t += (series[i].counts[j] || 0);
+      totals.push(t);
+    }
+
+    for (var g = 0; g <= 4; g++) {
+      var gy = p.y0 + (g / 4) * p.ih;
+      p.s.appendChild(svgEl('line', { x1: p.x0, y1: gy, x2: p.x1, y2: gy, 'class': 'gl' }));
+      p.s.appendChild(text(p.x0 - 8, gy + 3, (100 - g * 25) + '%', 'tk', 'end'));
+    }
+
+    /* Cumulative offsets, bottom up, so each band sits on the one below it. */
+    var below = [];
+    for (j = 0; j < n; j++) below.push(0);
+
+    var items = [];
+    for (i = series.length - 1; i >= 0; i--) {
+      var colour = seriesColour(i, series[i].isOther);
+      var top = [], bottom = [];
+      for (j = 0; j < n; j++) {
+        var share = totals[j] > 0 ? (series[i].counts[j] || 0) / totals[j] : 0;
+        var yBot = p.y0 + p.ih - (below[j] / 1) * p.ih;
+        var yTop = p.y0 + p.ih - ((below[j] + share)) * p.ih;
+        top.push([p.xAt(j, n), yTop]);
+        bottom.push([p.xAt(j, n), yBot]);
+        below[j] += share;
+      }
+      var d = 'M' + top[0][0] + ',' + top[0][1];
+      for (j = 1; j < top.length; j++) d += 'L' + top[j][0] + ',' + top[j][1];
+      for (j = bottom.length - 1; j >= 0; j--) d += 'L' + bottom[j][0] + ',' + bottom[j][1];
+      d += 'Z';
+      var band = svgEl('path', { d: d, fill: colour, stroke: v('--surface'),
+        'stroke-width': 1 });
+      var lastShare = totals[n - 1] > 0
+        ? (series[i].counts[n - 1] || 0) / totals[n - 1] : 0;
+      tip(band, [series[i].label || '(not set)',
+                 'latest share ' + pct(lastShare),
+                 fmt(series[i].total) + ' records across the window']);
+      drillable(band, panel.field, series[i].key);
+      p.s.appendChild(band);
+    }
+    for (i = 0; i < series.length; i++) {
+      items.push({ label: series[i].label || '(not set)',
+                   colour: seriesColour(i, series[i].isOther) });
+    }
+
+    xTicks(p, periods);
+    legendRow(p, items, p.h - 10);
+    return p.s;
+  }
+
+  /**
+   * A grid of small panels, one per category, sharing one scale.
+   *
+   * Sharing the scale is the whole point and the most common way this form is got
+   * wrong: with a free scale per facet, every panel looks equally busy and the
+   * comparison the grid exists to enable is destroyed.
+   */
+  function drawSmallMultiples(panel) {
+    var periods = panel.periods || [];
+    var series = (panel.series || []).slice();
+    if (panel.other) series.push(panel.other);
+    if (!periods.length || !series.length) return svgRoot(W, 60);
+
+    var cols = W >= 800 ? 3 : 2;
+    var rows = Math.ceil(series.length / cols);
+    var cw = W / cols, chH = 96;
+    var s = svgRoot(W, rows * chH + 8);
+
+    var max = 0, i, j;
+    for (i = 0; i < series.length; i++) {
+      for (j = 0; j < series[i].counts.length; j++) {
+        if (series[i].counts[j] > max) max = series[i].counts[j];
+      }
+    }
+    max = niceMax(max);
+
+    for (i = 0; i < series.length; i++) {
+      var cx = (i % cols) * cw, cy = Math.floor(i / cols) * chH;
+      var ix = cx + 8, iy = cy + 26, iw = cw - 20, ih = chH - 44;
+      var colour = seriesColour(i, series[i].isOther);
+
+      s.appendChild(text(cx + 8, cy + 15,
+        truncate(series[i].label || '(not set)', Math.floor(cw / 7)), 'ct', 'start'));
+      s.appendChild(text(cx + cw - 12, cy + 15, fmt(series[i].total), 'vl', 'end'));
+
+      var pts = [];
+      for (j = 0; j < periods.length; j++) {
+        var xx = ix + (periods.length <= 1 ? iw / 2 : (j / (periods.length - 1)) * iw);
+        var yy = iy + ih - ((series[i].counts[j] || 0) / max) * ih;
+        pts.push([xx, yy]);
+      }
+      var d = 'M' + pts[0][0] + ',' + (iy + ih);
+      for (j = 0; j < pts.length; j++) d += 'L' + pts[j][0] + ',' + pts[j][1];
+      d += 'L' + pts[pts.length - 1][0] + ',' + (iy + ih) + 'Z';
+      s.appendChild(svgEl('path', { d: d, fill: colour, opacity: 0.16 }));
+      s.appendChild(svgEl('path', { d: poly(pts), fill: 'none', stroke: colour,
+        'stroke-width': 2, 'stroke-linejoin': 'round' }));
+      s.appendChild(svgEl('line', { x1: ix, y1: iy + ih, x2: ix + iw, y2: iy + ih,
+        'class': 'bl' }));
+
+      var hit = svgEl('rect', { x: cx, y: cy, width: cw, height: chH,
+        fill: 'transparent' });
+      tip(hit, [series[i].label || '(not set)',
+                fmt(series[i].total) + ' records',
+                'peak ' + fmt(Math.max.apply(null, series[i].counts)) +
+                ' in one ' + (panel.grain || 'period')]);
+      drillable(hit, panel.field, series[i].key);
+      s.appendChild(hit);
+    }
+
+    s.appendChild(text(4, rows * chH + 5,
+      'All panels share one scale, topping at ' + fmt(max) + ', so the heights ' +
+      'compare across categories.', 'tk', 'start'));
+    return s;
+  }
+
+  /** Two ranked positions joined by a line. Movement is the slope. */
+  function drawSlope(panel) {
+    var rows = panel.rows || [];
+    if (!rows.length) return svgRoot(W, 60);
+
+    var p = plot(28 + rows.length * 26 + 40, 116, 116, 34, 20);
+    var max = 0, i;
+    for (i = 0; i < rows.length; i++) {
+      if (rows[i].from > max) max = rows[i].from;
+      if (rows[i].to > max) max = rows[i].to;
+    }
+    if (max <= 0) return p.s;
+
+    var top = p.y0, bot = p.y1;
+    var y = function (val) { return bot - (val / max) * (bot - top); };
+
+    p.s.appendChild(text(p.x0, p.y0 - 16, truncate(panel.fromLabel, 20), 'tk', 'middle'));
+    p.s.appendChild(text(p.x1, p.y0 - 16, truncate(panel.toLabel, 20), 'tk', 'middle'));
+    p.s.appendChild(svgEl('line', { x1: p.x0, y1: top, x2: p.x0, y2: bot, 'class': 'gl' }));
+    p.s.appendChild(svgEl('line', { x1: p.x1, y1: top, x2: p.x1, y2: bot, 'class': 'gl' }));
+
+    for (i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var colour = catColour(i);
+      var y1 = y(r.from), y2 = y(r.to);
+      var line = svgEl('line', { x1: p.x0, y1: y1, x2: p.x1, y2: y2,
+        stroke: colour, 'stroke-width': 2, 'stroke-linecap': 'round' });
+      tip(line, [r.label || '(not set)',
+                 panel.fromLabel + ': ' + fmt(r.from) + '  (rank ' + r.rankFrom + ')',
+                 panel.toLabel + ': ' + fmt(r.to) + '  (rank ' + r.rankTo + ')',
+                 (r.rankTo < r.rankFrom ? 'up ' + (r.rankFrom - r.rankTo)
+                  : r.rankTo > r.rankFrom ? 'down ' + (r.rankTo - r.rankFrom)
+                  : 'no change') + ' in rank']);
+      drillable(line, panel.field, r.key);
+      p.s.appendChild(line);
+
+      p.s.appendChild(svgEl('circle', { cx: p.x0, cy: y1, r: 4, fill: colour }));
+      p.s.appendChild(svgEl('circle', { cx: p.x1, cy: y2, r: 4, fill: colour }));
+      p.s.appendChild(text(p.x0 - 10, y1 + 4,
+        truncate(r.label || '(not set)', 15), 'ct', 'end'));
+      p.s.appendChild(text(p.x1 + 10, y2 + 4, fmt(r.to), 'vl', 'start'));
+    }
+    return p.s;
+  }
+
+  /** Rank position at every period. Crossings are the story. */
+  function drawBump(panel) {
+    var path = panel.path || [], keys = panel.keys || [];
+    if (path.length < 2 || !keys.length) return drawSlope(panel);
+
+    var p = plot(60 + keys.length * 24, 130, 92, 30, 30);
+    var n = path.length;
+    var y = function (rank) {
+      return p.y0 + ((rank - 1) / Math.max(1, keys.length - 1)) * p.ih;
+    };
+
+    var i, j;
+    for (j = 0; j < n; j++) {
+      p.s.appendChild(svgEl('line', { x1: p.xAt(j, n), y1: p.y0 - 6,
+        x2: p.xAt(j, n), y2: p.y1 + 6, 'class': 'gl' }));
+      p.s.appendChild(valueLabel(p.xAt(j, n), p.y1 + 22, path[j].label, 'tk'));
+    }
+
+    for (i = 0; i < keys.length; i++) {
+      var colour = catColour(i);
+      var pts = [];
+      for (j = 0; j < n; j++) pts.push([p.xAt(j, n), y(path[j].rank[keys[i].key])]);
+      var line = svgEl('path', { d: poly(pts), fill: 'none', stroke: colour,
+        'stroke-width': 2.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' });
+      tip(line, [keys[i].label || '(not set)',
+                 'from rank ' + path[0].rank[keys[i].key] +
+                 ' to rank ' + path[n - 1].rank[keys[i].key]]);
+      drillable(line, panel.field, keys[i].key);
+      p.s.appendChild(line);
+      for (j = 0; j < n; j++) {
+        p.s.appendChild(svgEl('circle', { cx: pts[j][0], cy: pts[j][1], r: 4.5,
+          fill: colour, stroke: v('--surface'), 'stroke-width': 2 }));
+      }
+      p.s.appendChild(text(p.x0 - 10, y(path[0].rank[keys[i].key]) + 4,
+        truncate(keys[i].label || '(not set)', 17), 'ct', 'end'));
+      p.s.appendChild(text(p.x1 + 10, y(path[n - 1].rank[keys[i].key]) + 4,
+        '#' + path[n - 1].rank[keys[i].key], 'vl', 'start'));
+    }
+    return p.s;
+  }
+
+  /**
+   * A waterfall: what moved the total between two periods.
+   *
+   * The bars reconcile the two ends exactly, because the contributions are computed
+   * to sum to the change rather than sampled from the top few. That is the property
+   * that makes this form worth drawing at all: if the steps do not close the gap,
+   * it is a bar chart with a running total drawn on it.
+   */
+  function drawWaterfall(panel) {
+    var steps = panel.steps || [];
+    if (!steps.length) return svgRoot(W, 60);
+
+    var p = plot(230, 44, 14, 20, 56);
+    var n = steps.length + 2;
+    var slot = p.iw / n, bw = Math.min(52, slot * 0.62);
+
+    var running = panel.start, lo = Math.min(panel.start, panel.end),
+        hi = Math.max(panel.start, panel.end), i;
+    for (i = 0; i < steps.length; i++) {
+      running += steps[i].delta;
+      if (running < lo) lo = running;
+      if (running > hi) hi = running;
+    }
+    var top = niceMax(hi), base = 0;
+    if (lo < 0) base = -niceMax(-lo);
+    var span = top - base;
+    if (span <= 0) return p.s;
+    var y = function (val) { return p.y0 + p.ih - ((val - base) / span) * p.ih; };
+
+    for (var g = 0; g <= 4; g++) {
+      var gy = p.y0 + (g / 4) * p.ih;
+      p.s.appendChild(svgEl('line', { x1: p.x0, y1: gy, x2: p.x1, y2: gy, 'class': 'gl' }));
+      p.s.appendChild(text(p.x0 - 8, gy + 3, compact(top - (g / 4) * span), 'tk', 'end'));
+    }
+
+    function bar(idx, from, to, colour, label, lines, key) {
+      var cx = p.x0 + slot * idx + slot / 2;
+      var yTop = Math.min(y(from), y(to));
+      var hgt = Math.max(2, Math.abs(y(from) - y(to)));
+      var rect = svgEl('rect', { x: cx - bw / 2, y: yTop, width: bw, height: hgt,
+        rx: 3, fill: colour });
+      tip(rect, lines);
+      if (key !== null) drillable(rect, panel.field, key);
+      p.s.appendChild(rect);
+      p.s.appendChild(valueLabel(cx, yTop - 6, label, 'vl'));
+      return cx;
+    }
+
+    /* Start and end are totals and wear the neutral step; the movers wear the
+       diverging pair, which is the one place in this product two hues encode
+       direction rather than identity. */
+    bar(0, base, panel.start, v(OTHER), fmt(panel.start),
+        [panel.startLabel, fmt(panel.start) + ' records'], null);
+    p.s.appendChild(valueLabel(p.x0 + slot * 0 + slot / 2, p.h - 24,
+      truncate(panel.startLabel, 10), 'tk'));
+
+    running = panel.start;
+    for (i = 0; i < steps.length; i++) {
+      var st = steps[i];
+      var from = running, to = running + st.delta;
+      var cxi = bar(i + 1, from, to,
+        st.isOther ? v(OTHER) : (st.delta >= 0 ? v('--up') : v('--down')),
+        (st.delta > 0 ? '+' : '') + fmt(st.delta),
+        [st.label || '(not set)',
+         (st.delta > 0 ? 'added ' : 'removed ') + fmt(Math.abs(st.delta)) + ' records',
+         st.isOther ? 'folded from the smaller movers'
+                    : fmt(st.from) + ' then ' + fmt(st.to)],
+        st.isOther ? null : st.key);
+      p.s.appendChild(valueLabel(cxi, p.h - 24, truncate(st.label || '(none)', 10), 'tk'));
+      /* The connector is what makes the eye read this as one running total. */
+      p.s.appendChild(svgEl('line', {
+        x1: cxi + bw / 2, y1: y(to), x2: cxi + slot - bw / 2, y2: y(to),
+        'class': 'gl', 'stroke-dasharray': '2 2' }));
+      running = to;
+    }
+
+    bar(n - 1, base, panel.end, v(OTHER), fmt(panel.end),
+        [panel.endLabel, fmt(panel.end) + ' records'], null);
+    p.s.appendChild(valueLabel(p.x0 + slot * (n - 1) + slot / 2, p.h - 24,
+      truncate(panel.endLabel, 10), 'tk'));
+
+    p.s.appendChild(svgEl('line', { x1: p.x0, y1: y(base), x2: p.x1, y2: y(base),
+      'class': 'bl' }));
+    return p.s;
+  }
+
+  // ── grids ────────────────────────────────────────────────────────────────
+
+  /**
+   * A heatmap, used for both a crosstab and a week cycle. One hue, light to dark,
+   * because the value being encoded is a magnitude and a rainbow would imply
+   * categories that are not there.
+   */
+  function drawHeatmap(panel) {
+    var grid = panel.grid || [];
+    if (!grid.length) return svgRoot(W, 60);
+
+    var rowLabels = panel.rowLabels || [];
+    var colLabels = panel.colLabels || [];
+    var isCycle = (panel.kind === 'cycle');
+    if (isCycle) {
+      colLabels = [];
+      for (var hh = 0; hh < 24; hh++) colLabels.push(hh < 10 ? '0' + hh : String(hh));
+    }
+
+    var nRows = grid.length, nCols = grid[0].length;
+    var padL = isCycle ? 40 : 122, padT = 30, padR = 10, padB = 34;
+    var cellH = isCycle ? 22 : 26;
+    var h = padT + nRows * cellH + padB;
+    var s = svgRoot(W, h);
+    var cw = (W - padL - padR) / nCols;
+    var max = panel.maxCell || 1;
+
+    var r, c;
+    for (c = 0; c < nCols; c++) {
+      var lbl = truncate(colLabels[c] === undefined ? '' : colLabels[c],
+                         Math.max(3, Math.floor(cw / 6.4)));
+      /* Every other hour on a cycle grid, or the labels collide at 24 columns. */
+      if (!isCycle || c % 2 === 0) {
+        s.appendChild(text(padL + cw * c + cw / 2, padT - 10, lbl, 'tk', 'middle'));
+      }
+    }
+
+    for (r = 0; r < nRows; r++) {
+      var ry = padT + r * cellH;
+      s.appendChild(text(padL - 10, ry + cellH / 2 + 4,
+        truncate(rowLabels[r] === undefined ? '' : rowLabels[r], isCycle ? 4 : 17),
+        'ct', 'end'));
+      for (c = 0; c < nCols; c++) {
+        var val = grid[r][c];
+        var t = max > 0 ? val / max : 0;
+        var cell = svgEl('rect', {
+          x: padL + cw * c + 1, y: ry + 1,
+          width: Math.max(1, cw - 2), height: cellH - 2, rx: 3,
+          fill: val === 0 ? v('--q0') : seqStep(t)
+        });
+        tip(cell, isCycle
+          ? [rowLabels[r] + ' at ' + colLabels[c] + ':00 UTC',
+             fmt(val) + ' records',
+             pct(panel.total ? val / panel.total : 0) + ' of the week']
+          : [panel.rowFieldLabel + ': ' + rowLabels[r],
+             panel.colFieldLabel + ': ' + colLabels[c],
+             fmt(val) + ' records',
+             pct(panel.grand ? val / panel.grand : 0) + ' of the total']);
+        s.appendChild(cell);
+        /* A number in the cell only where the cell is big enough and the grid
+           small enough that the numbers do not become the texture. */
+        if (!isCycle && cw > 42 && val > 0 && nCols <= 8) {
+          s.appendChild(text(padL + cw * c + cw / 2, ry + cellH / 2 + 4,
+            compact(val), onSeq(t), 'middle'));
+        }
+      }
+    }
+
+    /* The ramp legend. A sequential scale is unreadable without one. */
+    var lx = padL, ly = h - 16, lw = Math.min(180, (W - padL) * 0.4);
+    for (var q = 0; q < SEQ.length; q++) {
+      s.appendChild(svgEl('rect', { x: lx + (lw / SEQ.length) * q, y: ly - 9,
+        width: lw / SEQ.length, height: 9, fill: v(SEQ[q]) }));
+    }
+    s.appendChild(text(lx - 6, ly, '0', 'tk', 'end'));
+    s.appendChild(text(lx + lw + 6, ly, fmt(max), 'tk', 'start'));
+    return s;
+  }
+
+  /**
+   * A calendar heatmap: one square per day, weeks as columns.
+   *
+   * Position carries the date, so weekends line up as rows and a gap is visible as
+   * a gap rather than as a dip that could be a low value.
+   */
+  function drawCalendar(panel) {
+    var byDay = panel.byDay || {};
+    var end = panel.endDay;
+    if (!end) return svgRoot(W, 60);
+
+    var cell = 13, gap = 3, padL = 34, padT = 26;
+    var weeks = Math.floor((W - padL - 20) / (cell + gap));
+    var days = weeks * 7;
+
+    var endDays = isoToDays(end);
+    /* Wind back to the Monday on or before the start, so every column is a whole
+       week and the day-of-week rows are straight. */
+    var startDays = endDays - days + 1;
+    startDays -= mondayOffset(startDays);
+
+    var h = padT + 7 * (cell + gap) + 34;
+    var s = svgRoot(W, h);
+    var max = panel.maxCell || 1;
+
+    var dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    for (var d = 0; d < 7; d += 2) {
+      s.appendChild(text(padL - 8, padT + d * (cell + gap) + cell - 2,
+        dayNames[d], 'tk', 'end'));
+    }
+
+    var lastMonth = '';
+    for (var w = 0; w < weeks; w++) {
+      for (var dd = 0; dd < 7; dd++) {
+        var abs = startDays + w * 7 + dd;
+        if (abs > endDays) continue;
+        var iso = daysToIso(abs);
+        var val = byDay[iso] || 0;
+        var t = max > 0 ? val / max : 0;
+        var rect = svgEl('rect', {
+          x: padL + w * (cell + gap), y: padT + dd * (cell + gap),
+          width: cell, height: cell, rx: 2.5,
+          fill: val === 0 ? v('--q0') : seqStep(t)
+        });
+        tip(rect, [iso, fmt(val) + (val === 1 ? ' record' : ' records')]);
+        s.appendChild(rect);
+
+        if (dd === 0) {
+          var mo = iso.substr(0, 7);
+          if (mo !== lastMonth) {
+            lastMonth = mo;
+            s.appendChild(text(padL + w * (cell + gap), padT - 10,
+              MONTH_ABBR[parseInt(iso.substr(5, 2), 10) - 1], 'tk', 'start'));
+          }
+        }
+      }
+    }
+
+    var ly = h - 12, lx = padL;
+    s.appendChild(text(lx, ly, 'less', 'tk', 'start'));
+    for (var q = 0; q < SEQ.length; q++) {
+      s.appendChild(svgEl('rect', { x: lx + 32 + q * (cell + 2), y: ly - 10,
+        width: cell, height: cell, rx: 2.5, fill: v(SEQ[q]) }));
+    }
+    s.appendChild(text(lx + 32 + SEQ.length * (cell + 2) + 6, ly, 'more', 'tk', 'start'));
+    s.appendChild(text(W - 4, ly, 'busiest day ' + fmt(max), 'tk', 'end'));
+    return s;
+  }
+
+  var MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  /* Day arithmetic, mirroring the server's. Same algorithm, so a date bucketed on
+     the server and positioned in the browser cannot disagree. */
+  function isoToDays(iso) {
+    var y = parseInt(iso.substr(0, 4), 10);
+    var m = parseInt(iso.substr(5, 2), 10);
+    var d = parseInt(iso.substr(8, 2), 10);
+    y -= (m <= 2) ? 1 : 0;
+    var era = Math.floor(y / 400);
+    var yoe = y - era * 400;
+    var doy = Math.floor((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5) + d - 1;
+    var doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+    return era * 146097 + doe - 719468;
+  }
+
+  function daysToIso(z) {
+    z += 719468;
+    var era = Math.floor(z / 146097);
+    var doe = z - era * 146097;
+    var yoe = Math.floor((doe - Math.floor(doe / 1460) + Math.floor(doe / 36524) -
+                          Math.floor(doe / 146096)) / 365);
+    var y = yoe + era * 400;
+    var doy = doe - (365 * yoe + Math.floor(yoe / 4) - Math.floor(yoe / 100));
+    var mp = Math.floor((5 * doy + 2) / 153);
+    var d = doy - Math.floor((153 * mp + 2) / 5) + 1;
+    var m = mp + (mp < 10 ? 3 : -9);
+    y += (m <= 2) ? 1 : 0;
+    return y + '-' + p2(m) + '-' + p2(d);
+  }
+
+  function mondayOffset(days) { return (((days + 3) % 7) + 7) % 7; }
+  function p2(n) { return n < 10 ? '0' + n : String(n); }
+
+  // ── distributions and relationships ──────────────────────────────────────
+
+  /** A histogram over binned observations, with the quartile box beneath it. */
+  function drawHistogramBins(panel) {
+    var bins = panel.bins || [];
+    if (!bins.length) return svgRoot(W, 60);
+
+    var p = plot(215, 44, 14, 18, 52);
+    var max = 0, i;
+    for (i = 0; i < bins.length; i++) if (bins[i].count > max) max = bins[i].count;
+    max = niceMax(max);
+    yAxis(p, max, 3);
+
+    var slot = p.iw / bins.length;
+    var span = panel.hi - panel.lo;
+    for (i = 0; i < bins.length; i++) {
+      var bh = bins[i].count === 0 ? 0 : Math.max(2, (bins[i].count / max) * p.ih);
+      /* Histogram bars touch, with a 1px surface gap: the axis is continuous and a
+         wide gap would imply the bins are categories. */
+      var rect = svgEl('rect', { x: p.x0 + slot * i + 0.5, y: p.y1 - bh,
+        width: Math.max(1, slot - 1), height: bh, rx: 2, fill: v('--c1') });
+      tip(rect, [num(bins[i].from) + ' to ' + num(bins[i].to),
+                 fmt(bins[i].count) + ' records',
+                 pct(panel.n ? bins[i].count / panel.n : 0) + ' of the total']);
+      p.s.appendChild(rect);
+    }
+
+    /* Median and quartiles marked on the axis, because the shape alone does not
+       tell you where the middle is when the tail is long. */
+    if (span > 0) {
+      var mx = p.x0 + ((panel.median - panel.lo) / span) * p.iw;
+      p.s.appendChild(svgEl('line', { x1: mx, y1: p.y0, x2: mx, y2: p.y1,
+        stroke: v('--c4'), 'stroke-width': 2, 'stroke-dasharray': '4 3' }));
+      p.s.appendChild(valueLabel(mx, p.y0 - 4, 'median ' + num(panel.median), 'vl'));
+    }
+
+    p.s.appendChild(text(p.x0, p.h - 26, num(panel.lo), 'tk', 'start'));
+    p.s.appendChild(text(p.x1, p.h - 26, num(panel.hi), 'tk', 'end'));
+    p.s.appendChild(text(p.x0, p.h - 8,
+      bins.length + ' equal bins  ·  n = ' + fmt(panel.n) +
+      '  ·  mean ' + num(panel.mean), 'tk', 'start'));
+    return p.s;
+  }
+
+  function num(x) {
+    if (x === null || x === undefined) return '0';
+    var a = Math.abs(x);
+    if (a >= 1000) return compact(x);
+    if (a >= 10) return String(Math.round(x));
+    return String(Math.round(x * 100) / 100);
+  }
+
+  /**
+   * Box plots side by side.
+   *
+   * The one form that shows a difference in spread rather than a difference in
+   * average. Whiskers end at the furthest real observation inside 1.5 IQR and
+   * outliers are drawn individually, because those records are the ones worth
+   * clicking through to.
+   */
+  function drawBox(panel) {
+    var rows = panel.rows || [];
+    if (!rows.length) return svgRoot(W, 60);
+
+    var p = plot(60 + rows.length * 34, 130, 60, 18, 34);
+    var lo = null, hi = null, i, j;
+    for (i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var mn = r.lo, mx = r.hi;
+      for (j = 0; j < r.outliers.length; j++) {
+        if (r.outliers[j] < mn) mn = r.outliers[j];
+        if (r.outliers[j] > mx) mx = r.outliers[j];
+      }
+      if (lo === null || mn < lo) lo = mn;
+      if (hi === null || mx > hi) hi = mx;
+    }
+    if (lo === hi) { hi = lo + 1; }
+    var span = hi - lo;
+    var x = function (val) { return p.x0 + ((val - lo) / span) * p.iw; };
+
+    for (var g = 0; g <= 4; g++) {
+      var gx = p.x0 + (g / 4) * p.iw;
+      p.s.appendChild(svgEl('line', { x1: gx, y1: p.y0, x2: gx, y2: p.y1, 'class': 'gl' }));
+      p.s.appendChild(text(gx, p.h - 14, num(lo + (g / 4) * span), 'tk', 'middle'));
+    }
+
+    var bh = 18;
+    for (i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var cy = p.y0 + i * 34 + 16;
+      p.s.appendChild(text(p.x0 - 10, cy + 4,
+        truncate(row.label || '(not set)', 17), 'ct', 'end'));
+
+      /* Whisker */
+      p.s.appendChild(svgEl('line', { x1: x(row.lo), y1: cy, x2: x(row.hi), y2: cy,
+        stroke: v('--ink-3'), 'stroke-width': 1.5 }));
+      p.s.appendChild(svgEl('line', { x1: x(row.lo), y1: cy - 5, x2: x(row.lo), y2: cy + 5,
+        stroke: v('--ink-3'), 'stroke-width': 1.5 }));
+      p.s.appendChild(svgEl('line', { x1: x(row.hi), y1: cy - 5, x2: x(row.hi), y2: cy + 5,
+        stroke: v('--ink-3'), 'stroke-width': 1.5 }));
+
+      /* The box */
+      var bx = x(row.q1), bw = Math.max(2, x(row.q3) - x(row.q1));
+      var box = svgEl('rect', { x: bx, y: cy - bh / 2, width: bw, height: bh, rx: 3,
+        fill: catColour(i), opacity: 0.85 });
+      tip(box, [row.label || '(not set)',
+                'median ' + num(row.median),
+                'middle half ' + num(row.q1) + ' to ' + num(row.q3),
+                'range ' + num(row.lo) + ' to ' + num(row.hi),
+                fmt(row.n) + ' records' +
+                (row.outliers.length ? ', ' + row.outliers.length + ' outliers' : '')]);
+      drillable(box, panel.groupField, row.key);
+      p.s.appendChild(box);
+
+      /* Median: a surface-coloured rule inside the box, so it reads at any fill. */
+      p.s.appendChild(svgEl('line', { x1: x(row.median), y1: cy - bh / 2,
+        x2: x(row.median), y2: cy + bh / 2, stroke: v('--surface'), 'stroke-width': 2 }));
+
+      for (j = 0; j < row.outliers.length; j++) {
+        p.s.appendChild(svgEl('circle', { cx: x(row.outliers[j]), cy: cy, r: 2.6,
+          fill: 'none', stroke: catColour(i), 'stroke-width': 1.4, opacity: 0.8 }));
+      }
+      p.s.appendChild(text(p.x1 + 8, cy + 4, fmt(row.n), 'vl', 'start'));
+    }
+    return p.s;
+  }
+
+  /** Two measures against each other, with quadrants at the medians. */
+  function drawScatter(panel) {
+    var pts = panel.points || [];
+    if (!pts.length) return svgRoot(W, 60);
+
+    var p = plot(250, 48, 16, 18, 56);
+    var i;
+    var xs = [], ys = [];
+    for (i = 0; i < pts.length; i++) { xs.push(pts[i].x); ys.push(pts[i].y); }
+    var xMin = Math.min.apply(null, xs), xMax = Math.max.apply(null, xs);
+    var yMin = Math.min.apply(null, ys), yMax = Math.max.apply(null, ys);
+    if (xMax === xMin) xMax = xMin + 1;
+    if (yMax === yMin) yMax = yMin + 1;
+
+    var X = function (val) { return p.x0 + ((val - xMin) / (xMax - xMin)) * p.iw; };
+    var Y = function (val) { return p.y1 - ((val - yMin) / (yMax - yMin)) * p.ih; };
+
+    for (var g = 0; g <= 4; g++) {
+      var gy = p.y0 + (g / 4) * p.ih;
+      p.s.appendChild(svgEl('line', { x1: p.x0, y1: gy, x2: p.x1, y2: gy, 'class': 'gl' }));
+      p.s.appendChild(text(p.x0 - 8, gy + 3, num(yMax - (g / 4) * (yMax - yMin)), 'tk', 'end'));
+      var gx = p.x0 + (g / 4) * p.iw;
+      p.s.appendChild(text(gx, p.h - 30, num(xMin + (g / 4) * (xMax - xMin)), 'tk', 'middle'));
+    }
+
+    /* Reference quadrants at the medians. The brand kit specifies these and they
+       are what turn a cloud into four statements you can name. */
+    var sx = xs.slice().sort(function (a, b) { return a - b; });
+    var sy = ys.slice().sort(function (a, b) { return a - b; });
+    var mx = sx[Math.floor(sx.length / 2)], my = sy[Math.floor(sy.length / 2)];
+    p.s.appendChild(svgEl('line', { x1: X(mx), y1: p.y0, x2: X(mx), y2: p.y1,
+      stroke: v('--ink-3'), 'stroke-width': 1, 'stroke-dasharray': '3 3', opacity: 0.7 }));
+    p.s.appendChild(svgEl('line', { x1: p.x0, y1: Y(my), x2: p.x1, y2: Y(my),
+      stroke: v('--ink-3'), 'stroke-width': 1, 'stroke-dasharray': '3 3', opacity: 0.7 }));
+
+    /* Colour by group where there is one, capped at the validated categorical set
+       so a ninth series is never a generated hue. */
+    var groups = {}, order = [];
+    for (i = 0; i < pts.length; i++) {
+      var k = pts[i].g || '';
+      if (groups[k] === undefined) {
+        groups[k] = order.length < CAT.length ? order.length : -1;
+        order.push({ key: k, label: pts[i].gl || '(not set)' });
+      }
+    }
+    var multi = panel.groupField && order.length > 1 && order.length <= CAT.length;
+
+    var r = pts.length > 1200 ? 1.8 : pts.length > 400 ? 2.4 : 3.2;
+    var op = pts.length > 1200 ? 0.4 : pts.length > 400 ? 0.55 : 0.75;
+    for (i = 0; i < pts.length; i++) {
+      var idx = multi ? groups[pts[i].g || ''] : 0;
+      var dot = svgEl('circle', { cx: X(pts[i].x), cy: Y(pts[i].y), r: r,
+        fill: idx < 0 ? v(OTHER) : catColour(idx), opacity: op });
+      /* A per-point tooltip on four thousand points would be four thousand
+         attributes. Only worth it where the marks are separable. */
+      if (pts.length <= 400) {
+        tip(dot, [(multi ? (pts[i].gl || '(not set)') : 'Record'),
+                  panel.xFieldLabel + ': ' + num(pts[i].x),
+                  panel.yFieldLabel + ': ' + num(pts[i].y)]);
+      }
+      p.s.appendChild(dot);
+    }
+
+    p.s.appendChild(text(p.x1, p.h - 30, panel.xFieldLabel, 'tk', 'end'));
+    p.s.appendChild(text(p.x0 - 40, p.y0 - 6, panel.yFieldLabel, 'tk', 'start'));
+    if (multi) {
+      var items = [];
+      for (i = 0; i < order.length; i++) {
+        items.push({ label: order[i].label, colour: catColour(i) });
+      }
+      legendRow(p, items, p.h - 8);
+    } else {
+      p.s.appendChild(text(p.x0, p.h - 8, fmt(pts.length) + ' records' +
+        (panel.corr === null ? '' : '  ·  r = ' + panel.corr), 'tk', 'start'));
+    }
+    return p.s;
+  }
+
+  // ── concentration, sequence, single values ───────────────────────────────
+
+  /**
+   * A real Pareto: ranked bars with the cumulative share as a line on the same
+   * plot.
+   *
+   * This used to be aliased to the ranked bar renderer, which drew the bars and
+   * dropped the cumulative line — the one element that makes it a Pareto rather
+   * than a sorted bar chart.
+   *
+   * The cumulative axis is a percentage of a known total, not a second measure, so
+   * this is not a dual-axis chart. That distinction is the reason it is allowed
+   * here at all.
+   */
+  function drawPareto(panel) {
+    var rows = panel.rows || [];
+    if (!rows.length) return svgRoot(W, 60);
+
+    var p = plot(250, 46, 46, 20, 66);
+    var max = niceMax(rows[0].count);
+    yAxis(p, max, 4);
+
+    var slot = p.iw / rows.length, bw = Math.min(46, slot * 0.66);
+    var i, pts = [];
+
+    for (i = 0; i < rows.length; i++) {
+      var cx = p.x0 + slot * i + slot / 2;
+      var bh = Math.max(2, (rows[i].count / max) * p.ih);
+      /* The head that reaches 80% is the subject; the tail is context. */
+      var inHead = (i < panel.eightyAt);
+      var rect = svgEl('rect', { x: cx - bw / 2, y: p.y1 - bh, width: bw, height: bh,
+        rx: 4, fill: inHead ? v('--c1') : v(OTHER) });
+      tip(rect, [rows[i].label || '(not set)',
+                 fmt(rows[i].count) + ' records',
+                 pct(rows[i].count / panel.total) + ' of the total',
+                 'cumulative ' + pct(rows[i].cumulative)]);
+      drillable(rect, panel.field, rows[i].key);
+      p.s.appendChild(rect);
+      p.s.appendChild(valueLabel(cx, p.h - 48, truncate(rows[i].label || '(none)', 9), 'tk'));
+      pts.push([cx, p.y1 - rows[i].cumulative * p.ih]);
+    }
+
+    p.s.appendChild(svgEl('path', { d: poly(pts), fill: 'none', stroke: v('--c4'),
+      'stroke-width': 2, 'stroke-linejoin': 'round' }));
+    for (i = 0; i < pts.length; i++) {
+      p.s.appendChild(svgEl('circle', { cx: pts[i][0], cy: pts[i][1], r: 3,
+        fill: v('--surface'), stroke: v('--c4'), 'stroke-width': 2 }));
+    }
+
+    /* The 80% rule, drawn, because that is the claim the form is making. */
+    var y80 = p.y1 - 0.8 * p.ih;
+    p.s.appendChild(svgEl('line', { x1: p.x0, y1: y80, x2: p.x1, y2: y80,
+      stroke: v('--c4'), 'stroke-width': 1, 'stroke-dasharray': '4 3', opacity: 0.8 }));
+    p.s.appendChild(text(p.x1 + 4, y80 + 3, '80%', 'tk', 'start'));
+    for (var g = 0; g <= 4; g++) {
+      p.s.appendChild(text(p.x1 + 6, p.y0 + (g / 4) * p.ih + 3,
+        (100 - g * 25) + '%', 'tk', 'start'));
+    }
+
+    p.s.appendChild(text(p.x0, p.h - 8,
+      'Bars are counts on the left axis; the line is cumulative share on the right.',
+      'tk', 'start'));
+    return p.s;
+  }
+
+  /** A funnel. Width is the surviving share; the gap between stages is the drop. */
+  function drawFunnel(panel) {
+    var stages = panel.stages || [];
+    if (!stages.length) return svgRoot(W, 60);
+
+    var rowH = 44, padT = 8, padL = 4;
+    var h = padT + stages.length * rowH + 16;
+    var s = svgRoot(W, h);
+    var maxW = W - 150;
+
+    for (var i = 0; i < stages.length; i++) {
+      var st = stages[i];
+      var y = padT + i * rowH;
+      var w = Math.max(3, st.share * maxW);
+      var cx = padL + (maxW - w) / 2 + 70;
+
+      var t = 1 - (i / Math.max(1, stages.length - 1));
+      var rect = svgEl('rect', { x: cx, y: y, width: w, height: rowH - 14, rx: 4,
+        fill: seqStep(0.25 + 0.7 * t) });
+      tip(rect, [st.label,
+                 fmt(st.count) + ' records',
+                 pct(st.share) + ' of the first stage',
+                 i === 0 ? 'the entry stage'
+                   : pct(st.stepShare) + ' carried through from ' + stages[i - 1].label]);
+      drillable(rect, panel.field, st.key);
+      s.appendChild(rect);
+
+      s.appendChild(text(4, y + (rowH - 14) / 2 + 4,
+        truncate(st.label, 11), 'ct', 'start'));
+      s.appendChild(text(cx + w / 2, y + (rowH - 14) / 2 + 4,
+        fmt(st.count), onSeq(0.25 + 0.7 * t), 'middle'));
+      s.appendChild(text(W - 4, y + (rowH - 14) / 2 + 4, pct(st.share), 'vl', 'end'));
+
+      /* The drop between stages is the number a funnel exists to show, so it is
+         labelled on the gap rather than left to be inferred from two widths. */
+      if (i > 0 && st.stepShare < 1) {
+        s.appendChild(text(cx + w / 2, y - 3,
+          '-' + pct(1 - st.stepShare), 'tk', 'middle'));
+      }
+    }
+    return s;
+  }
+
+  /**
+   * A radial gauge against a declared target, with the median marked as a notch.
+   *
+   * The commitment is a notch rather than a coloured arc segment: a coloured band
+   * behind the value implies a good/bad judgement that nobody on this engagement
+   * has defined, and inventing one would put an opinion on screen as if it were
+   * data.
+   */
+  function drawGauge(panel) {
+    var s = svgRoot(W, 176);
+    var target = panel.target || 100;
+    var val = Math.max(0, Math.min(target, panel.value || 0));
+    var frac = target > 0 ? val / target : 0;
+
+    var cx = W / 2, cy = 126, r = 82, thick = 20;
+    var a0 = Math.PI, a1 = Math.PI * 2;
+
+    s.appendChild(svgEl('path', { d: arc(cx, cy, r, r - thick, a0, a1),
+      fill: v('--q0') }));
+    if (frac > 0) {
+      s.appendChild(svgEl('path', {
+        d: arc(cx, cy, r, r - thick, a0, a0 + frac * (a1 - a0)),
+        fill: v('--c1') }));
+    }
+
+    if (panel.median !== undefined && panel.median !== null && target > 0) {
+      var mf = Math.max(0, Math.min(1, panel.median / target));
+      var ma = a0 + mf * (a1 - a0);
+      s.appendChild(svgEl('line', {
+        x1: cx + (r - thick - 4) * Math.cos(ma), y1: cy + (r - thick - 4) * Math.sin(ma),
+        x2: cx + (r + 4) * Math.cos(ma), y2: cy + (r + 4) * Math.sin(ma),
+        stroke: v('--ink-1'), 'stroke-width': 2 }));
+      s.appendChild(text(cx + (r + 14) * Math.cos(ma), cy + (r + 14) * Math.sin(ma) + 4,
+        'median', 'tk', mf > 0.5 ? 'start' : 'end'));
+    }
+
+    s.appendChild(text(cx, cy - 8, num(panel.value), 'huge', 'middle'));
+    s.appendChild(text(cx, cy + 14, 'mean of ' + fmt(panel.n) + ', target ' + target,
+      'tk', 'middle'));
+    s.appendChild(text(cx - r, cy + 16, '0', 'tk', 'middle'));
+    s.appendChild(text(cx + r, cy + 16, String(target), 'tk', 'middle'));
+    return s;
+  }
+
+  /**
+   * A KPI tile. Where a comparison exists it is structurally required rather than
+   * optional, because a number with nothing to compare it to is a fact and not an
+   * indicator.
+   */
+  function drawKpi(panel) {
+    var box = el('div', 'kpi');
+
+    var top = el('div', 'kpi-l', panel.fieldLabel || '');
+    box.appendChild(top);
+
+    var valueRow = el('div', 'kpi-v');
+    valueRow.appendChild(el('span', 'kpi-n',
+      panel.unit === 'h' ? num(panel.value) + 'h' : compact(panel.value)));
+
+    var d = panel.delta;
+    if (d && d.change !== null) {
+      var up = d.change > 0;
+      var chip = el('span', 'kpi-d ' + (up ? 'up' : d.change < 0 ? 'down' : ''));
+      chip.textContent = (up ? '▲ ' : d.change < 0 ? '▼ ' : '') +
+        pct(Math.abs(d.change));
+      chip.title = 'Against ' + fmt(d.previous) + ' in ' + d.previousLabel +
+        (d.partial ? ', projected from ' + fmt(d.current) + ' so far this period.'
+                   : '.');
+      valueRow.appendChild(chip);
+    }
+    box.appendChild(valueRow);
+
+    var sub = el('div', 'kpi-s');
+    if (d && d.change !== null) {
+      sub.textContent = (d.partial ? 'projected against ' : 'against ') +
+        fmt(d.previous) + ' in ' + d.previousLabel;
+    } else if (panel.median !== undefined && panel.median !== null) {
+      sub.textContent = 'median ' + num(panel.median) +
+        (panel.n ? '  ·  n = ' + fmt(panel.n) : '');
+    } else {
+      sub.textContent = panel.reason || '';
+    }
+    box.appendChild(sub);
+
+    if (panel.capped) {
+      box.appendChild(el('div', 'kpi-c', 'lower bound'));
+    }
+    return box;
+  }
+
+  /**
+   * The report matrix.
+   *
+   * This is the artifact that separates a report from a dashboard, and the one
+   * thing a grid of charts cannot substitute for. Five devices per row, each
+   * derived: count, share, an in-cell bar, a sparkline of the same series the trend
+   * above is drawn from, and variance against the last complete period.
+   */
+  function drawMatrix(panel) {
+    var rows = panel.rows || [];
+    var wrap = el('div', 'tbl-wrap');
+    var t = el('table', 'tbl mx');
+
+    var thead = el('thead'), hr = el('tr');
+    hr.appendChild(el('th', 'l', panel.fieldLabel));
+    hr.appendChild(el('th', 'n', 'Records'));
+    hr.appendChild(el('th', 'n', 'Share'));
+    hr.appendChild(el('th', 'l', ''));
+    if (panel.periods) {
+      hr.appendChild(el('th', 'l', panel.periods.length + ' ' + panel.grain + ' trend'));
+      hr.appendChild(el('th', 'n', 'vs last'));
+    }
+    thead.appendChild(hr);
+    t.appendChild(thead);
+
+    var tb = el('tbody');
+    var max = 0, i;
+    for (i = 0; i < rows.length; i++) if (rows[i].count > max) max = rows[i].count;
+
+    for (i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var tr = el('tr');
+      if (r.key !== '') {
+        tr.setAttribute('data-drill-field', panel.field);
+        tr.setAttribute('data-drill-key', r.key);
+        tr.className = 'hit';
+      }
+      tr.appendChild(el('td', 'l', r.label));
+      tr.appendChild(el('td', 'n', fmt(r.count)));
+      tr.appendChild(el('td', 'n', pct(r.share)));
+
+      /* In-cell bar: length against the largest row, which is the comparison the
+         eye makes anyway and would otherwise have to be done by reading numbers. */
+      var barCell = el('td', 'l');
+      var bar = el('div', 'mx-bar');
+      var fill = el('i');
+      fill.style.width = (max > 0 ? (r.count / max) * 100 : 0) + '%';
+      bar.appendChild(fill);
+      barCell.appendChild(bar);
+      tr.appendChild(barCell);
+
+      if (panel.periods) {
+        var sparkCell = el('td', 'l');
+        if (r.spark) sparkCell.appendChild(sparkline(r.spark, panel.periods));
+        tr.appendChild(sparkCell);
+
+        var vc = el('td', 'n');
+        if (r.change === null || r.change === undefined) {
+          vc.textContent = '—';
+        } else {
+          vc.className = 'n ' + (r.change > 0 ? 'up' : r.change < 0 ? 'down' : '');
+          vc.textContent = (r.change > 0 ? '+' : '') + pct(r.change);
+          vc.title = (r.delta > 0 ? '+' : '') + fmt(r.delta) +
+                     ' against the previous complete period';
+        }
+        tr.appendChild(vc);
+      }
+      tb.appendChild(tr);
+    }
+    t.appendChild(tb);
+
+    var tf = el('tfoot'), fr = el('tr');
+    fr.appendChild(el('td', 'l', 'Total'));
+    fr.appendChild(el('td', 'n', fmt(panel.total)));
+    fr.appendChild(el('td', 'n', '100%'));
+    fr.appendChild(el('td', 'l', ''));
+    if (panel.periods) {
+      fr.appendChild(el('td', 'l', ''));
+      fr.appendChild(el('td', 'n', ''));
+    }
+    tf.appendChild(fr);
+    t.appendChild(tf);
+
+    wrap.appendChild(t);
+    return wrap;
+  }
+
+  /** An inline sparkline for a matrix row. No axis: it is a shape, not a reading. */
+  function sparkline(counts, periods) {
+    var w = 92, h = 22;
+    var s = svgEl('svg', { viewBox: '0 0 ' + w + ' ' + h, 'class': 'spark',
+      preserveAspectRatio: 'none', 'aria-hidden': 'true' });
+    var max = Math.max.apply(null, counts) || 1;
+    var pts = [], i;
+    for (i = 0; i < counts.length; i++) {
+      pts.push([(counts.length <= 1 ? w / 2 : (i / (counts.length - 1)) * w),
+                h - 2 - (counts[i] / max) * (h - 4)]);
+    }
+    s.appendChild(svgEl('path', { d: poly(pts), fill: 'none', stroke: v('--c1'),
+      'stroke-width': 1.5, 'stroke-linejoin': 'round' }));
+    /* The open period is dashed here too, for the same reason as on the trend. */
+    if (periods && periods.length === counts.length && periods[counts.length - 1].partial &&
+        pts.length >= 2) {
+      s.appendChild(svgEl('path', {
+        d: poly([pts[pts.length - 2], pts[pts.length - 1]]),
+        fill: 'none', stroke: v('--surface'), 'stroke-width': 2.5 }));
+      s.appendChild(svgEl('path', {
+        d: poly([pts[pts.length - 2], pts[pts.length - 1]]),
+        fill: 'none', stroke: v('--c1'), 'stroke-width': 1.5,
+        'stroke-dasharray': '2 2' }));
+    }
+    return s;
+  }
+
+  /**
+   * What renders, and with what.
+   *
+   * The regression harness asserts this table covers every form CmdForm declares,
+   * so a form added to the engine without a renderer fails the build rather than
+   * falling back to a table in front of a client. Anything not here still degrades
+   * to the labelled table view, which is the accessibility fallback every chart
+   * needs regardless.
+   *
+   * Three entries used to be quiet lies and are called out because they are the
+   * worst kind of charting bug -- the output looked finished and answered a
+   * different question than the one in the title:
+   *
+   *   line_multi        drew the first series and discarded the rest
+   *   pareto            drew the bars and dropped the cumulative line, which is
+   *                     the only thing distinguishing a Pareto from sorted bars
+   *   stat_tile_delta   drew the value and dropped the delta
+   */
   var FORMS = {
     line: function (p) { return drawLine(p, false); },
     area: function (p) { return drawLine(p, true); },
-    line_multi: function (p) { return drawLine(p, false); },
+    line_multi: drawLineMulti,
+    stream: drawStream,
+    small_multiples: drawSmallMultiples,
     column: drawColumn,
     ranked_bar: drawRankedBar,
     ranked_bar_top_n: drawRankedBar,
-    pareto: drawRankedBar,
+    pareto: drawPareto,
     stacked_proportion: function (p) { return drawStackedProportion(p, false); },
     stacked_ordinal: function (p) { return drawStackedProportion(p, true); },
     donut: function (p) { return drawDonut(p, false); },
     semi_donut: function (p) { return drawDonut(p, true); },
+    heatmap: drawHeatmap,
+    calendar_heatmap: drawCalendar,
     treemap: drawTreemap,
-    histogram: drawHistogram,
-    stat_tile: drawStatTile,
-    stat_tile_delta: drawStatTile
+    scatter: drawScatter,
+    /* Two histograms: the analysis panel arrives pre-binned over observations,
+       while a dimension panel still carries grouped rows and bins them here. */
+    histogram: function (p) {
+      return (p.bins && p.bins.length) ? drawHistogramBins(p) : drawHistogram(p);
+    },
+    box: drawBox,
+    gauge: drawGauge,
+    waterfall: drawWaterfall,
+    slope: drawSlope,
+    bump: drawBump,
+    matrix: drawMatrix,
+    funnel: drawFunnel,
+    /* A KPI tile is HTML rather than SVG -- there is no plot, so an SVG would be
+       a text node in a viewBox. The dimension-panel scalar keeps the SVG form. */
+    stat_tile: function (p) {
+      return p.kind === 'kpi' ? drawKpi(p) : drawStatTile(p);
+    },
+    stat_tile_delta: drawKpi
   };
 
   // ── panel and page assembly ──────────────────────────────────────────────
@@ -617,20 +1898,46 @@
     var meta = el('div', 'cp-m');
     meta.appendChild(el('span', 'form-tag', panel.form.replace(/_/g, ' ')));
     head.appendChild(meta);
-    p.appendChild(head);
 
     var body = el('div', 'cp-b');
     W = (panel.span === 2) ? W_SPAN2 : W_SINGLE;
     var draw = FORMS[panel.form];
+    var chartNode;
     if (draw) {
-      body.appendChild(draw(panel));
+      chartNode = draw(panel);
     } else {
-      var note = el('div', 'cav', 'No renderer for "' + panel.form +
-        '" yet, so the data is shown as a table.');
-      body.appendChild(note);
-      body.appendChild(drawTable(panel));
+      chartNode = el('div');
+      chartNode.appendChild(el('div', 'cav', 'No renderer for "' + panel.form +
+        '" yet, so the data is shown as a table.'));
+      chartNode.appendChild(drawTable(panel));
     }
+    body.appendChild(chartNode);
+
+    /* The toggle is built after the chart, because it owns swapping the body
+       between the two views and needs the node it is swapping out. */
+    var toggle = viewToggle(panel, body, chartNode);
+    if (toggle) meta.insertBefore(toggle, meta.firstChild);
+
+    p.appendChild(head);
     p.appendChild(body);
+
+    /* The analytics caption. The trend carries a fitted line and a projection, and
+       the method behind them is stated on the panel rather than left to be assumed
+       — twelve points and least squares is not a forecasting model, and a reader
+       who thinks it is will over-trust the dashed line. */
+    if (panel.annotation) {
+      var a = panel.annotation;
+      var cap = el('div', 'cp-an');
+      cap.appendChild(el('span', 'an-k', a.direction));
+      var words = 'about ' + (a.perPeriod > 0 ? '+' : '') + a.perPeriod +
+                  ' per period on the fitted line. ' + a.method + '.';
+      if (a.anomalies.length) {
+        words += ' ' + a.anomalies.length + ' period' +
+                 (a.anomalies.length === 1 ? '' : 's') + ' ringed as unusual.';
+      }
+      cap.appendChild(el('span', '', words));
+      p.appendChild(cap);
+    }
 
     // caveats, then the drill affordance
     if (panel.caveats && panel.caveats.length) {
@@ -884,6 +2191,440 @@
     return s;
   }
 
+  // ── the interaction layer ────────────────────────────────────────────────
+
+  /**
+   * One tooltip for the whole page, positioned on hover.
+   *
+   * Delegated at the mount rather than bound per mark: a dense page carries a few
+   * thousand marks and that many listeners is a measurable cost on a 1.2s
+   * first-paint budget for no benefit. Marks carry their report in `data-tip` and
+   * this reads it.
+   *
+   * Focus is handled alongside hover, so the same report is reachable from the
+   * keyboard. That is why tip() sets tabindex: a tooltip only a mouse can reach is
+   * a tooltip half the requirement.
+   */
+  function tooltipLayer(mount) {
+    var box = el('div', 'cmd-tip');
+    box.setAttribute('role', 'tooltip');
+    box.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(box);
+
+    var shown = null;
+
+    function render(target) {
+      var raw = target.getAttribute('data-tip');
+      if (!raw) return;
+      box.innerHTML = '';
+      var lines = raw.split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        box.appendChild(el('div', i === 0 ? 'tip-h' : 'tip-r', lines[i]));
+      }
+      box.className = 'cmd-tip on';
+      box.setAttribute('aria-hidden', 'false');
+      shown = target;
+      place(target);
+    }
+
+    function place(target) {
+      var r = target.getBoundingClientRect();
+      var bw = box.offsetWidth, bh = box.offsetHeight;
+      var sx = window.pageXOffset || document.documentElement.scrollLeft;
+      var sy = window.pageYOffset || document.documentElement.scrollTop;
+
+      var left = r.left + sx + r.width / 2 - bw / 2;
+      var top = r.top + sy - bh - 10;
+      /* Flip below when there is no room above, and clamp inside the viewport, so
+         a mark near an edge does not put its own report off screen. */
+      if (r.top - bh - 10 < 0) top = r.bottom + sy + 10;
+      var maxLeft = (document.documentElement.clientWidth || 0) + sx - bw - 8;
+      if (left > maxLeft) left = maxLeft;
+      if (left < sx + 8) left = sx + 8;
+
+      box.style.left = Math.round(left) + 'px';
+      box.style.top = Math.round(top) + 'px';
+    }
+
+    function hide() {
+      box.className = 'cmd-tip';
+      box.setAttribute('aria-hidden', 'true');
+      shown = null;
+    }
+
+    function nearest(node) {
+      while (node && node !== mount) {
+        if (node.getAttribute && node.getAttribute('data-tip')) return node;
+        node = node.parentNode;
+      }
+      return null;
+    }
+
+    mount.addEventListener('mouseover', function (e) {
+      var t = nearest(e.target);
+      if (t && t !== shown) render(t);
+    });
+    mount.addEventListener('mouseout', function (e) {
+      var t = nearest(e.target);
+      if (t && t === shown) hide();
+    });
+    mount.addEventListener('focusin', function (e) {
+      var t = nearest(e.target);
+      if (t) render(t);
+    });
+    mount.addEventListener('focusout', hide);
+    window.addEventListener('scroll', function () { if (shown) place(shown); });
+    document.addEventListener('keydown', function (e) {
+      if (e.keyCode === 27) hide();
+    });
+  }
+
+  /**
+   * Cross-highlighting, and the honest limit of it.
+   *
+   * Power BI cross-filters: click a bar and every other visual re-aggregates to
+   * that slice. We deliberately do not do that in the browser, and the reason is
+   * the engagement's central rule rather than an implementation shortcut.
+   * Re-aggregating client side would mean shipping the records to the page, and
+   * every number in this product is aggregated server side specifically so that
+   * rows the viewer cannot read never enter the response. Trading that away to
+   * avoid a page load would give up the one correctness property the whole product
+   * is built on.
+   *
+   * So a click does two things instead. It cross-highlights immediately, in the
+   * page, with no request: every mark keyed to the same value stays lit and the
+   * rest recede, which is the read-a-slice-across-panels affordance people
+   * actually use it for. And it offers the real filter as an explicit action,
+   * which is a drill: the server rebuilds the payload for that slice, ACL-checked,
+   * and the result is shareable and reversible because it lives in the URL.
+   */
+  function highlightLayer(mount, payload) {
+    var active = null;
+    var bar = null;
+
+    function marks() {
+      return mount.querySelectorAll('[data-drill-field]');
+    }
+
+    function paint() {
+      var all = marks(), i;
+      for (i = 0; i < all.length; i++) {
+        var f = all[i].getAttribute('data-drill-field');
+        var k = all[i].getAttribute('data-drill-key');
+        var cls = all[i].getAttribute('class') || '';
+        cls = cls.replace(/ ?(dim|lit)\b/g, '');
+        if (active) {
+          /* Only panels that actually carry the selected field respond. A panel
+             about a different dimension has no opinion about this selection and
+             dimming it would imply one. */
+          if (f === active.field) cls += (k === active.key) ? ' lit' : ' dim';
+        }
+        all[i].setAttribute('class', cls);
+      }
+      chip();
+    }
+
+    function chip() {
+      if (bar) { bar.parentNode.removeChild(bar); bar = null; }
+      if (!active) return;
+
+      bar = el('div', 'sel-bar');
+      var label = el('span', 'sel-l');
+      label.textContent = active.fieldLabel + ': ' + active.label;
+      bar.appendChild(label);
+
+      var go = el('a', 'btn sm');
+      go.textContent = 'Filter the whole page';
+      go.href = drillUrl(payload, active.field, active.key);
+      go.title = 'Rebuilds every panel for this slice on the server, ' +
+                 'permission-checked, with the filter in the URL so it can be ' +
+                 'shared and stepped back out of.';
+      bar.appendChild(go);
+
+      var clear = el('button', 'btn sm ghost', 'Clear selection');
+      clear.type = 'button';
+      clear.addEventListener('click', function () { active = null; paint(); });
+      bar.appendChild(clear);
+
+      var note = el('span', 'sel-n',
+        'Highlighted across this page. Other panels keep their own totals until ' +
+        'you filter.');
+      bar.appendChild(note);
+
+      mount.insertBefore(bar, mount.firstChild.nextSibling);
+    }
+
+    function labelOf(node) {
+      var raw = node.getAttribute('data-tip');
+      return raw ? raw.split('\n')[0] : node.getAttribute('data-drill-key');
+    }
+
+    mount.addEventListener('click', function (e) {
+      var node = e.target;
+      while (node && node !== mount) {
+        if (node.getAttribute && node.getAttribute('data-drill-field')) break;
+        node = node.parentNode;
+      }
+      if (!node || node === mount) return;
+
+      var field = node.getAttribute('data-drill-field');
+      var key = node.getAttribute('data-drill-key');
+      if (active && active.field === field && active.key === key) {
+        active = null;
+      } else {
+        active = { field: field, key: key, label: labelOf(node),
+                   fieldLabel: fieldLabelOf(payload, field) };
+      }
+      paint();
+    });
+  }
+
+  function fieldLabelOf(payload, field) {
+    for (var i = 0; i < payload.panels.length; i++) {
+      var p = payload.panels[i];
+      if (p.field === field && p.fieldLabel) return p.fieldLabel;
+      if (p.groupField === field && p.groupFieldLabel) return p.groupFieldLabel;
+    }
+    if (payload.matrix && payload.matrix.field === field) return payload.matrix.fieldLabel;
+    return field;
+  }
+
+  /**
+   * The filter bar: which slice of the subject is on screen, and how to get out.
+   *
+   * Every step of the drill path is a removable chip rather than only a
+   * breadcrumb, because the path is a set of filters and the thing you most often
+   * want is to drop one from the middle without losing the rest.
+   */
+  function filterBar(payload) {
+    if (!payload.path || !payload.path.length) return null;
+
+    var bar = el('div', 'filter-bar');
+    bar.appendChild(el('span', 'fb-l', 'Filtered to'));
+
+    for (var i = 0; i < payload.path.length; i++) {
+      var seg = payload.path[i];
+      var chip = el('span', 'fb-chip');
+      chip.appendChild(el('span', 'fb-f', seg.fieldLabel));
+      chip.appendChild(el('span', 'fb-v', seg.label));
+
+      var drop = el('a', 'fb-x');
+      drop.textContent = '×';
+      drop.href = dropFromPath(payload, i);
+      drop.title = 'Remove this filter and keep the others';
+      drop.setAttribute('aria-label', 'Remove filter ' + seg.fieldLabel);
+      chip.appendChild(drop);
+      bar.appendChild(chip);
+    }
+
+    var all = el('a', 'fb-clear', 'Clear all');
+    all.href = 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table);
+    bar.appendChild(all);
+    return bar;
+  }
+
+  function dropFromPath(payload, idx) {
+    var parts = [];
+    for (var i = 0; i < payload.path.length; i++) {
+      if (i === idx) continue;
+      parts.push(encodeURIComponent(payload.path[i].field) + ':' +
+                 encodeURIComponent(payload.path[i].key));
+    }
+    return 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table) +
+           (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '');
+  }
+
+  /**
+   * The chart/table toggle.
+   *
+   * Present on every panel that has rows behind it. This is the accessibility
+   * fallback the dataviz rules require, and it is also the thing an analyst asks
+   * for within about a minute of seeing any chart: the numbers.
+   */
+  function viewToggle(panel, body, chartNode) {
+    if (!hasTabularForm(panel)) return null;
+
+    var seg = el('div', 'seg sm');
+    seg.setAttribute('role', 'group');
+    seg.setAttribute('aria-label', 'View as');
+    var tableNode = null;
+
+    function show(which) {
+      body.innerHTML = '';
+      if (which === 'table') {
+        if (!tableNode) tableNode = tabulate(panel);
+        body.appendChild(tableNode);
+      } else {
+        body.appendChild(chartNode);
+      }
+      var bs = seg.querySelectorAll('button');
+      for (var i = 0; i < bs.length; i++) {
+        bs[i].setAttribute('aria-selected',
+          String(bs[i].getAttribute('data-v') === which));
+      }
+    }
+
+    [['chart', 'Chart'], ['table', 'Table']].forEach(function (pair) {
+      var b = el('button', null, pair[1]);
+      b.type = 'button';
+      b.setAttribute('data-v', pair[0]);
+      b.addEventListener('click', function () { show(pair[0]); });
+      seg.appendChild(b);
+    });
+    show('chart');
+    return seg;
+  }
+
+  function hasTabularForm(panel) {
+    if (panel.kind === 'kpi' || panel.form === 'matrix') return false;
+    return !!(panel.rows || panel.points || panel.series || panel.stages ||
+              panel.bins || panel.grid || panel.steps);
+  }
+
+  /**
+   * The numbers behind any panel, whatever its form.
+   *
+   * One function rather than a table renderer per form, because the fallback has to
+   * exist for every panel and a per-form implementation is a per-form omission
+   * waiting to happen.
+   */
+  function tabulate(panel) {
+    var wrap = el('div', 'tbl-wrap');
+    var t = el('table', 'tbl');
+    var head = el('tr'), tb = el('tbody');
+    var i, j;
+
+    function th(label, cls) { head.appendChild(el('th', cls || 'l', label)); }
+    function row(cells) {
+      var tr = el('tr');
+      for (var c = 0; c < cells.length; c++) {
+        tr.appendChild(el('td', cells[c].n ? 'n' : 'l', cells[c].v));
+      }
+      tb.appendChild(tr);
+    }
+
+    if (panel.points) {                       /* scatter */
+      th(panel.xFieldLabel, 'n'); th(panel.yFieldLabel, 'n');
+      if (panel.groupField) th(panel.groupFieldLabel);
+      var cap = Math.min(panel.points.length, 250);
+      for (i = 0; i < cap; i++) {
+        var cells = [{ v: num(panel.points[i].x), n: true },
+                     { v: num(panel.points[i].y), n: true }];
+        if (panel.groupField) cells.push({ v: panel.points[i].gl || '(not set)' });
+        row(cells);
+      }
+      if (panel.points.length > cap) {
+        row([{ v: 'and ' + fmt(panel.points.length - cap) + ' more rows' }]);
+      }
+
+    } else if (panel.bins) {                  /* histogram */
+      th('Range'); th('Records', 'n'); th('Share', 'n');
+      for (i = 0; i < panel.bins.length; i++) {
+        row([{ v: num(panel.bins[i].from) + ' to ' + num(panel.bins[i].to) },
+             { v: fmt(panel.bins[i].count), n: true },
+             { v: pct(panel.n ? panel.bins[i].count / panel.n : 0), n: true }]);
+      }
+
+    } else if (panel.stages) {                /* funnel */
+      th('Stage'); th('Records', 'n'); th('Of first', 'n'); th('Carried through', 'n');
+      for (i = 0; i < panel.stages.length; i++) {
+        row([{ v: panel.stages[i].label },
+             { v: fmt(panel.stages[i].count), n: true },
+             { v: pct(panel.stages[i].share), n: true },
+             { v: i === 0 ? '—' : pct(panel.stages[i].stepShare), n: true }]);
+      }
+
+    } else if (panel.steps) {                 /* waterfall */
+      th(panel.fieldLabel); th('Before', 'n'); th('After', 'n'); th('Change', 'n');
+      for (i = 0; i < panel.steps.length; i++) {
+        var st = panel.steps[i];
+        row([{ v: st.label || '(not set)' },
+             { v: st.from === undefined ? '—' : fmt(st.from), n: true },
+             { v: st.to === undefined ? '—' : fmt(st.to), n: true },
+             { v: (st.delta > 0 ? '+' : '') + fmt(st.delta), n: true }]);
+      }
+
+    } else if (panel.grid && panel.rowLabels) {   /* heatmap or cycle */
+      th('');
+      var cols = panel.colLabels;
+      if (!cols) { cols = []; for (i = 0; i < 24; i++) cols.push(i + ':00'); }
+      for (j = 0; j < cols.length; j++) th(cols[j], 'n');
+      for (i = 0; i < panel.grid.length; i++) {
+        var line = [{ v: panel.rowLabels[i] }];
+        for (j = 0; j < panel.grid[i].length; j++) {
+          line.push({ v: fmt(panel.grid[i][j]), n: true });
+        }
+        row(line);
+      }
+
+    } else if (panel.series) {                /* any time-by-category form */
+      th(panel.fieldLabel);
+      for (j = 0; j < panel.periods.length; j++) th(panel.periods[j].label, 'n');
+      th('Total', 'n');
+      var all = panel.series.slice();
+      if (panel.other) all.push(panel.other);
+      for (i = 0; i < all.length; i++) {
+        var r2 = [{ v: all[i].label || '(not set)' }];
+        for (j = 0; j < panel.periods.length; j++) {
+          r2.push({ v: fmt(all[i].counts[j] || 0), n: true });
+        }
+        r2.push({ v: fmt(all[i].total), n: true });
+        row(r2);
+      }
+
+    } else if (panel.rows && panel.rows.length && panel.rows[0].median !== undefined) {
+      th(panel.groupFieldLabel || panel.fieldLabel);
+      th('n', 'n'); th('Min', 'n'); th('Q1', 'n'); th('Median', 'n');
+      th('Q3', 'n'); th('Max', 'n');
+      for (i = 0; i < panel.rows.length; i++) {
+        var b = panel.rows[i];
+        row([{ v: b.label || '(not set)' }, { v: fmt(b.n), n: true },
+             { v: num(b.lo), n: true }, { v: num(b.q1), n: true },
+             { v: num(b.median), n: true }, { v: num(b.q3), n: true },
+             { v: num(b.hi), n: true }]);
+      }
+
+    } else if (panel.rows && panel.rows.length && panel.rows[0].from !== undefined) {
+      th(panel.fieldLabel); th('Before', 'n'); th('After', 'n'); th('Change', 'n');
+      for (i = 0; i < panel.rows.length; i++) {
+        var sr = panel.rows[i];
+        row([{ v: sr.label || '(not set)' }, { v: fmt(sr.from), n: true },
+             { v: fmt(sr.to), n: true },
+             { v: (sr.to - sr.from > 0 ? '+' : '') + fmt(sr.to - sr.from), n: true }]);
+      }
+
+    } else if (panel.rows && panel.rows.length && panel.rows[0].cumulative !== undefined) {
+      th(panel.fieldLabel); th('Records', 'n'); th('Share', 'n'); th('Cumulative', 'n');
+      for (i = 0; i < panel.rows.length; i++) {
+        row([{ v: panel.rows[i].label || '(not set)' },
+             { v: fmt(panel.rows[i].count), n: true },
+             { v: pct(panel.rows[i].count / panel.total), n: true },
+             { v: pct(panel.rows[i].cumulative), n: true }]);
+      }
+
+    } else if (panel.points === undefined && panel.rows) {   /* grouped rows */
+      return drawTable(panel);
+
+    } else {
+      return el('div', 'cav', 'No tabular view for this panel.');
+    }
+
+    var thead = el('thead'); thead.appendChild(head);
+    t.appendChild(thead); t.appendChild(tb);
+    wrap.appendChild(t);
+    return wrap;
+  }
+
+  /** The KPI row. */
+  function buildKpiRow(kpis) {
+    var row = el('div', 'kpi-row');
+    for (var i = 0; i < kpis.length; i++) {
+      var draw = FORMS[kpis[i].form];
+      row.appendChild(draw ? draw(kpis[i]) : drawKpi(kpis[i]));
+    }
+    return row;
+  }
+
   // ── entry ────────────────────────────────────────────────────────────────
 
   function renderDashboard(payload, mount) {
@@ -902,6 +2643,18 @@
 
     mount.appendChild(buildHeader(payload));
 
+    /* Which slice is on screen, and how to step out of it. Above everything,
+       because a page showing a filtered subset while looking like the whole table
+       is the fastest way to have someone act on the wrong number. */
+    var fb = filterBar(payload);
+    if (fb) mount.appendChild(fb);
+
+    /* The headline numbers, before any chart. A leader reads these and stops; the
+       charts exist to answer the question these provoke. */
+    if (payload.kpis && payload.kpis.length) {
+      mount.appendChild(buildKpiRow(payload.kpis));
+    }
+
     if (payload.notes && payload.notes.length) {
       for (var n = 0; n < payload.notes.length; n++) {
         mount.appendChild(el('div', 'note', payload.notes[n]));
@@ -912,11 +2665,18 @@
     for (var i = 0; i < payload.panels.length; i++) {
       grid.appendChild(buildPanel(payload.panels[i], payload));
     }
+    if (payload.matrix) grid.appendChild(buildPanel(payload.matrix, payload));
     var dp = buildDrillPanel(payload);
     if (dp) grid.appendChild(dp);
     var decl = buildDeclaredPanel(payload);
     if (decl) grid.appendChild(decl);
     mount.appendChild(grid);
+
+    /* Behaviour is attached after the DOM exists, and both handlers are delegated
+       at the mount, so this is two listeners for a page carrying a few thousand
+       marks rather than a few thousand listeners. */
+    tooltipLayer(mount);
+    highlightLayer(mount, payload);
   }
 
   function renderCatalog(payload, mount) {
