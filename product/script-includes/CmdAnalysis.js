@@ -68,6 +68,11 @@ CmdAnalysis.FORECAST_AHEAD = 3;
    is labelled as one. */
 CmdAnalysis.ANOMALY_SIGMA = 2;
 
+/* Rank places a series must travel in each direction before its path counts as a
+   genuine reversal rather than jitter. Ranks derived from counts swap on a handful
+   of records, and the smallest series swap most, so one place either way is noise. */
+CmdAnalysis.BUMP_MIN_SWING = 2;
+
 /* A gauge needs a target. Nothing on a stock instance declares one, so the only
    honest generic source is a column whose measured range is a percentage. Detected
    by measurement, never by column name, for the same reason every other decision
@@ -303,7 +308,7 @@ CmdAnalysis.prototype = {
         if (series.length < 2) return null;
 
         var occupied = this._occupiedBuckets(series, r.periods.length);
-        if (occupied < 4) return null;
+        if (occupied < CmdPayload.occupiedFloor(r.periods.length)) return null;
 
         var kept, other = null, form, reason;
         if (series.length <= CmdAnalysis.LINE_MAX) {
@@ -364,6 +369,77 @@ CmdAnalysis.prototype = {
             });
         }
         return out;
+    },
+
+    /**
+     * The backlog: how many records were open at the end of each period.
+     *
+     * The one series in this product that is a level rather than a rate, and the
+     * reason the area form exists. Every other trend counts events that happened
+     * inside a bucket, where the area under the line is not a quantity and filling
+     * it would be decoration. A backlog is a stock: bounded below by zero, and the
+     * area under it is genuinely stock-time, so it is filled.
+     *
+     * It also answers a different question from the trend above it, which is why
+     * both can sit on one page without repeating themselves. "How many arrived" and
+     * "how many are still outstanding" diverge exactly when a team stops keeping up,
+     * and that divergence is the thing a service leader is looking for.
+     */
+    backlog: function (table, query, grain, buckets, budgetMs) {
+        var pair = this._durationPair(table, query, budgetMs);
+        if (!pair) return null;
+
+        var r = this.data.stockSeries(table, pair.start.name, pair.end.name,
+                                      grain || 'month', buckets || 12, query, budgetMs);
+        if (!r || !r.counts.length || r.considered < CmdAnalysis.DIST_MIN_N) return null;
+
+        var pts = [], i, occupied = 0, peak = 0;
+        for (i = 0; i < r.periods.length; i++) {
+            var c = r.counts[i] || 0;
+            if (c > 0) occupied++;
+            if (c > peak) peak = c;
+            pts.push({ period: r.periods[i].period, label: r.periods[i].label,
+                       count: c, partial: r.periods[i].partial });
+        }
+        if (occupied < CmdPayload.occupiedFloor(pts.length) || peak === 0) return null;
+
+        /* A backlog that never changes is a fact, not a chart. */
+        var flat = true;
+        for (i = 1; i < pts.length; i++) {
+            if (pts[i].count !== pts[0].count) { flat = false; break; }
+        }
+        if (flat) return null;
+
+        /* The form is asked for rather than asserted, so the one place that decides
+           between a line and a filled area stays the form engine. isStock is the
+           flag that distinction has always been keyed on; nothing could set it
+           before this panel existed, which is why area was unreachable. */
+        var decision = this.form.decide({
+            field: pair.start.name, fieldLabel: pair.start.label,
+            isTime: true, grain: grain || 'month', isStock: true,
+            dims: 1, distinct: pts.length, n: r.considered, seriesCount: 1,
+            partialTail: true
+        });
+
+        return {
+            id: 'backlog',
+            kind: 'series',
+            form: decision.form,
+            question: 'How much is still open at the end of each ' + (grain || 'month') + '?',
+            reason: 'a level rather than a rate: each point counts records opened on ' +
+                    pair.start.label.toLowerCase() + ' and not yet closed on ' +
+                    pair.end.label.toLowerCase() + ' at that moment, so the area ' +
+                    'under it is meaningful',
+            field: pair.start.name, fieldLabel: 'Open backlog',
+            startField: pair.start.name, endField: pair.end.name,
+            grain: grain || 'month',
+            points: pts,
+            stillOpen: r.stillOpen,
+            span: 2,
+            caveats: r.capped ? [{ severity: 'warn',
+                text: 'The permission-checked scan stopped early, so the backlog is ' +
+                      'a lower bound at every point.' }] : []
+        };
     },
 
     /**
@@ -453,20 +529,54 @@ CmdAnalysis.prototype = {
                 path.push({ label: r.periods[closed[p]].label, rank: at });
             }
 
-            var crossed = false;
-            for (p = 1; p < path.length && !crossed; p++) {
-                for (i = 0; i < series.length; i++) {
-                    if (path[p].rank[series[i].key] !== path[p - 1].rank[series[i].key]) {
-                        crossed = true; break;
-                    }
+            /* Bump only where the path itself carries information a slope cannot.
+             *
+             * The first rule here was "any rank changed between consecutive
+             * periods", and that made slope effectively unreachable: this builder
+             * already returns null unless the two halves rank differently, and if
+             * the halves differ then some period in between necessarily changed. So
+             * bump won every time and the slope branch was dead code that still
+             * passed its tests.
+             *
+             * The distinction that actually matters to a reader is whether a series
+             * ever turns around. If everything drifts one way, the endpoints tell
+             * the whole story and a slope tells it with a fraction of the ink. If
+             * something climbs and then falls back, the endpoints hide that, and
+             * only the full path shows it. */
+            /* A reversal has to be material, not a wobble.
+             *
+             * Ranks computed from counts jitter by one place all the time, and the
+             * smallest series jitter most: two categories separated by three records
+             * swap places whenever a handful of tickets land. Treating any direction
+             * change as a reversal made every subject a bump chart and left the
+             * slope branch unreachable, which is the same dead-branch problem this
+             * rule was written to fix in the first place.
+             *
+             * So a series must travel at least two rank places one way and at least
+             * two back before the round trip counts as something the endpoints would
+             * hide. */
+            var reversed = false;
+            for (i = 0; i < series.length && !reversed; i++) {
+                var up = 0, down = 0, peakUp = 0, peakDown = 0;
+                for (p = 1; p < path.length; p++) {
+                    var step = path[p].rank[series[i].key] -
+                               path[p - 1].rank[series[i].key];
+                    if (step > 0) { up += step; down = 0; }
+                    else if (step < 0) { down -= step; up = 0; }
+                    if (up > peakUp) peakUp = up;
+                    if (down > peakDown) peakDown = down;
+                }
+                if (peakUp >= CmdAnalysis.BUMP_MIN_SWING &&
+                    peakDown >= CmdAnalysis.BUMP_MIN_SWING) {
+                    reversed = true;
                 }
             }
 
-            if (crossed) {
+            if (reversed) {
                 out.form = 'bump';
-                out.reason = 'rank position at every complete period, because these ' +
-                             'categories change places during the window and only ' +
-                             'the endpoints would hide that';
+                out.reason = 'rank position at every complete period, because at ' +
+                             'least one of these categories climbs and then falls ' +
+                             'back, which the two endpoints alone would hide';
                 out.path = path;
                 out.keys = [];
                 for (i = 0; i < series.length; i++) {

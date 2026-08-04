@@ -2078,6 +2078,48 @@
     return seg;
   }
 
+  /**
+   * The time window slicer.
+   *
+   * It changes what the page measures, not just what it draws, so it is a
+   * navigation and lives in the URL beside the drill path -- which means a
+   * three-month view of a filtered slice is a shareable link, and the back button
+   * reverses it.
+   *
+   * It also changes which forms the page can choose. A rank comparison over three
+   * periods is a slope chart; over twelve, where series cross and recross, it is a
+   * bump chart. That is the form engine doing its job on a different question, and
+   * it is the clearest demonstration in the product that the chart follows the
+   * data rather than a template.
+   */
+  function windowControl(payload) {
+    var seg = el('div', 'seg sm');
+    seg.setAttribute('role', 'group');
+    seg.setAttribute('aria-label', 'Time window');
+
+    var opts = payload.window.allowed;
+    for (var i = 0; i < opts.length; i++) {
+      var m = opts[i];
+      var a = el('a', null, m + 'm');
+      a.href = windowUrl(payload, m);
+      a.setAttribute('aria-selected', String(m === payload.window.months));
+      a.title = 'Rebuild this page over the last ' + m + ' months';
+      seg.appendChild(a);
+    }
+    return seg;
+  }
+
+  function windowUrl(payload, months) {
+    var parts = [];
+    for (var i = 0; i < payload.path.length; i++) {
+      parts.push(encodeURIComponent(payload.path[i].field) + ':' +
+                 encodeURIComponent(payload.path[i].key));
+    }
+    return 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table) +
+           (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '') +
+           '&months=' + months;
+  }
+
   function buildHeader(payload) {
     var h = el('div', 'app-h');
 
@@ -2109,6 +2151,7 @@
 
     var right = el('div', 'app-h-r');
     right.appendChild(aclChip(payload.acl));
+    if (payload.window) right.appendChild(windowControl(payload));
     right.appendChild(themeToggle());
     var lst = el('a', 'btn', 'Open record list');
     lst.href = payload.subject.listUrl;

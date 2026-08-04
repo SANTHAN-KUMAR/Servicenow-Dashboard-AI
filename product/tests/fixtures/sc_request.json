@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:49:03",
+ "generated": "2026-08-04 11:33:29",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -148,5 +148,27 @@
    "declaredParentLabel": "Company"
   }
  ],
- "timingMs": 74
+ "scan": {
+  "spentMs": 16,
+  "allowanceMs": 5000,
+  "scans": 2,
+  "starved": 0,
+  "exhausted": false,
+  "log": [
+   {
+    "via": "proof",
+    "ms": 7,
+    "rows": 1,
+    "budget": 2500
+   },
+   {
+    "via": "reduce",
+    "ms": 9,
+    "rows": 1,
+    "n": 11,
+    "budget": 3200
+   }
+  ]
+ },
+ "timingMs": 330
 }

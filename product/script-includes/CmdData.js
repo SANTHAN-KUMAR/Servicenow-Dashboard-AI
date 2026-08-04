@@ -1083,6 +1083,11 @@ CmdData.prototype = {
             return { id: 'd', kind: 'duration', startField: start, endField: end,
                      groupField: groupField || null };
         },
+        stock: function (startField, endField, grain, buckets) {
+            return { id: 'k', kind: 'stock', startField: startField,
+                     endField: endField, grain: grain || 'month',
+                     buckets: buckets || 12 };
+        },
         dow: function (dateField) {
             return { id: 'h', kind: 'dow', dateField: dateField };
         },
@@ -1138,6 +1143,8 @@ CmdData.prototype = {
             return { grid: [], maxCell: 0, total: 0 };
         case 'day':
             return { byDay: {}, days: spec.days || 0, maxCell: 0, total: 0 };
+        case 'stock':
+            return { periods: [], counts: [], considered: 0, stillOpen: 0 };
         default:
             return {};
         }
@@ -1316,6 +1323,43 @@ CmdData.prototype = {
                         periods: order.periods, series: series,
                         outside: outside, grain: grain
                     };
+                }
+            };
+        }
+
+        if (spec.kind === 'stock') {
+            /* A level, not a flow.
+             *
+             * Every other time reduction here counts events that happened inside a
+             * bucket -- records created in June. This counts records that were
+             * still open at the end of June, which is a different question and the
+             * one a backlog chart answers. It is also the only series in this
+             * product for which the area under the line means anything, because a
+             * level is bounded below by zero and its area is stock-time; the area
+             * under a rate is not a quantity at all.
+             *
+             * One pass, twelve comparisons per row, no date construction. */
+            var order2 = this._bucketKeys(spec.grain || 'month', spec.buckets || 12);
+            var open = zeros(order2.ends.length);
+            var everOpen = 0, stillOpen = 0;
+            return {
+                id: id,
+                valueFields: [spec.startField, spec.endField],
+                displayFields: [],
+                row: function (r) {
+                    var st = epochSecOf(r[spec.startField]);
+                    if (st === null) return;
+                    var en = r[spec.endField] ? epochSecOf(r[spec.endField]) : null;
+                    everOpen++;
+                    if (en === null) stillOpen++;
+                    for (var b = 0; b < order2.ends.length; b++) {
+                        var at = order2.ends[b];
+                        if (st <= at && (en === null || en > at)) open[b]++;
+                    }
+                },
+                done: function () {
+                    return { periods: order2.periods, counts: open,
+                             considered: everOpen, stillOpen: stillOpen };
                 }
             };
         }
@@ -1541,13 +1585,17 @@ CmdData.prototype = {
     /** The ordered bucket keys for a grain and window, so the scan can slot a row. */
     _bucketKeys: function (grain, buckets) {
         var now = new GlideDateTime();
-        var keys = [], periods = [];
+        var keys = [], periods = [], ends = [];
         for (var i = buckets - 1; i >= 0; i--) {
             var b = this._bucketBounds(now, grain, i);
             keys.push(b.key);
             periods.push({ period: b.key, label: b.label, partial: i === 0 });
+            /* The instant each bucket closes, as epoch seconds, so a stock
+               accumulator can ask "was this record open then" by comparison
+               rather than by constructing dates per row. */
+            ends.push(epochSecOf(b.to));
         }
-        return { keys: keys, periods: periods };
+        return { keys: keys, periods: periods, ends: ends };
     },
 
     /* ══════════════════════════════════════════════════════════════════════
@@ -1757,6 +1805,14 @@ CmdData.prototype = {
     seriesByGroup: function (table, dateField, groupField, grain, buckets, query, budgetMs) {
         return this._one(table, query,
             this.specs.series(dateField, groupField, grain, buckets), budgetMs);
+    },
+
+    /**
+     * How many records were open at the end of each period: a backlog.
+     */
+    stockSeries: function (table, startField, endField, grain, buckets, query, budgetMs) {
+        return this._one(table, query,
+            this.specs.stock(startField, endField, grain, buckets), budgetMs);
     },
 
     /**

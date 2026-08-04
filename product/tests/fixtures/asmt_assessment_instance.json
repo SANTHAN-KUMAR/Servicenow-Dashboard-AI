@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:49:25",
+ "generated": "2026-08-04 11:33:48",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -21,6 +21,96 @@
  },
  "path": [],
  "panels": [
+  {
+   "id": "backlog",
+   "kind": "series",
+   "form": "area",
+   "question": "How much is still open at the end of each month?",
+   "reason": "a level rather than a rate: each point counts records opened on created and not yet closed on expiration date at that moment, so the area under it is meaningful",
+   "field": "sys_created_on",
+   "fieldLabel": "Open backlog",
+   "startField": "sys_created_on",
+   "endField": "expiration_date",
+   "grain": "month",
+   "points": [
+    {
+     "period": "2025-09",
+     "label": "Sep '25",
+     "count": 12,
+     "partial": false
+    },
+    {
+     "period": "2025-10",
+     "label": "Oct '25",
+     "count": 12,
+     "partial": false
+    },
+    {
+     "period": "2025-11",
+     "label": "Nov '25",
+     "count": 12,
+     "partial": false
+    },
+    {
+     "period": "2025-12",
+     "label": "Dec '25",
+     "count": 12,
+     "partial": false
+    },
+    {
+     "period": "2026-01",
+     "label": "Jan '26",
+     "count": 12,
+     "partial": false
+    },
+    {
+     "period": "2026-02",
+     "label": "Feb '26",
+     "count": 12,
+     "partial": false
+    },
+    {
+     "period": "2026-03",
+     "label": "Mar '26",
+     "count": 12,
+     "partial": false
+    },
+    {
+     "period": "2026-04",
+     "label": "Apr '26",
+     "count": 12,
+     "partial": false
+    },
+    {
+     "period": "2026-05",
+     "label": "May '26",
+     "count": 12,
+     "partial": false
+    },
+    {
+     "period": "2026-06",
+     "label": "Jun '26",
+     "count": 32,
+     "partial": false
+    },
+    {
+     "period": "2026-07",
+     "label": "Jul '26",
+     "count": 32,
+     "partial": false
+    },
+    {
+     "period": "2026-08",
+     "label": "Aug '26",
+     "count": 32,
+     "partial": true
+    }
+   ],
+   "stillOpen": 32,
+   "span": 2,
+   "caveats": [],
+   "_rank": 1
+  },
   {
    "id": "change_metric_type",
    "kind": "change",
@@ -64,7 +154,8 @@
     }
    ],
    "span": 2,
-   "caveats": []
+   "caveats": [],
+   "_rank": 2
   },
   {
    "id": "dim_metric_type",
@@ -464,7 +555,7 @@
     "previous": 1,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.083,
+    "elapsedFraction": 0.122,
     "paceAdjusted": 0,
     "delta": -1,
     "change": -1,
@@ -477,7 +568,7 @@
    "caveats": [
     {
      "severity": "info",
-     "text": "This month is 8% elapsed, so the comparison is projected to a full month. Actual so far is 0 against 1 last month."
+     "text": "This month is 12% elapsed, so the comparison is projected to a full month. Actual so far is 0 against 1 last month."
     }
    ]
   }
@@ -648,5 +739,46 @@
   "caveats": []
  },
  "declared": [],
- "timingMs": 628
+ "scan": {
+  "spentMs": 545,
+  "allowanceMs": 5000,
+  "scans": 5,
+  "starved": 0,
+  "exhausted": false,
+  "log": [
+   {
+    "via": "proof",
+    "ms": 52,
+    "rows": 86,
+    "budget": 2500
+   },
+   {
+    "via": "reduce",
+    "ms": 442,
+    "rows": 86,
+    "n": 15,
+    "budget": 3200
+   },
+   {
+    "via": "proof",
+    "ms": 2,
+    "rows": 0,
+    "budget": 2500
+   },
+   {
+    "via": "proof",
+    "ms": 2,
+    "rows": 1,
+    "budget": 2500
+   },
+   {
+    "via": "reduce",
+    "ms": 47,
+    "rows": 86,
+    "n": 4,
+    "budget": 3200
+   }
+  ]
+ },
+ "timingMs": 704
 }

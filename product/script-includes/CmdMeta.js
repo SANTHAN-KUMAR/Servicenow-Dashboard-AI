@@ -194,25 +194,54 @@ CmdMeta.prototype = {
         var ck = table + '|' + field;
         if (this._choices[ck]) return this._choices[ck];
 
-        var out = [], seen = {};
-        var gr = new GlideRecord('sys_choice');
-        gr.addQuery('name', 'IN', this._hierarchy(table).join(','));
-        gr.addQuery('element', field);
-        gr.addQuery('inactive', '!=', true);
-        /* Choices are per language; without this a bilingual instance returns each
-           value once per installed language and the funnel gets duplicate stages. */
-        gr.addQuery('language', 'en');
-        gr.orderBy('sequence');
-        gr.query();
-        while (gr.next()) {
-            var v = gr.getValue('value');
-            if (v === null || v === '' || seen[v]) continue;
-            seen[v] = true;
-            out.push({
-                value: v,
-                label: gr.getValue('label') || v,
-                sequence: parseInt(gr.getValue('sequence'), 10) || 0
-            });
+        /* The most specific table that defines choices for this element wins, and
+         * the hierarchy is NOT merged.
+         *
+         * Merging is what the first version did, and it produced nonsense that was
+         * hard to see. `change_request.state` came back as the union of the task
+         * base-class vocabulary and the change vocabulary:
+         *
+         *     Pending 449, Open 0, Assess 314, Work in Progress 0,
+         *     Closed Complete 70, Authorize 290, Scheduled 163, ...
+         *
+         * Two unrelated vocabularies interleaved by a sequence number that only
+         * means something within one of them. Every label is real and the order is
+         * meaningless, which is the worst combination: the funnel gate rejected it
+         * for failing to decline, which was the right answer reached by accident.
+         * Had the numbers happened to fall the other way it would have drawn a
+         * confident funnel over stages that do not form a sequence.
+         *
+         * The platform resolves choices by overriding, not by accumulating: a table
+         * that declares any choice for an element replaces its parent's list rather
+         * than adding to it. This walks the hierarchy from the most specific and
+         * takes the first table that declares anything.
+         */
+        var chain = this._hierarchy(table);
+        var out = [];
+
+        for (var h = 0; h < chain.length && !out.length; h++) {
+            var seen = {};
+            var gr = new GlideRecord('sys_choice');
+            gr.addQuery('name', chain[h]);
+            gr.addQuery('element', field);
+            gr.addQuery('inactive', '!=', true);
+            /* Choices are per language; without this a bilingual instance returns
+               each value once per installed language and a funnel gets duplicate
+               stages. */
+            gr.addQuery('language', 'en');
+            gr.orderBy('sequence');
+            gr.query();
+            while (gr.next()) {
+                var v = gr.getValue('value');
+                if (v === null || v === '' || seen[v]) continue;
+                seen[v] = true;
+                out.push({
+                    value: v,
+                    label: gr.getValue('label') || v,
+                    sequence: parseInt(gr.getValue('sequence'), 10) || 0,
+                    definedOn: chain[h]
+                });
+            }
         }
 
         this._choices[ck] = out;

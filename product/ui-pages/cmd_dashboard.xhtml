@@ -43,10 +43,21 @@
     }
   }
 
+  /* The time window, as a slicer in the URL.
+     Clamped to a declared set rather than trusted, because it reaches a query
+     builder and an arbitrary number here would let a link ask for a thousand
+     buckets. Twelve is the default and the window a leader reads by habit. */
+  var months = parseInt(RP.getParameterValue('months'), 10);
+  var allowed = [3, 6, 12, 24];
+  var ok = false;
+  for (var w = 0; w &lt; allowed.length; w++) if (allowed[w] === months) ok = true;
+  if (!ok) months = 12;
+
   var out;
   try {
     var builder = new CmdPayload();
-    out = builder.dashboard(table, path, {});
+    out = builder.dashboard(table, path, { months: months });
+    out.window = { months: months, allowed: allowed };
   } catch (e) {
     out = { error: 'The dashboard could not be built: ' + e,
             subject: { table: table, label: table, rows: 0 },

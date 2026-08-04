@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:49:07",
+ "generated": "2026-08-04 11:33:31",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -9,18 +9,247 @@
   "table": "kb_knowledge",
   "label": "Knowledge",
   "query": "",
-  "rows": 700,
+  "rows": 50,
   "listUrl": "/kb_knowledge_list.do?sysparm_query=&sysparm_view="
  },
  "acl": {
   "mode": "BOUNDED",
   "aggregate": 757,
-  "secure": 700,
-  "delta": 57,
+  "secure": 50,
+  "delta": 707,
   "capped": true
  },
  "path": [],
  "panels": [
+  {
+   "id": "backlog",
+   "kind": "series",
+   "form": "area",
+   "question": "How much is still open at the end of each month?",
+   "reason": "a level rather than a rate: each point counts records opened on created and not yet closed on valid to at that moment, so the area under it is meaningful",
+   "field": "sys_created_on",
+   "fieldLabel": "Open backlog",
+   "startField": "sys_created_on",
+   "endField": "valid_to",
+   "grain": "month",
+   "points": [
+    {
+     "period": "2025-09",
+     "label": "Sep '25",
+     "count": 36,
+     "partial": false
+    },
+    {
+     "period": "2025-10",
+     "label": "Oct '25",
+     "count": 36,
+     "partial": false
+    },
+    {
+     "period": "2025-11",
+     "label": "Nov '25",
+     "count": 36,
+     "partial": false
+    },
+    {
+     "period": "2025-12",
+     "label": "Dec '25",
+     "count": 36,
+     "partial": false
+    },
+    {
+     "period": "2026-01",
+     "label": "Jan '26",
+     "count": 36,
+     "partial": false
+    },
+    {
+     "period": "2026-02",
+     "label": "Feb '26",
+     "count": 36,
+     "partial": false
+    },
+    {
+     "period": "2026-03",
+     "label": "Mar '26",
+     "count": 36,
+     "partial": false
+    },
+    {
+     "period": "2026-04",
+     "label": "Apr '26",
+     "count": 36,
+     "partial": false
+    },
+    {
+     "period": "2026-05",
+     "label": "May '26",
+     "count": 36,
+     "partial": false
+    },
+    {
+     "period": "2026-06",
+     "label": "Jun '26",
+     "count": 39,
+     "partial": false
+    },
+    {
+     "period": "2026-07",
+     "label": "Jul '26",
+     "count": 551,
+     "partial": false
+    },
+    {
+     "period": "2026-08",
+     "label": "Aug '26",
+     "count": 560,
+     "partial": true
+    }
+   ],
+   "stillOpen": 30,
+   "span": 2,
+   "caveats": [
+    {
+     "severity": "warn",
+     "text": "The permission-checked scan stopped early, so the backlog is a lower bound at every point."
+    }
+   ],
+   "_rank": 1
+  },
+  {
+   "id": "pareto_author",
+   "kind": "pareto",
+   "form": "pareto",
+   "question": "How few author values account for most of the volume?",
+   "reason": "1 of 7 values cover 80% of records, which is what makes the ranked view worth drawing with a cumulative line rather than as plain bars",
+   "field": "author",
+   "fieldLabel": "Author",
+   "rows": [
+    {
+     "key": "6816f79cc0a8016401c5a33be04be441",
+     "label": "Santhan K",
+     "count": 534,
+     "cumulative": 0.954
+    },
+    {
+     "key": "62d78687c0a8010e00b3d84178adc913",
+     "label": "Ron Kettering",
+     "count": 7,
+     "cumulative": 0.966
+    },
+    {
+     "key": "a6826bf03710200044e0bfc8bcbe5de6",
+     "label": "Boris Catino",
+     "count": 6,
+     "cumulative": 0.977
+    },
+    {
+     "key": "46d85d4aa9fe198101e36eb956587fe7",
+     "label": "Sam Sorokin",
+     "count": 5,
+     "cumulative": 0.986
+    },
+    {
+     "key": "46d14f04a9fe19810142e40c6b071512",
+     "label": "Wayne Webb",
+     "count": 5,
+     "cumulative": 0.995
+    },
+    {
+     "key": "46bbf3daa9fe1981001fd0ccdd391f83",
+     "label": "Ted Bozelle",
+     "count": 2,
+     "cumulative": 0.998
+    },
+    {
+     "key": "ee826bf03710200044e0bfc8bcbe5de6",
+     "label": "Bernard Laboy",
+     "count": 1,
+     "cumulative": 1
+    }
+   ],
+   "total": 560,
+   "eightyAt": 1,
+   "span": 2,
+   "caveats": [],
+   "_rank": 6
+  },
+  {
+   "id": "dist_sys_view_count",
+   "kind": "distribution",
+   "form": "histogram",
+   "question": "How is view count distributed?",
+   "reason": "11 equal-width bins over 560 values, sized by the interquartile range rather than by a fixed count",
+   "field": "sys_view_count",
+   "fieldLabel": "View count",
+   "bins": [
+    {
+     "from": 0,
+     "to": 8.182,
+     "count": 546
+    },
+    {
+     "from": 8.182,
+     "to": 16.364,
+     "count": 4
+    },
+    {
+     "from": 16.364,
+     "to": 24.545,
+     "count": 3
+    },
+    {
+     "from": 24.545,
+     "to": 32.727,
+     "count": 0
+    },
+    {
+     "from": 32.727,
+     "to": 40.909,
+     "count": 2
+    },
+    {
+     "from": 40.909,
+     "to": 49.091,
+     "count": 3
+    },
+    {
+     "from": 49.091,
+     "to": 57.273,
+     "count": 0
+    },
+    {
+     "from": 57.273,
+     "to": 65.455,
+     "count": 0
+    },
+    {
+     "from": 65.455,
+     "to": 73.636,
+     "count": 0
+    },
+    {
+     "from": 73.636,
+     "to": 81.818,
+     "count": 1
+    },
+    {
+     "from": 81.818,
+     "to": 90,
+     "count": 1
+    }
+   ],
+   "lo": 0,
+   "hi": 90,
+   "n": 560,
+   "mean": 0.929,
+   "median": 0,
+   "q1": 0,
+   "q3": 0,
+   "span": 1,
+   "caveats": [],
+   "_rank": 7
+  },
   {
    "id": "dim_author",
    "kind": "dimension",
@@ -35,7 +264,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 470 records you can read. 287 more exist that you do not have access to."
+     "text": "Filtered to the 560 records you can read. 197 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -48,12 +277,12 @@
      {
       "key": "6816f79cc0a8016401c5a33be04be441",
       "label": "Santhan K",
-      "count": 445
+      "count": 534
      },
      {
       "key": "62d78687c0a8010e00b3d84178adc913",
       "label": "Ron Kettering",
-      "count": 6
+      "count": 7
      },
      {
       "key": "a6826bf03710200044e0bfc8bcbe5de6",
@@ -86,8 +315,8 @@
    "shape": {
     "distinct": 7,
     "fill": 1,
-    "topShare": 0.947,
-    "concentration": 0.96
+    "topShare": 0.954,
+    "concentration": 0.966
    },
    "ordinal": false,
    "span": 1
@@ -95,14 +324,157 @@
  ],
  "drill": {
   "atMax": false,
-  "options": []
+  "options": [
+   {
+    "field": "author",
+    "label": "Author",
+    "isOrdinal": false,
+    "isRef": true,
+    "offer": true,
+    "reason": "7 values, populated on 100%",
+    "fill": 1,
+    "distinct": 7,
+    "rows": 50
+   },
+   {
+    "field": "article_type",
+    "label": "Article type",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "every record here has the same article type",
+    "fill": 1,
+    "distinct": 1,
+    "rows": 50
+   },
+   {
+    "field": "active",
+    "label": "Active",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "every record here has the same active",
+    "fill": 1,
+    "distinct": 1,
+    "rows": 50
+   },
+   {
+    "field": "helpful_count",
+    "label": "Helpful count",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "every record here has the same helpful count",
+    "fill": 0.9303571428571429,
+    "distinct": 1,
+    "rows": 50
+   },
+   {
+    "field": "category",
+    "label": "Category",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "Category is empty on 99.1% of these records",
+    "fill": 0.008928571428571428,
+    "distinct": 2,
+    "rows": 50
+   },
+   {
+    "field": "base_version",
+    "label": "Base Version",
+    "isOrdinal": false,
+    "isRef": true,
+    "offer": false,
+    "reason": "Base Version is empty on 98.9% of these records",
+    "fill": 0.010714285714285714,
+    "distinct": 6,
+    "rows": 50
+   }
+  ]
  },
  "notes": [
-  "Stopped after examining 9 of 36 fields, to keep this page inside its time budget. This table is expensive to permission-check.",
-  "9 further analysis panels were not built, to keep this page inside its time budget. This table is expensive to permission-check.",
-  "Drill options were not computed, to keep this page inside its time budget."
+  "This subject is expensive to permission-check, so the page stopped reading rows after 5.3s. 6 further measurements were not attempted, and the panels shown are built from the rows that were read."
  ],
- "kpis": [],
+ "kpis": [
+  {
+   "id": "kpi_count",
+   "kind": "kpi",
+   "span": 1,
+   "question": "How many records, and is that more or fewer than before?",
+   "fieldLabel": "Records",
+   "value": 50,
+   "capped": true,
+   "form": "stat_tile_delta",
+   "reason": "compared with the previous month on sys_created_on",
+   "delta": {
+    "current": 11,
+    "previous": 20,
+    "currentLabel": "Aug '26",
+    "previousLabel": "Jul '26",
+    "elapsedFraction": 0.122,
+    "paceAdjusted": 90,
+    "delta": 70,
+    "change": 3.5,
+    "rawDelta": -9,
+    "rawChange": -0.45,
+    "partial": true,
+    "mode": "VERIFIED",
+    "capped": true
+   },
+   "caveats": [
+    {
+     "severity": "info",
+     "text": "This month is 12% elapsed, so the comparison is projected to a full month. Actual so far is 11 against 20 last month."
+    }
+   ]
+  },
+  {
+   "id": "kpi_gauge_sys_view_count",
+   "kind": "kpi",
+   "span": 1,
+   "form": "gauge",
+   "question": "Where does view count sit against complete?",
+   "fieldLabel": "View count",
+   "field": "sys_view_count",
+   "value": 0.929,
+   "target": 100,
+   "median": 0,
+   "n": 560,
+   "reason": "measured range is 0 to 90 across 560 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
+   "capped": true
+  },
+  {
+   "id": "kpi_duration",
+   "kind": "kpi",
+   "span": 1,
+   "form": "stat_tile",
+   "question": "How long does one take, from created to valid to?",
+   "fieldLabel": "Mean hours, Created to Valid to",
+   "value": 645283.9,
+   "unit": "h",
+   "median": 643592.1,
+   "n": 530,
+   "reason": "measured over 530 records where both dates are set",
+   "caveats": [],
+   "capped": true
+  },
+  {
+   "id": "kpi_sum_use_count",
+   "kind": "kpi",
+   "span": 1,
+   "form": "stat_tile",
+   "question": "What does use count total?",
+   "fieldLabel": "Total use count",
+   "field": "use_count",
+   "value": 1,
+   "mean": 0.002,
+   "median": 0,
+   "n": 559,
+   "reason": "summed over 559 records where the field is set",
+   "capped": true
+  }
+ ],
  "matrix": {
   "id": "matrix_author",
   "kind": "matrix",
@@ -115,29 +487,16 @@
    {
     "key": "6816f79cc0a8016401c5a33be04be441",
     "label": "Santhan K",
-    "count": 445,
-    "share": 0.947,
-    "spark": [
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     2,
-     474,
-     8
-    ],
-    "delta": 472,
-    "change": 236
+    "count": 534,
+    "share": 0.954,
+    "spark": null,
+    "delta": null,
+    "change": null
    },
    {
     "key": "62d78687c0a8010e00b3d84178adc913",
     "label": "Ron Kettering",
-    "count": 6,
+    "count": 7,
     "share": 0.013,
     "spark": null,
     "delta": null,
@@ -147,7 +506,7 @@
     "key": "a6826bf03710200044e0bfc8bcbe5de6",
     "label": "Boris Catino",
     "count": 6,
-    "share": 0.013,
+    "share": 0.011,
     "spark": null,
     "delta": null,
     "change": null
@@ -156,7 +515,7 @@
     "key": "46d85d4aa9fe198101e36eb956587fe7",
     "label": "Sam Sorokin",
     "count": 5,
-    "share": 0.011,
+    "share": 0.009,
     "spark": null,
     "delta": null,
     "change": null
@@ -165,7 +524,7 @@
     "key": "46d14f04a9fe19810142e40c6b071512",
     "label": "Wayne Webb",
     "count": 5,
-    "share": 0.011,
+    "share": 0.009,
     "spark": null,
     "delta": null,
     "change": null
@@ -189,73 +548,87 @@
     "change": null
    }
   ],
-  "total": 470,
-  "periods": [
-   {
-    "period": "2025-09",
-    "label": "Sep '25",
-    "partial": false
-   },
-   {
-    "period": "2025-10",
-    "label": "Oct '25",
-    "partial": false
-   },
-   {
-    "period": "2025-11",
-    "label": "Nov '25",
-    "partial": false
-   },
-   {
-    "period": "2025-12",
-    "label": "Dec '25",
-    "partial": false
-   },
-   {
-    "period": "2026-01",
-    "label": "Jan '26",
-    "partial": false
-   },
-   {
-    "period": "2026-02",
-    "label": "Feb '26",
-    "partial": false
-   },
-   {
-    "period": "2026-03",
-    "label": "Mar '26",
-    "partial": false
-   },
-   {
-    "period": "2026-04",
-    "label": "Apr '26",
-    "partial": false
-   },
-   {
-    "period": "2026-05",
-    "label": "May '26",
-    "partial": false
-   },
-   {
-    "period": "2026-06",
-    "label": "Jun '26",
-    "partial": false
-   },
-   {
-    "period": "2026-07",
-    "label": "Jul '26",
-    "partial": false
-   },
-   {
-    "period": "2026-08",
-    "label": "Aug '26",
-    "partial": true
-   }
-  ],
+  "total": 560,
+  "periods": [],
   "grain": "month",
   "span": 2,
   "caveats": []
  },
- "declared": [],
- "timingMs": 8871
+ "declared": [
+  {
+   "field": "category",
+   "label": "Category",
+   "isOrdinal": false,
+   "isRef": false,
+   "offer": false,
+   "reason": "Category is empty on 99.1% of these records",
+   "fill": 0.008928571428571428,
+   "distinct": 2,
+   "rows": 50,
+   "declaredParent": "topic",
+   "declaredParentLabel": "Topic"
+  },
+  {
+   "field": "wiki",
+   "label": "Wiki",
+   "isOrdinal": false,
+   "isRef": false,
+   "offer": false,
+   "reason": "every record here has the same wiki",
+   "fill": 1,
+   "distinct": 0,
+   "rows": 50,
+   "declaredParent": "short_description",
+   "declaredParentLabel": "Short description"
+  }
+ ],
+ "scan": {
+  "spentMs": 5325,
+  "allowanceMs": 5000,
+  "scans": 6,
+  "starved": 6,
+  "exhausted": true,
+  "log": [
+   {
+    "via": "proof",
+    "ms": 527,
+    "rows": 50,
+    "budget": 2500
+   },
+   {
+    "via": "reduce",
+    "ms": 3242,
+    "rows": 560,
+    "n": 17,
+    "budget": 3200
+   },
+   {
+    "via": "reduce",
+    "ms": 1221,
+    "rows": 610,
+    "n": 1,
+    "budget": 1200
+   },
+   {
+    "via": "reduce",
+    "ms": 43,
+    "rows": 10,
+    "n": 1,
+    "budget": 10
+   },
+   {
+    "via": "proof",
+    "ms": 17,
+    "rows": 11,
+    "budget": 250
+   },
+   {
+    "via": "proof",
+    "ms": 275,
+    "rows": 20,
+    "budget": 250
+   }
+  ]
+ },
+ "timingMs": 5471
 }

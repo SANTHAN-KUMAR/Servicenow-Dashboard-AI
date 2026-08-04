@@ -469,3 +469,15 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
 @media (prefers-reduced-motion:reduce){
   .cmd-tip, #cmd-wrap .dim{transition:none}
 }
+
+/* The window slicer sits in the segmented control, but its items are links
+   rather than buttons because each one is a different page. */
+#cmd-wrap .seg a{
+  display:inline-flex; align-items:center; padding:3px 9px; font-size:11px;
+  color:var(--ink-2); text-decoration:none; border-radius:6px;
+  font-variant-numeric:tabular-nums}
+#cmd-wrap .seg a[aria-selected="true"]{
+  background:var(--surface); color:var(--ink-1); font-weight:600;
+  box-shadow:0 1px 2px rgba(16,22,32,.10)}
+:root[data-cmd-theme="dark"] #cmd-wrap .seg a[aria-selected="true"]{
+  box-shadow:0 1px 2px rgba(0,0,0,.5)}

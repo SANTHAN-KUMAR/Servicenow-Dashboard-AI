@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:49:22",
+ "generated": "2026-08-04 11:33:45",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -152,6 +152,96 @@
    }
   },
   {
+   "id": "backlog",
+   "kind": "series",
+   "form": "area",
+   "question": "How much is still open at the end of each month?",
+   "reason": "a level rather than a rate: each point counts records opened on created and not yet closed on updated at that moment, so the area under it is meaningful",
+   "field": "sys_created_on",
+   "fieldLabel": "Open backlog",
+   "startField": "sys_created_on",
+   "endField": "sys_updated_on",
+   "grain": "month",
+   "points": [
+    {
+     "period": "2025-09",
+     "label": "Sep '25",
+     "count": 606,
+     "partial": false
+    },
+    {
+     "period": "2025-10",
+     "label": "Oct '25",
+     "count": 607,
+     "partial": false
+    },
+    {
+     "period": "2025-11",
+     "label": "Nov '25",
+     "count": 608,
+     "partial": false
+    },
+    {
+     "period": "2025-12",
+     "label": "Dec '25",
+     "count": 609,
+     "partial": false
+    },
+    {
+     "period": "2026-01",
+     "label": "Jan '26",
+     "count": 609,
+     "partial": false
+    },
+    {
+     "period": "2026-02",
+     "label": "Feb '26",
+     "count": 610,
+     "partial": false
+    },
+    {
+     "period": "2026-03",
+     "label": "Mar '26",
+     "count": 611,
+     "partial": false
+    },
+    {
+     "period": "2026-04",
+     "label": "Apr '26",
+     "count": 611,
+     "partial": false
+    },
+    {
+     "period": "2026-05",
+     "label": "May '26",
+     "count": 611,
+     "partial": false
+    },
+    {
+     "period": "2026-06",
+     "label": "Jun '26",
+     "count": 629,
+     "partial": false
+    },
+    {
+     "period": "2026-07",
+     "label": "Jul '26",
+     "count": 3,
+     "partial": false
+    },
+    {
+     "period": "2026-08",
+     "label": "Aug '26",
+     "count": 0,
+     "partial": true
+    }
+   ],
+   "stillOpen": 0,
+   "span": 2,
+   "caveats": [],
+   "_rank": 1
+  },
+  {
    "id": "cal_sys_created_on",
    "kind": "calendar",
    "form": "calendar_heatmap",
@@ -238,7 +328,8 @@
    "endDay": "2031-08-14",
    "days": 182,
    "span": 2,
-   "caveats": []
+   "caveats": [],
+   "_rank": 8
   },
   {
    "id": "dim_company",
@@ -559,10 +650,10 @@
     "previous": 14,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.083,
-    "paceAdjusted": 24,
-    "delta": 10,
-    "change": 0.714,
+    "elapsedFraction": 0.122,
+    "paceAdjusted": 16,
+    "delta": 2,
+    "change": 0.143,
     "rawDelta": -12,
     "rawChange": -0.857,
     "partial": true,
@@ -572,7 +663,7 @@
    "caveats": [
     {
      "severity": "info",
-     "text": "This month is 8% elapsed, so the comparison is projected to a full month. Actual so far is 2 against 14 last month."
+     "text": "This month is 12% elapsed, so the comparison is projected to a full month. Actual so far is 2 against 14 last month."
     }
    ]
   },
@@ -832,5 +923,46 @@
    "declaredParentLabel": "Company"
   }
  ],
- "timingMs": 874
+ "scan": {
+  "spentMs": 519,
+  "allowanceMs": 5000,
+  "scans": 5,
+  "starved": 0,
+  "exhausted": false,
+  "log": [
+   {
+    "via": "proof",
+    "ms": 131,
+    "rows": 664,
+    "budget": 2500
+   },
+   {
+    "via": "reduce",
+    "ms": 280,
+    "rows": 664,
+    "n": 14,
+    "budget": 3200
+   },
+   {
+    "via": "proof",
+    "ms": 4,
+    "rows": 2,
+    "budget": 2500
+   },
+   {
+    "via": "proof",
+    "ms": 5,
+    "rows": 14,
+    "budget": 2500
+   },
+   {
+    "via": "reduce",
+    "ms": 99,
+    "rows": 664,
+    "n": 3,
+    "budget": 3200
+   }
+  ]
+ },
+ "timingMs": 730
 }

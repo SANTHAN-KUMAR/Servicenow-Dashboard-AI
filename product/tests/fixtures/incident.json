@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:48:39",
+ "generated": "2026-08-04 11:33:03",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -228,77 +228,77 @@
      "key": "2",
      "label": "In Progress",
      "counts": [
-      93,
-      104,
-      85,
-      104,
-      29,
-      176,
-      172,
-      228,
-      272,
-      350,
-      201,
-      270
+      40,
+      43,
+      39,
+      47,
+      15,
+      73,
+      97,
+      96,
+      114,
+      159,
+      88,
+      122
      ],
-     "total": 2084
+     "total": 933
     },
     {
      "key": "1",
      "label": "New",
      "counts": [
-      74,
-      98,
-      59,
-      89,
-      57,
-      41,
-      119,
-      165,
-      146,
-      174,
-      243,
-      177
+      38,
+      50,
+      30,
+      36,
+      30,
+      17,
+      61,
+      75,
+      62,
+      79,
+      106,
+      86
      ],
-     "total": 1442
+     "total": 670
     },
     {
      "key": "3",
      "label": "On Hold",
      "counts": [
-      73,
-      92,
-      5,
+      30,
+      41,
+      2,
+      9,
+      24,
+      24,
+      2,
+      19,
       16,
-      45,
-      49,
-      6,
-      43,
-      34,
-      60,
-      29,
-      55
+      23,
+      9,
+      22
      ],
-     "total": 507
+     "total": 221
     },
     {
      "key": "8",
      "label": "Canceled",
      "counts": [
-      3,
       0,
-      2,
-      17,
-      29,
-      39,
       0,
-      4,
-      9,
-      39,
+      1,
+      8,
+      14,
       19,
-      25
+      0,
+      3,
+      5,
+      14,
+      9,
+      12
      ],
-     "total": 186
+     "total": 85
     },
     {
      "key": "7",
@@ -324,10 +324,105 @@
    "span": 2,
    "caveats": [
     {
+     "severity": "warn",
+     "text": "The permission-checked scan stopped early, so these counts are a lower bound rather than a total."
+    },
+    {
      "severity": "info",
-     "text": "27 records fall outside the window shown."
+     "text": "13 records fall outside the window shown."
     }
-   ]
+   ],
+   "_rank": 0
+  },
+  {
+   "id": "backlog",
+   "kind": "series",
+   "form": "area",
+   "question": "How much is still open at the end of each month?",
+   "reason": "a level rather than a rate: each point counts records opened on created and not yet closed on opened at that moment, so the area under it is meaningful",
+   "field": "sys_created_on",
+   "fieldLabel": "Open backlog",
+   "startField": "sys_created_on",
+   "endField": "opened_at",
+   "grain": "month",
+   "points": [
+    {
+     "period": "2025-09",
+     "label": "Sep '25",
+     "count": 7,
+     "partial": false
+    },
+    {
+     "period": "2025-10",
+     "label": "Oct '25",
+     "count": 7,
+     "partial": false
+    },
+    {
+     "period": "2025-11",
+     "label": "Nov '25",
+     "count": 7,
+     "partial": false
+    },
+    {
+     "period": "2025-12",
+     "label": "Dec '25",
+     "count": 7,
+     "partial": false
+    },
+    {
+     "period": "2026-01",
+     "label": "Jan '26",
+     "count": 7,
+     "partial": false
+    },
+    {
+     "period": "2026-02",
+     "label": "Feb '26",
+     "count": 7,
+     "partial": false
+    },
+    {
+     "period": "2026-03",
+     "label": "Mar '26",
+     "count": 0,
+     "partial": false
+    },
+    {
+     "period": "2026-04",
+     "label": "Apr '26",
+     "count": 0,
+     "partial": false
+    },
+    {
+     "period": "2026-05",
+     "label": "May '26",
+     "count": 0,
+     "partial": false
+    },
+    {
+     "period": "2026-06",
+     "label": "Jun '26",
+     "count": 0,
+     "partial": false
+    },
+    {
+     "period": "2026-07",
+     "label": "Jul '26",
+     "count": 0,
+     "partial": false
+    },
+    {
+     "period": "2026-08",
+     "label": "Aug '26",
+     "count": 0,
+     "partial": true
+    }
+   ],
+   "stillOpen": 0,
+   "span": 2,
+   "caveats": [],
+   "_rank": 1
   },
   {
    "id": "change_incident_state",
@@ -339,15 +434,15 @@
    "fieldLabel": "Incident state",
    "startLabel": "Jun '26",
    "endLabel": "Jul '26",
-   "start": 624,
-   "end": 492,
+   "start": 276,
+   "end": 212,
    "steps": [
     {
      "key": "1",
      "label": "New",
-     "delta": 69,
-     "from": 174,
-     "to": 243
+     "delta": 27,
+     "from": 79,
+     "to": 106
     },
     {
      "key": "7",
@@ -359,145 +454,11836 @@
     {
      "key": "8",
      "label": "Canceled",
-     "delta": -20,
-     "from": 39,
-     "to": 19
+     "delta": -5,
+     "from": 14,
+     "to": 9
     },
     {
      "key": "3",
      "label": "On Hold",
-     "delta": -31,
-     "from": 60,
-     "to": 29
+     "delta": -14,
+     "from": 23,
+     "to": 9
     },
     {
      "key": "2",
      "label": "In Progress",
-     "delta": -149,
-     "from": 350,
-     "to": 201
+     "delta": -71,
+     "from": 159,
+     "to": 88
     }
    ],
    "span": 2,
-   "caveats": []
+   "caveats": [],
+   "_rank": 2
   },
   {
-   "id": "heat_incident_state_category",
-   "kind": "cross",
-   "form": "heatmap",
-   "question": "Where do incident state and category concentrate together?",
-   "reason": "a 5 by 8 grid, small enough that every cell is readable, so brightness carries the count",
-   "rowField": "incident_state",
-   "rowFieldLabel": "Incident state",
-   "colField": "category",
-   "colFieldLabel": "Category",
-   "rowKeys": [
-    "2",
-    "1",
-    "3",
-    "8",
-    "7"
+   "id": "scatter_reassignment_count_child_incidents",
+   "kind": "relationship",
+   "form": "scatter",
+   "question": "Does child incidents move with reassignment count?",
+   "reason": "1903 records plotted, showing effectively no relationship (r = -0.021)",
+   "xField": "reassignment_count",
+   "xFieldLabel": "Reassignment count",
+   "yField": "child_incidents",
+   "yFieldLabel": "Child Incidents",
+   "groupField": "incident_state",
+   "groupFieldLabel": "Incident state",
+   "points": [
+    {
+     "x": 2,
+     "y": 0,
+     "g": "7",
+     "gl": "Closed"
+    },
+    {
+     "x": 0,
+     "y": 1,
+     "g": "7",
+     "gl": "Closed"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "7",
+     "gl": "Closed"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "7",
+     "gl": "Closed"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "7",
+     "gl": "Closed"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 9,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 7,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 9,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 7,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 9,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 9,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 9,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 7,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 7,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "8",
+     "gl": "Canceled"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 6,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 5,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 3,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 0,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 4,
+     "y": 0,
+     "g": "3",
+     "gl": "On Hold"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    },
+    {
+     "x": 2,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "1",
+     "gl": "New"
+    },
+    {
+     "x": 1,
+     "y": 0,
+     "g": "2",
+     "gl": "In Progress"
+    }
    ],
-   "colKeys": [
-    "hardware",
-    "software",
-    "network",
-    "inquiry",
-    "database",
-    "password_reset",
-    "",
-    "Hardware"
+   "corr": -0.021,
+   "span": 1,
+   "caveats": [],
+   "_rank": 4
+  },
+  {
+   "id": "box_reassignment_count_impact",
+   "kind": "spread",
+   "form": "box",
+   "question": "How does reassignment count vary within each impact?",
+   "reason": "quartiles per group, so a difference in spread is visible and not just a difference in average, which is all a bar of means can show",
+   "field": "reassignment_count",
+   "fieldLabel": "Reassignment count",
+   "groupField": "impact",
+   "groupFieldLabel": "Impact",
+   "rows": [
+    {
+     "key": "2",
+     "label": "2 - Medium",
+     "sum": 2339,
+     "avg": 1.361,
+     "min": 0,
+     "max": 6,
+     "n": 1719,
+     "q1": 0,
+     "median": 1,
+     "q3": 2,
+     "lo": 0,
+     "hi": 5,
+     "outliers": [
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6
+     ]
+    },
+    {
+     "key": "1",
+     "label": "1 - High",
+     "sum": 238,
+     "avg": 3.051,
+     "min": 0,
+     "max": 9,
+     "n": 78,
+     "q1": 1,
+     "median": 2,
+     "q3": 5,
+     "lo": 0,
+     "hi": 9,
+     "outliers": []
+    },
+    {
+     "key": "3",
+     "label": "3 - Low",
+     "sum": 48,
+     "avg": 0.343,
+     "min": 0,
+     "max": 2,
+     "n": 140,
+     "q1": 0,
+     "median": 0,
+     "q3": 1,
+     "lo": 0,
+     "hi": 2,
+     "outliers": []
+    }
    ],
-   "rowLabels": [
-    "In Progress",
-    "New",
-    "On Hold",
-    "Canceled",
-    "Closed"
-   ],
-   "colLabels": [
-    "Hardware",
-    "Software",
-    "Network",
-    "Inquiry / Help",
-    "Database",
-    "Password Reset",
-    "(empty)",
-    "Hardware"
-   ],
-   "rowTotals": [
-    2085,
-    1453,
-    513,
-    186,
-    27
-   ],
-   "colTotals": [
-    1150,
-    957,
-    783,
-    655,
-    528,
-    186,
-    4,
-    1
-   ],
-   "grid": [
-    [
-     603,
-     487,
-     392,
-     276,
-     222,
-     102,
-     3,
-     0
-    ],
-    [
-     433,
-     293,
-     259,
-     277,
-     129,
-     62,
-     0,
-     0
-    ],
-    [
-     43,
-     108,
-     109,
-     61,
-     170,
-     21,
-     1,
-     0
-    ],
-    [
-     67,
-     64,
-     22,
-     26,
-     6,
-     1,
-     0,
-     0
-    ],
-    [
-     4,
-     5,
-     1,
-     15,
-     1,
-     0,
-     0,
-     1
-    ]
-   ],
-   "maxCell": 603,
-   "grand": 4264,
    "span": 2,
-   "caveats": []
+   "caveats": [],
+   "_rank": 5
+  },
+  {
+   "id": "trend_by_assignment_group",
+   "kind": "trend_group",
+   "form": "small_multiples",
+   "question": "How has assignment group moved over time?",
+   "reason": "13 categories: one panel each, sharing a scale, because a single plot with this many series is unreadable whichever way it is drawn",
+   "field": "assignment_group",
+   "fieldLabel": "Assignment group",
+   "dateField": "sys_created_on",
+   "grain": "month",
+   "periods": [
+    {
+     "period": "2025-09",
+     "label": "Sep '25",
+     "partial": false
+    },
+    {
+     "period": "2025-10",
+     "label": "Oct '25",
+     "partial": false
+    },
+    {
+     "period": "2025-11",
+     "label": "Nov '25",
+     "partial": false
+    },
+    {
+     "period": "2025-12",
+     "label": "Dec '25",
+     "partial": false
+    },
+    {
+     "period": "2026-01",
+     "label": "Jan '26",
+     "partial": false
+    },
+    {
+     "period": "2026-02",
+     "label": "Feb '26",
+     "partial": false
+    },
+    {
+     "period": "2026-03",
+     "label": "Mar '26",
+     "partial": false
+    },
+    {
+     "period": "2026-04",
+     "label": "Apr '26",
+     "partial": false
+    },
+    {
+     "period": "2026-05",
+     "label": "May '26",
+     "partial": false
+    },
+    {
+     "period": "2026-06",
+     "label": "Jun '26",
+     "partial": false
+    },
+    {
+     "period": "2026-07",
+     "label": "Jul '26",
+     "partial": false
+    },
+    {
+     "period": "2026-08",
+     "label": "Aug '26",
+     "partial": true
+    }
+   ],
+   "series": [
+    {
+     "key": "1be289a1eb32010045e1a5115206fea1",
+     "label": "US Presidents Group 2",
+     "counts": [
+      31,
+      10,
+      10,
+      14,
+      8,
+      27,
+      10,
+      15,
+      21,
+      62,
+      62,
+      31
+     ],
+     "total": 301
+    },
+    {
+     "key": "0c5e2a7ce4001410f877ce457cda6b98",
+     "label": "Business Application Registration Approval Group",
+     "counts": [
+      9,
+      31,
+      27,
+      3,
+      36,
+      14,
+      13,
+      32,
+      48,
+      9,
+      17,
+      44
+     ],
+     "total": 283
+    },
+    {
+     "key": "0a52d3dcd7011200f2d224837e6103f2",
+     "label": "Application Development",
+     "counts": [
+      5,
+      14,
+      22,
+      18,
+      22,
+      19,
+      6,
+      24,
+      40,
+      42,
+      6,
+      37
+     ],
+     "total": 255
+    },
+    {
+     "key": "10e39a5673500010c2e7660c4cf6a7ef",
+     "label": "Nimsoft desk",
+     "counts": [
+      15,
+      8,
+      9,
+      23,
+      2,
+      29,
+      50,
+      34,
+      15,
+      3,
+      27,
+      18
+     ],
+     "total": 233
+    },
+    {
+     "key": "019ad92ec7230010393d265c95c260dd",
+     "label": "Analytics Settings Managers",
+     "counts": [
+      1,
+      1,
+      0,
+      13,
+      9,
+      2,
+      25,
+      12,
+      34,
+      56,
+      59,
+      20
+     ],
+     "total": 232
+    },
+    {
+     "key": "0762d92db72422103a858bbb4e11a928",
+     "label": "MIF Admins",
+     "counts": [
+      29,
+      13,
+      0,
+      10,
+      0,
+      24,
+      4,
+      31,
+      20,
+      38,
+      13,
+      28
+     ],
+     "total": 210
+    },
+    {
+     "key": "12a586cd0bb23200ecfd818393673a30",
+     "label": "Incident Management",
+     "counts": [
+      10,
+      15,
+      3,
+      16,
+      6,
+      0,
+      23,
+      22,
+      10,
+      33,
+      6,
+      59
+     ],
+     "total": 203
+    },
+    {
+     "key": "0c4e7b573b331300ad3cc9bb34efc461",
+     "label": "Problem Analyzers",
+     "counts": [
+      8,
+      42,
+      1,
+      3,
+      0,
+      18,
+      15,
+      23,
+      9,
+      32,
+      22,
+      5
+     ],
+     "total": 178
+    },
+    {
+     "key": "d625dccec0a8016700a222a0f7900d06",
+     "label": "Service Desk",
+     "counts": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      7,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "total": 7
+    }
+   ],
+   "other": {
+    "key": "__other__",
+    "label": "Other (4)",
+    "counts": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     13,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "total": 13,
+    "isOther": true
+   },
+   "span": 2,
+   "caveats": [
+    {
+     "severity": "info",
+     "text": "12 records have no assignment group set and are not drawn, because a series of blanks is not a category."
+    },
+    {
+     "severity": "warn",
+     "text": "The permission-checked scan stopped early, so these counts are a lower bound rather than a total."
+    },
+    {
+     "severity": "info",
+     "text": "13 records fall outside the window shown."
+    }
+   ],
+   "_rank": 8
   },
   {
    "id": "dim_incident_state",
@@ -563,46 +12349,43 @@
    "rows": {
     "series": [
      {
-      "key": "Hardware",
-      "label": "Hardware",
-      "count": 1151
+      "key": "network",
+      "label": "Network",
+      "count": 1208
      },
      {
       "key": "software",
       "label": "Software",
-      "count": 957
+      "count": 1112
      },
      {
-      "key": "network",
-      "label": "Network",
-      "count": 783
+      "key": "Hardware",
+      "label": "Hardware",
+      "count": 868
      },
      {
       "key": "inquiry",
       "label": "Inquiry / Help",
-      "count": 655
+      "count": 579
      },
      {
       "key": "database",
       "label": "Database",
-      "count": 528
+      "count": 493
      },
      {
-      "key": "password_reset",
-      "label": "Password Reset",
-      "count": 186
+      "key": "",
+      "label": "",
+      "count": 4
      }
     ],
-    "other": {
-     "count": 4,
-     "groups": 1
-    }
+    "other": null
    },
    "shape": {
-    "distinct": 6,
+    "distinct": 5,
     "fill": 0.99906191369606,
-    "topShare": 0.27,
-    "concentration": 0.494
+    "topShare": 0.283,
+    "concentration": 0.544
    },
    "ordinal": false,
    "span": 1
@@ -745,11 +12528,78 @@
  ],
  "drill": {
   "atMax": false,
-  "options": []
+  "options": [
+   {
+    "field": "escalation",
+    "label": "Escalation",
+    "isOrdinal": true,
+    "isRef": false,
+    "offer": true,
+    "reason": "4 values, populated on 100%",
+    "fill": 1,
+    "distinct": 4,
+    "rows": 4264
+   },
+   {
+    "field": "active",
+    "label": "Active",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": true,
+    "reason": "2 values, populated on 100%",
+    "fill": 1,
+    "distinct": 2,
+    "rows": 4264
+   },
+   {
+    "field": "category",
+    "label": "Category",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": true,
+    "reason": "5 values, populated on 100%",
+    "fill": 0.99906191369606,
+    "distinct": 5,
+    "rows": 4264
+   },
+   {
+    "field": "approval",
+    "label": "Approval",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "every record here has the same approval",
+    "fill": 0.99812382739212,
+    "distinct": 1,
+    "rows": 4264
+   },
+   {
+    "field": "additional_assignee_list",
+    "label": "Additional assignee list",
+    "isOrdinal": false,
+    "isRef": true,
+    "offer": false,
+    "reason": "Additional assignee list is empty on 100% of these records",
+    "fill": 0,
+    "distinct": 0,
+    "rows": 4264
+   },
+   {
+    "field": "business_stc",
+    "label": "Business resolve time",
+    "isOrdinal": false,
+    "isRef": false,
+    "offer": false,
+    "reason": "Business resolve time is empty on 99.2% of these records",
+    "fill": 0.008208255159474672,
+    "distinct": 33,
+    "rows": 4264
+   }
+  ]
  },
  "notes": [
-  "8 further analysis panels were not built, to keep this page inside its time budget. This table is expensive to permission-check.",
-  "Drill options were not computed, to keep this page inside its time budget."
+  "4 further analysis panels could have been drawn but would have repeated a form already on this page.",
+  "This subject is expensive to permission-check, so the page stopped reading rows after 5.2s. 1 further measurement was not attempted, and the panels shown are built from the rows that were read."
  ],
  "kpis": [
   {
@@ -767,10 +12617,10 @@
     "previous": 492,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.083,
-    "paceAdjusted": 6343,
-    "delta": 5851,
-    "change": 11.892,
+    "elapsedFraction": 0.122,
+    "paceAdjusted": 4330,
+    "delta": 3838,
+    "change": 7.801,
     "rawDelta": 35,
     "rawChange": 0.071,
     "partial": true,
@@ -780,7 +12630,7 @@
    "caveats": [
     {
      "severity": "info",
-     "text": "This month is 8% elapsed, so the comparison is projected to a full month. Actual so far is 527 against 492 last month."
+     "text": "This month is 12% elapsed, so the comparison is projected to a full month. Actual so far is 527 against 492 last month."
     }
    ]
   },
@@ -792,11 +12642,11 @@
    "question": "Where does reassignment count sit against complete?",
    "fieldLabel": "Reassignment count",
    "field": "reassignment_count",
-   "value": 0.013,
+   "value": 1.348,
    "target": 100,
-   "median": 0,
+   "median": 1,
    "n": 4261,
-   "reason": "measured range is 0 to 2 across 4261 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
+   "reason": "measured range is 0 to 9 across 4261 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
    "capped": false
   },
   {
@@ -850,21 +12700,21 @@
     "count": 2085,
     "share": 0.489,
     "spark": [
-     93,
-     104,
-     85,
-     104,
-     29,
-     176,
-     172,
-     228,
-     272,
-     350,
-     201,
-     270
+     40,
+     43,
+     39,
+     47,
+     15,
+     73,
+     97,
+     96,
+     114,
+     159,
+     88,
+     122
     ],
-    "delta": -149,
-    "change": -0.426
+    "delta": -71,
+    "change": -0.447
    },
    {
     "key": "1",
@@ -872,21 +12722,21 @@
     "count": 1453,
     "share": 0.341,
     "spark": [
-     74,
-     98,
-     59,
-     89,
-     57,
-     41,
-     119,
-     165,
-     146,
-     174,
-     243,
-     177
+     38,
+     50,
+     30,
+     36,
+     30,
+     17,
+     61,
+     75,
+     62,
+     79,
+     106,
+     86
     ],
-    "delta": 69,
-    "change": 0.397
+    "delta": 27,
+    "change": 0.342
    },
    {
     "key": "3",
@@ -894,21 +12744,21 @@
     "count": 513,
     "share": 0.12,
     "spark": [
-     73,
-     92,
-     5,
+     30,
+     41,
+     2,
+     9,
+     24,
+     24,
+     2,
+     19,
      16,
-     45,
-     49,
-     6,
-     43,
-     34,
-     60,
-     29,
-     55
+     23,
+     9,
+     22
     ],
-    "delta": -31,
-    "change": -0.517
+    "delta": -14,
+    "change": -0.609
    },
    {
     "key": "8",
@@ -916,21 +12766,21 @@
     "count": 186,
     "share": 0.044,
     "spark": [
-     3,
      0,
-     2,
-     17,
-     29,
-     39,
      0,
-     4,
-     9,
-     39,
+     1,
+     8,
+     14,
      19,
-     25
+     0,
+     3,
+     5,
+     14,
+     9,
+     12
     ],
-    "delta": -20,
-    "change": -0.513
+    "delta": -5,
+    "change": -0.357
    },
    {
     "key": "7",
@@ -1022,6 +12872,122 @@
   "span": 2,
   "caveats": []
  },
- "declared": [],
- "timingMs": 6222
+ "declared": [
+  {
+   "field": "assigned_to",
+   "label": "Assigned to",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": true,
+   "reason": "23 values, populated on 85.2%",
+   "fill": 0.851782363977486,
+   "distinct": 23,
+   "rows": 4264,
+   "declaredParent": "assignment_group",
+   "declaredParentLabel": "Assignment group"
+  },
+  {
+   "field": "caller_id",
+   "label": "Caller",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": false,
+   "reason": "Caller is empty on 98.4% of these records",
+   "fill": 0.01571294559099437,
+   "distinct": 23,
+   "rows": 4264,
+   "declaredParent": "company",
+   "declaredParentLabel": "Company"
+  },
+  {
+   "field": "cmdb_ci",
+   "label": "Configuration item",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": true,
+   "reason": "covers the 36.8% of records that have a configuration item",
+   "fill": 0.3679643527204503,
+   "distinct": 36,
+   "rows": 4264,
+   "partial": true,
+   "declaredParent": "company",
+   "declaredParentLabel": "Company"
+  },
+  {
+   "field": "location",
+   "label": "Location",
+   "isOrdinal": false,
+   "isRef": true,
+   "offer": false,
+   "reason": "Location is empty on 99.1% of these records",
+   "fill": 0.009146341463414634,
+   "distinct": 12,
+   "rows": 4264,
+   "declaredParent": "company",
+   "declaredParentLabel": "Company"
+  },
+  {
+   "field": "subcategory",
+   "label": "Subcategory",
+   "isOrdinal": false,
+   "isRef": false,
+   "offer": true,
+   "reason": "covers the 51% of records that have a subcategory",
+   "fill": 0.5098499061913696,
+   "distinct": 18,
+   "rows": 4264,
+   "partial": true,
+   "declaredParent": "category",
+   "declaredParentLabel": "Category"
+  }
+ ],
+ "scan": {
+  "spentMs": 5169,
+  "allowanceMs": 5000,
+  "scans": 6,
+  "starved": 1,
+  "exhausted": true,
+  "log": [
+   {
+    "via": "proof",
+    "ms": 1081,
+    "rows": 4264,
+    "budget": 2500
+   },
+   {
+    "via": "reduce",
+    "ms": 2493,
+    "rows": 4264,
+    "n": 17,
+    "budget": 3200
+   },
+   {
+    "via": "proof",
+    "ms": 95,
+    "rows": 527,
+    "budget": 1426
+   },
+   {
+    "via": "proof",
+    "ms": 80,
+    "rows": 492,
+    "budget": 1331
+   },
+   {
+    "via": "reduce",
+    "ms": 675,
+    "rows": 4264,
+    "n": 1,
+    "budget": 1200
+   },
+   {
+    "via": "reduce",
+    "ms": 745,
+    "rows": 1940,
+    "n": 9,
+    "budget": 576
+   }
+  ]
+ },
+ "timingMs": 5733
 }

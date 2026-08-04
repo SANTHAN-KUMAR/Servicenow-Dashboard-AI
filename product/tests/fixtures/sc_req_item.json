@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-03 06:49:24",
+ "generated": "2026-08-04 11:33:47",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -68,7 +68,8 @@
    "maxCell": 4,
    "grand": 5,
    "span": 2,
-   "caveats": []
+   "caveats": [],
+   "_rank": 6
   },
   {
    "id": "dim_approval",
@@ -387,5 +388,46 @@
    "declaredParentLabel": "Company"
   }
  ],
- "timingMs": 143
+ "scan": {
+  "spentMs": 43,
+  "allowanceMs": 5000,
+  "scans": 5,
+  "starved": 0,
+  "exhausted": false,
+  "log": [
+   {
+    "via": "proof",
+    "ms": 3,
+    "rows": 5,
+    "budget": 2500
+   },
+   {
+    "via": "reduce",
+    "ms": 23,
+    "rows": 5,
+    "n": 15,
+    "budget": 3200
+   },
+   {
+    "via": "proof",
+    "ms": 2,
+    "rows": 0,
+    "budget": 2500
+   },
+   {
+    "via": "proof",
+    "ms": 2,
+    "rows": 0,
+    "budget": 2500
+   },
+   {
+    "via": "reduce",
+    "ms": 13,
+    "rows": 5,
+    "n": 3,
+    "budget": 3200
+   }
+  ]
+ },
+ "timingMs": 236
 }

@@ -35,7 +35,7 @@ CmdPayload.MAX_PANELS = 4;
  * Five is a page you read; ten is a page you scroll past. The builders are ordered
  * by what they add, so a cap here drops the least useful rather than a random tail,
  * and what was dropped is reported. */
-CmdPayload.MAX_ANALYSIS = 5;
+CmdPayload.MAX_ANALYSIS = 6;
 
 /* How wide the shared page scan guesses.
  *
@@ -66,6 +66,12 @@ CmdPayload.SCAN_MS = 3200;
  * "(none)" tile beside an "Other (176)" block and answers nothing. */
 CmdPayload.MIN_TOP_SHARE = 0.04;
 
+/* Ordinal fields tried when looking for a workflow to draw as a funnel, and for a
+   grouping whose spread differs enough to draw as a box. Each attempt is a
+   memoised profile plus a cheap test, so this is bounded work rather than a scan
+   per try. */
+CmdPayload.FUNNEL_TRIES = 6;
+
 /* Candidate dimensions examined to fill those panels. Higher gives better panels
    and costs more; each rejected candidate still costs its profile. */
 CmdPayload.MAX_CANDIDATES = 14;
@@ -76,8 +82,21 @@ CmdPayload.MAX_CANDIDATES = 14;
 CmdPayload.DATE_CANDIDATES = 5;
 
 /* Buckets of the window that must be occupied for a trend to be drawn at all. A
-   single bar beside nine empty slots reads as an outage, not as a distribution. */
+   single bar beside nine empty slots reads as an outage, not as a distribution.
+ *
+ * Scaled to the window by occupiedFloor(), not applied flat. As a flat five it was
+ * unsatisfiable the moment the window slicer offered three months: a three-bucket
+ * window can never have five occupied buckets, so every short view came back with
+ * no trend, no backlog and no rank comparison, and nothing said why. The bug was
+ * invisible while twelve months was the only window there was. */
 CmdPayload.MIN_OCCUPIED_BUCKETS = 5;
+
+/* The occupancy a window of this length must reach. Three fifths of the buckets,
+   never fewer than two, never more than the flat floor above. */
+CmdPayload.occupiedFloor = function (buckets) {
+    return Math.min(CmdPayload.MIN_OCCUPIED_BUCKETS,
+                    Math.max(2, Math.ceil(buckets * 0.6)));
+};
 
 /* Wall-clock budget for building a whole page.
  *
@@ -309,7 +328,8 @@ CmdPayload.prototype = {
                            opts);
 
         payload.panels = payload.panels.concat(
-            this._analysisGrid(table, query, dateField, lead, opts, tAssembly, payload));
+            this._analysisGrid(table, query, dateField, lead, opts, tAssembly,
+                               payload, used));
 
         payload.panels = payload.panels.concat(dimPanels);
 
@@ -426,9 +446,12 @@ CmdPayload.prototype = {
             added++;
         }
 
-        /* Elapsed time between the two best-spread date columns. */
+        /* Elapsed time, and the open backlog, both over the same pair of dates. */
         var pair = this.analysis._durationPair(table, query, CmdData.GROUP_MS);
-        if (pair) plan.push(sp.duration(pair.start.name, pair.end.name, null));
+        if (pair) {
+            plan.push(sp.duration(pair.start.name, pair.end.name, null));
+            plan.push(sp.stock(pair.start.name, pair.end.name, grain, months));
+        }
 
         this.data.planScan(table, query, plan, CmdPayload.SCAN_MS);
     },
@@ -460,12 +483,16 @@ CmdPayload.prototype = {
             plan.push(sp.series(dateField, lead.primary.name, grain, months));
             /* Three buckets, for the change breakdown's two complete periods. */
             plan.push(sp.series(dateField, lead.primary.name, grain, 3));
+            if (lead.wide) plan.push(sp.series(dateField, lead.wide.name, grain, months));
         }
         if (lead.secondary) {
             plan.push(sp.cross(lead.primary.name, lead.secondary.name));
         }
         for (i = 0; i < measures.length && i < 2; i++) {
             plan.push(sp.measure(measures[i].name, lead.primary.name));
+            if (lead.ordinals.length) {
+                plan.push(sp.measure(measures[i].name, lead.ordinals[0].name));
+            }
         }
         if (measures.length >= 2) {
             plan.push(sp.pair(measures[0].name, measures[1].name, lead.primary.name));
@@ -490,7 +517,8 @@ CmdPayload.prototype = {
      * together.
      */
     _leadDims: function (candidates, dims, used) {
-        var out = { primary: null, secondary: null, ordinal: null, concentrated: null };
+        var out = { primary: null, secondary: null, ordinal: null,
+                    concentrated: null, wide: null, ordinals: [] };
         if (!candidates.length) return out;
 
         var scored = candidates.slice();
@@ -507,8 +535,21 @@ CmdPayload.prototype = {
             if (!d || this._contains(used, d.name)) continue;
             if (!out.primary) { out.primary = d; continue; }
             if (!out.secondary) { out.secondary = d; }
-            if (!out.ordinal && d.isOrdinal) { out.ordinal = d; }
+            /* Every ordinal candidate, not just the first.
+             *
+             * A funnel needs a field whose declared order is a workflow, and most
+             * tables have several ordinal fields of which only one is. On
+             * change_request the first by rank is `priority`, which is a severity
+             * scale and sheds nothing, so the funnel builder tested priority,
+             * correctly refused, and never reached `state` -- which does form a
+             * pipeline and does decline at every stage. The gate was right and the
+             * candidate was wrong. */
+            if (d.isOrdinal) {
+                out.ordinals.push(d);
+                if (!out.ordinal) out.ordinal = d;
+            }
         }
+        if (out.primary && out.primary.isOrdinal) out.ordinals.push(out.primary);
         if (!out.ordinal && out.primary && out.primary.isOrdinal) {
             out.ordinal = out.primary;
         }
@@ -526,6 +567,30 @@ CmdPayload.prototype = {
                 out.concentrated = byName[c.field] || null;
             }
         }
+
+        /* The widest usable dimension, which is what small multiples are for.
+         *
+         * Without this the form was unreachable in practice. A trend by category
+         * was only ever offered on `primary`, and `primary` is chosen for being the
+         * most informative single breakdown -- which strongly favours a field with
+         * a handful of well-populated values, exactly the case that draws as a
+         * multi-line. The dimension with eighteen assignment groups, the one that
+         * genuinely cannot be separated in a single plot, was never asked.
+         *
+         * It is a different question rather than a duplicate: primary answers "how
+         * did the main categories move", this answers "how did every team move",
+         * and the second only makes sense as a grid of small panels sharing a scale. */
+        var widest = 0;
+        for (i = 0; i < scored.length; i++) {
+            var w = scored[i];
+            if (!w.shape || this._contains(used, w.field)) continue;
+            if (out.primary && w.field === out.primary.name) continue;
+            if (w.shape.distinct < CmdAnalysis.FACET_MAX) continue;
+            if (w.shape.distinct > widest) {
+                widest = w.shape.distinct;
+                out.wide = byName[w.field] || null;
+            }
+        }
         return out;
     },
 
@@ -538,91 +603,169 @@ CmdPayload.prototype = {
      * nothing, which is the correct outcome when the data does not support the
      * form and is why the order matters more than the count.
      */
-    _analysisGrid: function (table, query, dateField, lead, opts, t0, payload) {
+    _analysisGrid: function (table, query, dateField, lead, opts, t0, payload, used) {
         var self = this;
         var grain = opts.grain || 'month';
         var months = opts.months || 12;
         var budget = CmdData.GROUP_MS;
         var out = [];
 
+        /* The builder list, ordered by how much passing its gate tells you.
+         *
+         * Not by how generally useful the form is, which is what it was first
+         * ordered by, and which meant the same six kinds of chart opened every
+         * page. The rarer builders sat at positions ten to twelve and were never
+         * reached on any subject rich enough to have earlier panels -- so a change
+         * pipeline that genuinely forms a funnel never showed one.
+         *
+         * The rule now: a panel whose gate is strict is worth more when it passes.
+         * A funnel only draws where a declared sequence really sheds volume at
+         * every stage; a scatter only where two measures really vary together; a
+         * box only where the spread really differs between groups. Those are
+         * findings. A crosstab or a calendar draws almost anywhere there is a date,
+         * so it says correspondingly less by appearing.
+         *
+         * The three questions a leader asks first still lead, because ordering by
+         * rarity alone would bury the trend under a novelty.
+         */
         var builders = [];
 
+        /* ── what a leader asks first ── */
         if (dateField && lead.primary) {
             builders.push({ name: 'trend by ' + lead.primary.label, fn: function () {
                 return self.analysis.trendByGroup(table, query, dateField,
                     lead.primary, grain, months, budget);
             }});
+        }
+        builders.push({ name: 'backlog', fn: function () {
+            return self.analysis.backlog(table, query, grain, months, budget);
+        }});
+        if (dateField && lead.primary) {
             builders.push({ name: 'change breakdown', fn: function () {
                 return self.analysis.changeBreakdown(table, query, dateField,
                     lead.primary, grain, budget);
             }});
         }
 
-        if (lead.primary && lead.secondary) {
-            builders.push({ name: 'crosstab', fn: function () {
-                return self.analysis.crossHeat(table, query, lead.primary,
-                    lead.secondary, budget);
+        /* ── strict gates: rare, and therefore informative when they pass ── */
+        /* Funnel candidates come from the schema, not from the panel candidates.
+         *
+         * "Is this field a good breakdown" and "is this field a workflow" are
+         * different questions, and ranking for the first was silently answering the
+         * second. On change_request the candidate list is capped at fourteen
+         * dimensions interleaved by kind, and `state` -- the only field on the table
+         * that is actually a pipeline -- ranks below escalation, impact and
+         * priority and never made the list. The funnel builder was being handed
+         * three severity scales, correctly refusing all three, and never seeing the
+         * one field that forms a sequence.
+         *
+         * Asking every ordinal field is affordable because the gate is cheap and
+         * strict: it is one memoised profile and a monotonic-decline test, and
+         * almost every field fails it immediately. */
+        var ordinalFields = [], allDims = this.meta.dimensions(table), od;
+        for (od = 0; od < allDims.length; od++) {
+            if (allDims[od].isOrdinal && !this._contains(used, allDims[od].name)) {
+                ordinalFields.push(allDims[od]);
+            }
+        }
+        if (ordinalFields.length) {
+            builders.push({ name: 'funnel', fn: function () {
+                /* First ordinal field whose declared order actually sheds volume.
+                   Most will not, and that is the point of asking each of them. */
+                for (var q = 0; q < ordinalFields.length &&
+                                 q < CmdPayload.FUNNEL_TRIES; q++) {
+                    var f = self.analysis.funnel(table, query, ordinalFields[q]);
+                    if (f) return f;
+                }
+                return null;
             }});
         }
 
-        /* Ranked by what is actually in the column, not by dictionary order. One
-           scan profiles them all; taking meta.measures()[0] was handing the
-           histogram, the box plot and the scatter a column with 35 rows and no
-           variance while the well-populated ones went unexamined. */
         var measures = this.analysis.rankMeasures(table, query, budget);
-        if (measures.length) {
-            builders.push({ name: 'distribution', fn: function () {
-                return self.analysis.distribution(table, query, measures[0], budget);
-            }});
-            if (lead.primary) {
-                builders.push({ name: 'spread by group', fn: function () {
-                    return self.analysis.spreadByGroup(table, query, measures[0],
-                        lead.primary, budget);
-                }});
-            }
-        }
+
         if (measures.length >= 2) {
             builders.push({ name: 'relationship', fn: function () {
                 return self.analysis.relationship(table, query, measures[0],
                     measures[1], lead.primary, budget);
             }});
         }
-
+        if (measures.length && lead.primary) {
+            builders.push({ name: 'spread by group', fn: function () {
+                /* Try the ordinal dimensions before the lead.
+                 *
+                 * A box plot earns its place by showing a difference in SPREAD, and
+                 * spread differences follow severity far more often than they
+                 * follow subject: reassignment counts vary with priority, not with
+                 * whether the ticket is about email or a laptop. Offering only the
+                 * lead dimension meant the panel was measured against the field
+                 * least likely to separate, refused, and the one that would have
+                 * worked was never asked. */
+                var tries = ordinalFields.concat([lead.primary]), q;
+                for (q = 0; q < tries.length; q++) {
+                    var b = self.analysis.spreadByGroup(table, query,
+                        measures[0], tries[q], budget);
+                    if (b) return b;
+                }
+                return null;
+            }});
+        }
+        if (dateField && lead.primary) {
+            builders.push({ name: 'rank shift', fn: function () {
+                return self.analysis.rankShift(table, query, dateField,
+                    lead.primary, grain, months, budget);
+            }});
+        }
         if (lead.concentrated) {
             builders.push({ name: 'pareto', fn: function () {
                 return self.analysis.pareto(table, query, lead.concentrated);
             }});
         }
-        if (lead.ordinal) {
-            builders.push({ name: 'funnel', fn: function () {
-                return self.analysis.funnel(table, query, lead.ordinal);
+        if (dateField && lead.wide) {
+            builders.push({ name: 'small multiples by ' + lead.wide.label, fn: function () {
+                return self.analysis.trendByGroup(table, query, dateField,
+                    lead.wide, grain, months, budget);
+            }});
+        }
+
+        /* ── loose gates: draw almost anywhere, so they fill what is left ── */
+        if (lead.primary && lead.secondary) {
+            builders.push({ name: 'crosstab', fn: function () {
+                return self.analysis.crossHeat(table, query, lead.primary,
+                    lead.secondary, budget);
+            }});
+        }
+        if (measures.length) {
+            builders.push({ name: 'distribution', fn: function () {
+                return self.analysis.distribution(table, query, measures[0], budget);
             }});
         }
         if (dateField) {
             builders.push({ name: 'week cycle', fn: function () {
                 return self.analysis.weekCycle(table, query, dateField, budget);
             }});
-            if (lead.primary) {
-                builders.push({ name: 'rank shift', fn: function () {
-                    return self.analysis.rankShift(table, query, dateField,
-                        lead.primary, grain, months, budget);
-                }});
-            }
             builders.push({ name: 'calendar', fn: function () {
                 return self.analysis.calendar(table, query, dateField, 182, budget);
             }});
         }
 
-        /* The deadline still governs, but it is measured from after the shared scan
-           rather than from the start of the page. The scan is the page's one
-           expensive act and it has already been bounded by its own budget; charging
-           its cost a second time against every builder that reads its results
-           produced pages that did the work and then declined to show it. */
-        var attempted = 0, skipped = 0, i;
+        /* Build everything the budget allows, then choose across the results for a
+         * spread of forms.
+         *
+         * Taking the first N builders that succeed was wrong in the same way that
+         * taking the top N dimensions was wrong, and it produced the same symptom
+         * the client named: a page that looks like every other page. The builder
+         * list is ordered by usefulness, so the first six winners were always the
+         * same six kinds of chart, and the rarer forms -- the funnel, the box plot,
+         * the rank path -- sat at positions ten to twelve and were never reached on
+         * any subject that had earlier panels available.
+         *
+         * Building all of them is affordable now in a way it was not before: after
+         * the shared scan their inputs are memoised, so a builder that gets
+         * discarded costs the arithmetic and not another pass over the table.
+         */
+        var built = [], skipped = 0, i;
         for (i = 0; i < builders.length; i++) {
-            if (out.length >= CmdPayload.MAX_ANALYSIS) { skipped++; continue; }
             if (this._overBudget(t0)) { skipped++; continue; }
-            attempted++;
             var p = null;
             try {
                 p = builders[i].fn();
@@ -633,16 +776,34 @@ CmdPayload.prototype = {
                 payload.notes.push('The ' + builders[i].name + ' panel could not be ' +
                     'built: ' + (e.message || e));
             }
-            if (p) out.push(p);
+            if (p) { p._rank = i; built.push(p); }
         }
 
+        /* One of each form first, in builder order, then fill the remaining slots by
+           usefulness. A second heatmap is worth less than a first funnel. */
+        var seenForm = {}, j;
+        for (j = 0; j < built.length && out.length < CmdPayload.MAX_ANALYSIS; j++) {
+            if (seenForm[built[j].form]) continue;
+            seenForm[built[j].form] = true;
+            out.push(built[j]);
+        }
+        for (j = 0; j < built.length && out.length < CmdPayload.MAX_ANALYSIS; j++) {
+            if (this._contains(out, built[j])) continue;
+            out.push(built[j]);
+        }
+        out.sort(function (a, b) { return a._rank - b._rank; });
+
+        var dropped = built.length - out.length;
+        if (dropped > 0) {
+            payload.notes.push(dropped + ' further analysis panel' +
+                (dropped === 1 ? '' : 's') + ' could have been drawn but would have ' +
+                'repeated a form already on this page.');
+        }
         if (skipped > 0) {
-            payload.notes.push(skipped + ' further analysis panel' +
-                (skipped === 1 ? ' was' : 's were') + ' not built, ' +
-                (out.length >= CmdPayload.MAX_ANALYSIS
-                    ? 'because the page already holds as many as it can read well.'
-                    : 'to keep this page inside its time budget. This table is ' +
-                      'expensive to permission-check.'));
+            payload.notes.push(skipped + ' analysis panel' +
+                (skipped === 1 ? ' was' : 's were') + ' not attempted, to keep this ' +
+                'page inside its time budget. This table is expensive to ' +
+                'permission-check.');
         }
         return out;
     },
@@ -704,7 +865,7 @@ CmdPayload.prototype = {
             if (span > bestSpan) { bestSpan = span; field = dates[i].name; }
             if (bestSpan >= buckets) break;
         }
-        if (bestSpan < CmdPayload.MIN_OCCUPIED_BUCKETS) field = null;
+        if (bestSpan < CmdPayload.occupiedFloor(buckets)) field = null;
 
         this._dateField[ck] = field;
         return field;
@@ -736,7 +897,7 @@ CmdPayload.prototype = {
            ends of the window with a hole in the middle. */
         var occupied = 0;
         for (i = 0; i < pts.length; i++) if (pts[i].count > 0) occupied++;
-        if (occupied < CmdPayload.MIN_OCCUPIED_BUCKETS) return null;
+        if (occupied < CmdPayload.occupiedFloor(pts.length)) return null;
 
         var label = field;
         var fm = this.meta.field(table, field);
