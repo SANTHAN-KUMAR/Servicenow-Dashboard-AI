@@ -80,6 +80,12 @@ CmdData.REDUCE_MS = 3000;
  * page reports fewer panels rather than taking longer. */
 CmdData.SCAN_ALLOWANCE_MS = 5000;
 
+/* The smallest slice a permission-checked count may have, even with the request
+   allowance exhausted. A count of zero would be read as "there are no records"
+   rather than as "this was not measured", and the difference matters more than
+   the quarter second. */
+CmdData.MIN_COUNT_MS = 250;
+
 /* Distinct display values resolved per field before falling back to the stored
  * value.
  *
@@ -228,6 +234,18 @@ CmdData.prototype = {
         /* How many rows a complete proof would have to admit. Known up front and
            cheaply, because the unchecked count is an indexed aggregate. */
         var target = this.fastCount(table, query);
+
+        /* Subject to the request allowance like any other scan.
+         *
+         * This charged the allowance but never checked it, and that was the whole
+         * remaining overshoot: measured on `task`, the two planned reductions
+         * honoured their budgets and stopped at 5s, and then the period-comparison
+         * counts opened two more proofs of 615ms and 1853ms on top, because nothing
+         * told them the budget was gone. A floor is kept so that a late count
+         * returns a small honest lower bound rather than a zero, which would read
+         * as "no records" rather than as "not measured". */
+        var allowance = CmdData.SCAN_ALLOWANCE_MS - this._scanSpent;
+        budgetMs = Math.min(budgetMs, Math.max(CmdData.MIN_COUNT_MS, allowance));
 
         var t0 = new Date().getTime();
         var gr = new GlideRecordSecure(table);
