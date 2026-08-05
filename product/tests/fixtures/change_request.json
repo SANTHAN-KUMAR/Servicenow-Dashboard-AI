@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-05 06:43:36",
+ "generated": "2026-08-05 08:23:42",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -1504,10 +1504,10 @@
     "previous": 150,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.147,
-    "paceAdjusted": 1207,
-    "delta": 1057,
-    "change": 7.047,
+    "elapsedFraction": 0.15,
+    "paceAdjusted": 1189,
+    "delta": 1039,
+    "change": 6.927,
     "rawDelta": 28,
     "rawChange": 0.187,
     "partial": true,
@@ -1891,7 +1891,7 @@
   }
  ],
  "scan": {
-  "spentMs": 4079,
+  "spentMs": 4047,
   "allowanceMs": 5000,
   "scans": 13,
   "starved": 0,
@@ -1899,93 +1899,93 @@
   "log": [
    {
     "via": "proof",
-    "ms": 314,
+    "ms": 355,
     "rows": 1505,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 580,
+    "ms": 840,
     "rows": 1505,
     "n": 14,
     "budget": 3200
    },
    {
     "via": "proof",
-    "ms": 31,
+    "ms": 41,
     "rows": 178,
     "budget": 2500
    },
    {
     "via": "proof",
-    "ms": 27,
+    "ms": 114,
     "rows": 150,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 411,
+    "ms": 437,
     "rows": 1505,
     "n": 6,
     "budget": 3200
    },
    {
     "via": "reduce",
-    "ms": 485,
+    "ms": 222,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 223,
+    "ms": 458,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 243,
+    "ms": 240,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 407,
+    "ms": 252,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 304,
+    "ms": 343,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 245,
+    "ms": 311,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 212,
+    "ms": 229,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 597,
+    "ms": 205,
     "rows": 1505,
     "n": 1,
-    "budget": 1200
+    "budget": 1158
    }
   ]
  },
- "timingMs": 4977
+ "timingMs": 4682
 }

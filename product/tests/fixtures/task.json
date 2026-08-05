@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-05 06:43:48",
+ "generated": "2026-08-05 08:23:52",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -51,124 +51,124 @@
     {
      "period": "2025-09",
      "label": "Sep '25",
-     "count": 19,
+     "count": 20,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2025-10",
      "label": "Oct '25",
-     "count": 14,
+     "count": 15,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2025-11",
      "label": "Nov '25",
-     "count": 34,
+     "count": 38,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2025-12",
      "label": "Dec '25",
-     "count": 47,
+     "count": 50,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-01",
      "label": "Jan '26",
-     "count": 30,
+     "count": 34,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-02",
      "label": "Feb '26",
-     "count": 30,
+     "count": 34,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-03",
      "label": "Mar '26",
-     "count": 36,
+     "count": 42,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-04",
      "label": "Apr '26",
-     "count": 72,
+     "count": 78,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-05",
      "label": "May '26",
-     "count": 51,
+     "count": 64,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-06",
      "label": "Jun '26",
-     "count": 101,
+     "count": 108,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-07",
      "label": "Jul '26",
-     "count": 90,
+     "count": 98,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-08",
      "label": "Aug '26",
-     "count": 83,
+     "count": 89,
      "partial": true,
      "bounded": true
     }
    ],
-   "story": "The last three periods run 129% above the average of the 8 before them.",
+   "story": "The last three periods run 132% above the average of the 8 before them.",
    "span": 2,
    "annotation": {
-    "slope": 7.36,
-    "intercept": 10.82,
-    "sigma": 15.56,
+    "slope": 8.22,
+    "intercept": 11.73,
+    "sigma": 14.82,
     "direction": "rising",
-    "perPeriod": 7.4,
+    "perPeriod": 8.2,
     "anomalies": [],
     "forecast": [
      {
       "index": 12,
-      "value": 99,
-      "lo": 67,
-      "hi": 132
+      "value": 110,
+      "lo": 79,
+      "hi": 141
      },
      {
       "index": 13,
-      "value": 107,
-      "lo": 73,
-      "hi": 140
+      "value": 119,
+      "lo": 86,
+      "hi": 151
      },
      {
       "index": 14,
-      "value": 114,
-      "lo": 79,
-      "hi": 149
+      "value": 127,
+      "lo": 93,
+      "hi": 160
      }
     ],
     "fitFrom": {
      "index": 0,
-     "value": 11
+     "value": 12
     },
     "fitTo": {
      "index": 10,
-     "value": 84
+     "value": 94
     },
     "method": "least squares on 11 complete periods, band at 2 residual standard deviations"
    }
@@ -188,77 +188,77 @@
     {
      "period": "2025-09",
      "label": "Sep '25",
-     "count": 49,
+     "count": 52,
      "partial": false
     },
     {
      "period": "2025-10",
      "label": "Oct '25",
-     "count": 63,
+     "count": 67,
      "partial": false
     },
     {
      "period": "2025-11",
      "label": "Nov '25",
-     "count": 97,
+     "count": 105,
      "partial": false
     },
     {
      "period": "2025-12",
      "label": "Dec '25",
-     "count": 144,
+     "count": 155,
      "partial": false
     },
     {
      "period": "2026-01",
      "label": "Jan '26",
-     "count": 174,
+     "count": 189,
      "partial": false
     },
     {
      "period": "2026-02",
      "label": "Feb '26",
-     "count": 204,
+     "count": 223,
      "partial": false
     },
     {
      "period": "2026-03",
      "label": "Mar '26",
-     "count": 240,
+     "count": 265,
      "partial": false
     },
     {
      "period": "2026-04",
      "label": "Apr '26",
-     "count": 312,
+     "count": 343,
      "partial": false
     },
     {
      "period": "2026-05",
      "label": "May '26",
-     "count": 363,
+     "count": 407,
      "partial": false
     },
     {
      "period": "2026-06",
      "label": "Jun '26",
-     "count": 464,
+     "count": 515,
      "partial": false
     },
     {
      "period": "2026-07",
      "label": "Jul '26",
-     "count": 554,
+     "count": 613,
      "partial": false
     },
     {
      "period": "2026-08",
      "label": "Aug '26",
-     "count": 637,
+     "count": 702,
      "partial": true
     }
    ],
-   "stillOpen": 538,
+   "stillOpen": 591,
    "span": 2,
    "caveats": [
     {
@@ -273,14 +273,14 @@
    "kind": "distribution",
    "form": "histogram",
    "question": "How is reassignment count distributed?",
-   "reason": "11 equal-width bins over 666 values, sized by the interquartile range rather than by a fixed count",
+   "reason": "11 equal-width bins over 736 values, sized by the interquartile range rather than by a fixed count",
    "field": "reassignment_count",
    "fieldLabel": "Reassignment count",
    "bins": [
     {
      "from": 0,
      "to": 0.182,
-     "count": 660
+     "count": 730
     },
     {
      "from": 0.182,
@@ -335,8 +335,8 @@
    ],
    "lo": 0,
    "hi": 2,
-   "n": 666,
-   "mean": 0.011,
+   "n": 736,
+   "mean": 0.01,
    "median": 0,
    "q1": 0,
    "q3": 0,
@@ -357,21 +357,21 @@
      1,
      0,
      0,
-     0,
+     1,
      0,
      1,
-     22,
-     20,
-     9,
-     8,
+     23,
+     24,
      10,
+     8,
+     12,
      6,
      11,
-     7,
+     8,
      9,
-     10,
+     11,
      9,
-     4,
+     5,
      9,
      2,
      0,
@@ -382,23 +382,23 @@
      0,
      0,
      0,
-     6,
+     7,
      0,
      1,
      4,
-     15,
-     30,
-     5,
-     10,
+     16,
+     31,
+     6,
+     11,
      7,
      5,
-     4,
-     1,
-     9,
      5,
+     2,
+     9,
+     6,
      8,
      3,
-     0,
+     1,
      0,
      2,
      1,
@@ -407,21 +407,21 @@
     [
      0,
      2,
-     5,
-     0,
-     0,
-     1,
-     0,
-     15,
      7,
+     0,
+     0,
+     2,
+     0,
+     18,
+     8,
      11,
      8,
      3,
-     10,
+     12,
      4,
      4,
      7,
-     7,
+     8,
      3,
      5,
      2,
@@ -438,23 +438,23 @@
      1,
      1,
      3,
-     20,
+     21,
+     9,
      7,
-     6,
-     26,
-     4,
-     7,
-     4,
-     17,
-     10,
+     29,
+     5,
      8,
+     4,
+     18,
+     13,
+     9,
      2,
      1,
      2,
      0,
      0,
      1,
-     11
+     16
     ],
     [
      0,
@@ -463,20 +463,20 @@
      0,
      2,
      2,
+     8,
+     11,
+     8,
      7,
-     10,
+     9,
+     14,
      8,
      6,
-     8,
-     12,
+     7,
      8,
      5,
      7,
-     7,
-     3,
-     6,
-     3,
      4,
+     6,
      0,
      1,
      9,
@@ -499,14 +499,14 @@
      1,
      3,
      4,
-     1,
+     2,
      0,
      2,
      1,
      0,
      1,
      0,
-     10
+     11
     ],
     [
      0,
@@ -517,10 +517,10 @@
      0,
      0,
      2,
-     14,
+     17,
      1,
      1,
-     1,
+     2,
      0,
      2,
      2,
@@ -535,8 +535,8 @@
      0
     ]
    ],
-   "maxCell": 30,
-   "total": 670,
+   "maxCell": 31,
+   "total": 740,
    "rowLabels": [
     "Mon",
     "Tue",
@@ -560,38 +560,38 @@
    "kind": "calendar",
    "form": "calendar_heatmap",
    "question": "Which days were busy?",
-   "reason": "227 days with records, drawn as a calendar so weekends, gaps and spikes are visible as position rather than as a dip in a line",
+   "reason": "237 days with records, drawn as a calendar so weekends, gaps and spikes are visible as position rather than as a dip in a line",
    "dateField": "sys_created_on",
    "byDay": {
-    "2026-07-28": 8,
-    "2024-08-29": 22,
-    "2025-11-05": 11,
+    "2026-07-28": 9,
+    "2024-08-29": 24,
+    "2025-11-05": 14,
     "2025-12-06": 9,
     "2025-09-25": 1,
     "2025-12-02": 2,
     "2026-06-24": 4,
-    "2026-05-15": 5,
-    "2026-08-04": 9,
+    "2026-05-15": 6,
+    "2026-08-04": 10,
     "2016-08-10": 3,
     "2026-05-22": 2,
     "2026-06-22": 5,
-    "2026-07-14": 3,
-    "2026-02-05": 14,
-    "2026-08-10": 1,
+    "2026-07-14": 4,
+    "2026-02-05": 16,
+    "2026-08-10": 2,
     "2026-06-01": 4,
     "2026-06-10": 16,
     "2026-05-08": 3,
     "2026-01-05": 2,
     "2025-09-02": 4,
-    "2026-07-13": 3,
-    "2026-04-07": 23,
-    "2026-05-07": 12,
-    "2026-04-01": 1,
+    "2026-07-13": 4,
+    "2026-04-07": 24,
+    "2026-05-07": 18,
+    "2026-04-01": 2,
     "2026-03-20": 1,
     "2026-05-05": 2,
     "2026-06-15": 10,
-    "2026-07-25": 10,
-    "2026-06-08": 19,
+    "2026-07-25": 11,
+    "2026-06-08": 22,
     "2026-08-03": 19,
     "2026-03-05": 3,
     "2026-04-19": 2,
@@ -602,12 +602,12 @@
     "2026-01-19": 2,
     "2026-06-04": 2,
     "2025-11-07": 2,
-    "2026-04-28": 2,
+    "2026-04-28": 3,
     "2026-08-05": 7,
     "2026-03-27": 7,
     "2025-10-07": 2,
     "2025-12-01": 4,
-    "2026-07-23": 2,
+    "2026-07-23": 3,
     "2026-06-02": 1,
     "2026-01-14": 2,
     "2025-11-24": 1,
@@ -620,10 +620,10 @@
     "2026-07-31": 7,
     "2026-03-31": 2,
     "2026-08-21": 4,
-    "2026-07-21": 2,
+    "2026-07-21": 3,
     "2026-07-29": 1,
     "2026-06-09": 2,
-    "2026-07-30": 17,
+    "2026-07-30": 19,
     "2025-09-18": 2,
     "2025-10-22": 2,
     "2025-12-22": 4,
@@ -632,56 +632,56 @@
     "2026-07-10": 3,
     "2025-10-08": 3,
     "2026-08-24": 3,
-    "2026-05-21": 4,
+    "2026-05-21": 6,
     "2026-04-14": 4,
-    "2026-03-08": 11,
+    "2026-03-08": 13,
     "2025-09-03": 1,
     "2026-05-03": 1,
-    "2026-08-02": 4,
+    "2026-08-02": 5,
     "2015-07-01": 1,
     "2026-08-06": 2,
     "2026-08-28": 2,
-    "2024-08-30": 3,
+    "2024-08-30": 4,
     "2026-08-14": 2,
     "2026-03-10": 1,
     "2026-06-20": 1,
-    "2026-04-04": 1,
+    "2026-04-04": 2,
     "2025-09-12": 1,
-    "2020-10-09": 14,
-    "2026-08-17": 4,
+    "2020-10-09": 16,
+    "2026-08-17": 5,
     "2026-06-12": 15,
-    "2026-04-03": 1,
+    "2026-04-03": 2,
     "2026-04-21": 1,
     "2025-11-12": 4,
     "2025-12-21": 1,
     "2025-12-29": 1,
     "2026-03-02": 2,
-    "2026-05-14": 4,
+    "2026-05-14": 5,
     "2026-04-23": 1,
     "2015-08-17": 1,
     "2025-10-21": 1,
-    "2025-12-08": 6,
+    "2025-12-08": 7,
     "2025-11-11": 1,
     "2026-04-30": 2,
     "2026-05-28": 2,
     "2026-04-29": 3,
     "2026-05-29": 1,
     "2026-06-06": 2,
-    "2026-08-19": 3,
-    "2026-05-04": 3,
+    "2026-08-19": 4,
+    "2026-05-04": 4,
     "2026-07-24": 3,
     "2026-01-25": 1,
-    "2026-03-04": 2,
+    "2026-03-04": 3,
     "2026-01-17": 1,
     "2026-07-01": 3,
-    "2026-03-06": 1,
+    "2026-03-06": 2,
     "2026-01-24": 2,
     "2025-12-15": 2,
     "2026-02-27": 1,
     "2025-12-16": 4,
     "2026-06-23": 2,
     "2026-01-02": 1,
-    "2026-06-16": 3,
+    "2026-06-16": 4,
     "2026-04-22": 4,
     "2025-10-09": 1,
     "2026-07-16": 2,
@@ -698,9 +698,9 @@
     "2026-08-12": 2,
     "2026-07-03": 3,
     "2025-10-20": 1,
-    "2026-01-06": 12,
+    "2026-01-06": 14,
     "2026-08-23": 1,
-    "2026-12-16": 5,
+    "2026-12-16": 7,
     "2024-08-27": 1,
     "2025-12-24": 3,
     "2026-04-27": 1,
@@ -711,12 +711,12 @@
     "2015-07-06": 1,
     "2020-09-25": 1,
     "2025-12-04": 1,
-    "2026-02-23": 2,
+    "2026-02-23": 3,
     "2026-07-18": 1,
     "2022-04-25": 1,
     "2025-09-23": 2,
     "2025-11-27": 2,
-    "2025-09-15": 1,
+    "2025-09-15": 2,
     "2025-12-03": 1,
     "2026-02-25": 1,
     "2026-07-20": 3,
@@ -726,7 +726,7 @@
     "2026-06-25": 1,
     "2026-05-18": 4,
     "2026-02-20": 2,
-    "2026-04-09": 2,
+    "2026-04-09": 3,
     "2026-04-24": 2,
     "2026-07-08": 3,
     "2026-04-20": 4,
@@ -755,7 +755,7 @@
     "2026-03-19": 1,
     "2025-12-25": 2,
     "2026-05-02": 1,
-    "2026-08-20": 2,
+    "2026-08-20": 3,
     "2026-04-18": 2,
     "2025-12-31": 1,
     "2026-02-21": 1,
@@ -772,7 +772,7 @@
     "2026-08-29": 1,
     "2026-03-11": 1,
     "2026-06-26": 1,
-    "2026-03-12": 1,
+    "2026-03-12": 2,
     "2025-10-14": 1,
     "2025-09-24": 1,
     "2026-02-04": 2,
@@ -783,16 +783,26 @@
     "2026-01-26": 1,
     "2025-10-01": 1,
     "2026-05-12": 1,
-    "2025-12-12": 1,
+    "2025-12-12": 3,
     "2025-09-16": 1,
     "2025-12-10": 1,
     "2026-06-14": 1,
     "2025-12-09": 1,
-    "2025-11-28": 1,
-    "2024-08-21": 1
+    "2025-11-28": 2,
+    "2024-08-21": 1,
+    "2026-06-05": 1,
+    "2026-05-20": 1,
+    "2026-06-07": 1,
+    "2026-06-03": 1,
+    "2026-03-30": 1,
+    "2026-02-13": 1,
+    "2026-05-11": 1,
+    "2026-01-30": 1,
+    "2026-01-23": 1,
+    "2025-10-03": 1
    },
-   "maxCell": 23,
-   "total": 670,
+   "maxCell": 24,
+   "total": 740,
    "endDay": "2027-05-17",
    "days": 182,
    "span": 2,
@@ -818,7 +828,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 670 records you can read. 6,881 more exist that you do not have access to."
+     "text": "Filtered to the 740 records you can read. 6,811 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -831,17 +841,17 @@
      {
       "key": "2",
       "label": "2 - Medium",
-      "count": 386
+      "count": 429
      },
      {
       "key": "3",
       "label": "3 - Low",
-      "count": 271
+      "count": 297
      },
      {
       "key": "1",
       "label": "1 - High",
-      "count": 13
+      "count": 14
      }
     ],
     "other": null
@@ -849,8 +859,8 @@
    "shape": {
     "distinct": 3,
     "fill": 1,
-    "topShare": 0.576,
-    "concentration": 0.576
+    "topShare": 0.58,
+    "concentration": 0.58
    },
    "ordinal": true,
    "span": 1
@@ -869,7 +879,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 670 records you can read. 6,881 more exist that you do not have access to."
+     "text": "Filtered to the 740 records you can read. 6,811 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -882,17 +892,17 @@
      {
       "key": "not requested",
       "label": "Not Yet Requested",
-      "count": 621
+      "count": 685
      },
      {
       "key": "requested",
       "label": "Requested",
-      "count": 29
+      "count": 34
      },
      {
       "key": "approved",
       "label": "Approved",
-      "count": 19
+      "count": 20
      },
      {
       "key": "not_required",
@@ -905,8 +915,8 @@
    "shape": {
     "distinct": 4,
     "fill": 1,
-    "topShare": 0.927,
-    "concentration": 0.927
+    "topShare": 0.926,
+    "concentration": 0.926
    },
    "ordinal": false,
    "span": 1
@@ -925,7 +935,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 670 records you can read. 6,881 more exist that you do not have access to."
+     "text": "Filtered to the 740 records you can read. 6,811 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -938,7 +948,7 @@
      {
       "key": "0",
       "label": "0",
-      "count": 660
+      "count": 730
      },
      {
       "key": "1",
@@ -960,9 +970,9 @@
    },
    "shape": {
     "distinct": 3,
-    "fill": 0.9940298507462687,
-    "topShare": 0.985,
-    "concentration": 0.985
+    "fill": 0.9945945945945946,
+    "topShare": 0.986,
+    "concentration": 0.986
    },
    "ordinal": false,
    "span": 1
@@ -981,7 +991,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 670 records you can read. 6,881 more exist that you do not have access to."
+     "text": "Filtered to the 740 records you can read. 6,811 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -994,12 +1004,12 @@
      {
       "key": "1",
       "label": "true",
-      "count": 528
+      "count": 582
      },
      {
       "key": "0",
       "label": "false",
-      "count": 142
+      "count": 158
      }
     ],
     "other": null
@@ -1007,8 +1017,8 @@
    "shape": {
     "distinct": 2,
     "fill": 1,
-    "topShare": 0.788,
-    "concentration": 0.788
+    "topShare": 0.786,
+    "concentration": 0.786
    },
    "ordinal": false,
    "span": 1
@@ -1045,8 +1055,8 @@
     "isOrdinal": false,
     "isRef": false,
     "offer": true,
-    "reason": "3 values, populated on 99.4%",
-    "fill": 0.9940298507462687,
+    "reason": "3 values, populated on 99.5%",
+    "fill": 0.9945945945945946,
     "distinct": 3,
     "rows": 150
    },
@@ -1056,8 +1066,8 @@
     "isOrdinal": false,
     "isRef": false,
     "offer": true,
-    "reason": "covers the 20.6% of records that have a contact type",
-    "fill": 0.20597014925373133,
+    "reason": "covers the 20.8% of records that have a contact type",
+    "fill": 0.20810810810810812,
     "distinct": 2,
     "rows": 150,
     "partial": true
@@ -1087,7 +1097,7 @@
   ]
  },
  "notes": [
-  "This subject is expensive to permission-check, so the page stopped reading rows after 5.5s. 15 further measurements were not attempted, and the panels shown are built from the rows that were read."
+  "This subject is expensive to permission-check, so the page stopped reading rows after 5.4s. 15 further measurements were not attempted, and the panels shown are built from the rows that were read."
  ],
  "kpis": [
   {
@@ -1101,16 +1111,16 @@
    "form": "stat_tile_delta",
    "reason": "compared with the previous month on sys_created_on",
    "delta": {
-    "current": 110,
+    "current": 150,
     "previous": 150,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.147,
-    "paceAdjusted": 746,
-    "delta": 596,
-    "change": 3.973,
-    "rawDelta": -40,
-    "rawChange": -0.267,
+    "elapsedFraction": 0.15,
+    "paceAdjusted": 1002,
+    "delta": 852,
+    "change": 5.68,
+    "rawDelta": 0,
+    "rawChange": 0,
     "partial": true,
     "mode": "BOUNDED",
     "capped": true
@@ -1118,7 +1128,7 @@
    "caveats": [
     {
      "severity": "info",
-     "text": "This month is 15% elapsed, so the comparison is projected to a full month. Actual so far is 110 against 150 last month."
+     "text": "This month is 15% elapsed, so the comparison is projected to a full month. Actual so far is 150 against 150 last month."
     }
    ]
   },
@@ -1130,11 +1140,11 @@
    "question": "Where does reassignment count sit against complete?",
    "fieldLabel": "Reassignment count",
    "field": "reassignment_count",
-   "value": 0.011,
+   "value": 0.01,
    "target": 100,
    "median": 0,
-   "n": 666,
-   "reason": "measured range is 0 to 2 across 666 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
+   "n": 736,
+   "reason": "measured range is 0 to 2 across 736 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
    "capped": true
   },
   {
@@ -1144,11 +1154,11 @@
    "form": "stat_tile",
    "question": "How long does one take, from created to expected start?",
    "fieldLabel": "Mean hours, Created to Expected start",
-   "value": 64378.3,
+   "value": 64642.8,
    "unit": "h",
    "median": 80480.2,
-   "n": 132,
-   "reason": "measured over 132 records where both dates are set",
+   "n": 149,
+   "reason": "measured over 149 records where both dates are set",
    "caveats": [],
    "capped": true
   }
@@ -1165,8 +1175,8 @@
    {
     "key": "2",
     "label": "2 - Medium",
-    "count": 386,
-    "share": 0.576,
+    "count": 429,
+    "share": 0.58,
     "spark": null,
     "delta": null,
     "change": null
@@ -1174,8 +1184,8 @@
    {
     "key": "3",
     "label": "3 - Low",
-    "count": 271,
-    "share": 0.404,
+    "count": 297,
+    "share": 0.401,
     "spark": null,
     "delta": null,
     "change": null
@@ -1183,14 +1193,14 @@
    {
     "key": "1",
     "label": "1 - High",
-    "count": 13,
+    "count": 14,
     "share": 0.019,
     "spark": null,
     "delta": null,
     "change": null
    }
   ],
-  "total": 670,
+  "total": 740,
   "periods": [],
   "grain": "month",
   "span": 2,
@@ -1203,9 +1213,9 @@
    "isOrdinal": false,
    "isRef": true,
    "offer": true,
-   "reason": "26 values, populated on 70.7%",
-   "fill": 0.7074626865671642,
-   "distinct": 26,
+   "reason": "27 values, populated on 71.4%",
+   "fill": 0.7135135135135136,
+   "distinct": 27,
    "rows": 150,
    "declaredParent": "assignment_group",
    "declaredParentLabel": "Assignment group"
@@ -1238,7 +1248,7 @@
   }
  ],
  "scan": {
-  "spentMs": 5469,
+  "spentMs": 5355,
   "allowanceMs": 5000,
   "scans": 6,
   "starved": 15,
@@ -1246,44 +1256,44 @@
   "log": [
    {
     "via": "proof",
-    "ms": 397,
+    "ms": 272,
     "rows": 150,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 3229,
-    "rows": 670,
+    "ms": 3398,
+    "rows": 740,
     "n": 14,
     "budget": 3200
    },
    {
     "via": "reduce",
     "ms": 1206,
-    "rows": 780,
+    "rows": 810,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 174,
-    "rows": 90,
+    "ms": 138,
+    "rows": 70,
     "n": 1,
-    "budget": 168
+    "budget": 124
    },
    {
     "via": "proof",
-    "ms": 265,
-    "rows": 110,
+    "ms": 109,
+    "rows": 150,
     "budget": 250
    },
    {
     "via": "proof",
-    "ms": 198,
+    "ms": 232,
     "rows": 150,
     "budget": 250
    }
   ]
  },
- "timingMs": 5701
+ "timingMs": 5575
 }

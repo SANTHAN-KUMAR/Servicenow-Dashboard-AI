@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-05 06:43:58",
+ "generated": "2026-08-05 08:24:02",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -9,14 +9,14 @@
   "table": "kb_knowledge",
   "label": "Knowledge",
   "query": "",
-  "rows": 160,
+  "rows": 180,
   "listUrl": "/kb_knowledge_list.do?sysparm_query=&sysparm_view="
  },
  "acl": {
   "mode": "BOUNDED",
   "aggregate": 757,
-  "secure": 160,
-  "delta": 597,
+  "secure": 180,
+  "delta": 577,
   "capped": true
  },
  "path": [],
@@ -36,77 +36,77 @@
     {
      "period": "2025-09",
      "label": "Sep '25",
-     "count": 36,
+     "count": 41,
      "partial": false
     },
     {
      "period": "2025-10",
      "label": "Oct '25",
-     "count": 36,
+     "count": 41,
      "partial": false
     },
     {
      "period": "2025-11",
      "label": "Nov '25",
-     "count": 36,
+     "count": 41,
      "partial": false
     },
     {
      "period": "2025-12",
      "label": "Dec '25",
-     "count": 36,
+     "count": 41,
      "partial": false
     },
     {
      "period": "2026-01",
      "label": "Jan '26",
-     "count": 36,
+     "count": 41,
      "partial": false
     },
     {
      "period": "2026-02",
      "label": "Feb '26",
-     "count": 36,
+     "count": 41,
      "partial": false
     },
     {
      "period": "2026-03",
      "label": "Mar '26",
-     "count": 36,
+     "count": 41,
      "partial": false
     },
     {
      "period": "2026-04",
      "label": "Apr '26",
-     "count": 36,
+     "count": 41,
      "partial": false
     },
     {
      "period": "2026-05",
      "label": "May '26",
-     "count": 36,
+     "count": 41,
      "partial": false
     },
     {
      "period": "2026-06",
      "label": "Jun '26",
-     "count": 39,
+     "count": 44,
      "partial": false
     },
     {
      "period": "2026-07",
      "label": "Jul '26",
-     "count": 541,
+     "count": 630,
      "partial": false
     },
     {
      "period": "2026-08",
      "label": "Aug '26",
-     "count": 550,
+     "count": 640,
      "partial": true
     }
    ],
-   "stillOpen": 28,
+   "stillOpen": 32,
    "span": 2,
    "caveats": [
     {
@@ -128,47 +128,47 @@
     {
      "key": "6816f79cc0a8016401c5a33be04be441",
      "label": "Santhan K",
-     "count": 524,
+     "count": 610,
      "cumulative": 0.953
     },
     {
      "key": "62d78687c0a8010e00b3d84178adc913",
      "label": "Ron Kettering",
-     "count": 7,
-     "cumulative": 0.965
+     "count": 8,
+     "cumulative": 0.966
     },
     {
      "key": "a6826bf03710200044e0bfc8bcbe5de6",
      "label": "Boris Catino",
+     "count": 7,
+     "cumulative": 0.977
+    },
+    {
+     "key": "46d14f04a9fe19810142e40c6b071512",
+     "label": "Wayne Webb",
      "count": 6,
-     "cumulative": 0.976
+     "cumulative": 0.986
     },
     {
      "key": "46d85d4aa9fe198101e36eb956587fe7",
      "label": "Sam Sorokin",
      "count": 5,
-     "cumulative": 0.985
-    },
-    {
-     "key": "46d14f04a9fe19810142e40c6b071512",
-     "label": "Wayne Webb",
-     "count": 5,
-     "cumulative": 0.995
+     "cumulative": 0.994
     },
     {
      "key": "46bbf3daa9fe1981001fd0ccdd391f83",
      "label": "Ted Bozelle",
      "count": 2,
-     "cumulative": 0.998
+     "cumulative": 0.997
     },
     {
      "key": "ee826bf03710200044e0bfc8bcbe5de6",
      "label": "Bernard Laboy",
-     "count": 1,
+     "count": 2,
      "cumulative": 1
     }
    ],
-   "total": 550,
+   "total": 640,
    "eightyAt": 1,
    "span": 2,
    "caveats": [],
@@ -179,19 +179,19 @@
    "kind": "distribution",
    "form": "histogram",
    "question": "How is view count distributed?",
-   "reason": "11 equal-width bins over 550 values, sized by the interquartile range rather than by a fixed count",
+   "reason": "11 equal-width bins over 640 values, sized by the interquartile range rather than by a fixed count",
    "field": "sys_view_count",
    "fieldLabel": "View count",
    "bins": [
     {
      "from": 0,
      "to": 8.182,
-     "count": 536
+     "count": 623
     },
     {
      "from": 8.182,
      "to": 16.364,
-     "count": 4
+     "count": 7
     },
     {
      "from": 16.364,
@@ -241,8 +241,8 @@
    ],
    "lo": 0,
    "hi": 90,
-   "n": 550,
-   "mean": 0.945,
+   "n": 640,
+   "mean": 0.872,
    "median": 0,
    "q1": 0,
    "q3": 0,
@@ -264,7 +264,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 550 records you can read. 207 more exist that you do not have access to."
+     "text": "Filtered to the 640 records you can read. 117 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -277,26 +277,26 @@
      {
       "key": "6816f79cc0a8016401c5a33be04be441",
       "label": "Santhan K",
-      "count": 524
+      "count": 610
      },
      {
       "key": "62d78687c0a8010e00b3d84178adc913",
       "label": "Ron Kettering",
-      "count": 7
+      "count": 8
      },
      {
       "key": "a6826bf03710200044e0bfc8bcbe5de6",
       "label": "Boris Catino",
+      "count": 7
+     },
+     {
+      "key": "46d14f04a9fe19810142e40c6b071512",
+      "label": "Wayne Webb",
       "count": 6
      },
      {
       "key": "46d85d4aa9fe198101e36eb956587fe7",
       "label": "Sam Sorokin",
-      "count": 5
-     },
-     {
-      "key": "46d14f04a9fe19810142e40c6b071512",
-      "label": "Wayne Webb",
       "count": 5
      },
      {
@@ -307,7 +307,7 @@
      {
       "key": "ee826bf03710200044e0bfc8bcbe5de6",
       "label": "Bernard Laboy",
-      "count": 1
+      "count": 2
      }
     ],
     "other": null
@@ -316,7 +316,7 @@
     "distinct": 7,
     "fill": 1,
     "topShare": 0.953,
-    "concentration": 0.965
+    "concentration": 0.966
    },
    "ordinal": false,
    "span": 1
@@ -334,7 +334,7 @@
     "reason": "7 values, populated on 100%",
     "fill": 1,
     "distinct": 7,
-    "rows": 160
+    "rows": 180
    },
    {
     "field": "article_type",
@@ -345,7 +345,7 @@
     "reason": "every record here has the same article type",
     "fill": 1,
     "distinct": 1,
-    "rows": 160
+    "rows": 180
    },
    {
     "field": "active",
@@ -356,7 +356,7 @@
     "reason": "every record here has the same active",
     "fill": 1,
     "distinct": 1,
-    "rows": 160
+    "rows": 180
    },
    {
     "field": "helpful_count",
@@ -365,9 +365,9 @@
     "isRef": false,
     "offer": false,
     "reason": "every record here has the same helpful count",
-    "fill": 0.9290909090909091,
+    "fill": 0.93125,
     "distinct": 1,
-    "rows": 160
+    "rows": 180
    },
    {
     "field": "category",
@@ -376,9 +376,9 @@
     "isRef": false,
     "offer": false,
     "reason": "Category is empty on 99.1% of these records",
-    "fill": 0.00909090909090909,
+    "fill": 0.009375,
     "distinct": 2,
-    "rows": 160
+    "rows": 180
    },
    {
     "field": "base_version",
@@ -387,9 +387,9 @@
     "isRef": true,
     "offer": false,
     "reason": "Base Version is empty on 98.9% of these records",
-    "fill": 0.01090909090909091,
-    "distinct": 6,
-    "rows": 160
+    "fill": 0.0109375,
+    "distinct": 7,
+    "rows": 180
    }
   ]
  },
@@ -403,21 +403,21 @@
    "span": 1,
    "question": "How many records, and is that more or fewer than before?",
    "fieldLabel": "Records",
-   "value": 160,
+   "value": 180,
    "capped": true,
    "form": "stat_tile_delta",
    "reason": "compared with the previous month on sys_created_on",
    "delta": {
     "current": 11,
-    "previous": 70,
+    "previous": 130,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.147,
-    "paceAdjusted": 75,
-    "delta": 5,
-    "change": 0.071,
-    "rawDelta": -59,
-    "rawChange": -0.843,
+    "elapsedFraction": 0.15,
+    "paceAdjusted": 73,
+    "delta": -57,
+    "change": -0.438,
+    "rawDelta": -119,
+    "rawChange": -0.915,
     "partial": true,
     "mode": "VERIFIED",
     "capped": true
@@ -425,7 +425,7 @@
    "caveats": [
     {
      "severity": "info",
-     "text": "This month is 15% elapsed, so the comparison is projected to a full month. Actual so far is 11 against 70 last month."
+     "text": "This month is 15% elapsed, so the comparison is projected to a full month. Actual so far is 11 against 130 last month."
     }
    ]
   },
@@ -437,11 +437,11 @@
    "question": "Where does view count sit against complete?",
    "fieldLabel": "View count",
    "field": "sys_view_count",
-   "value": 0.945,
+   "value": 0.872,
    "target": 100,
    "median": 0,
-   "n": 550,
-   "reason": "measured range is 0 to 90 across 550 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
+   "n": 640,
+   "reason": "measured range is 0 to 90 across 640 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
    "capped": true
   },
   {
@@ -451,11 +451,11 @@
    "form": "stat_tile",
    "question": "How long does one take, from created to valid to?",
    "fieldLabel": "Mean hours, Created to Valid to",
-   "value": 645309.7,
+   "value": 645824.6,
    "unit": "h",
    "median": 643592.1,
-   "n": 522,
-   "reason": "measured over 522 records where both dates are set",
+   "n": 608,
+   "reason": "measured over 608 records where both dates are set",
    "caveats": [],
    "capped": true
   },
@@ -470,8 +470,8 @@
    "value": 1,
    "mean": 0.002,
    "median": 0,
-   "n": 549,
-   "reason": "summed over 549 records where the field is set",
+   "n": 639,
+   "reason": "summed over 639 records where the field is set",
    "capped": true
   }
  ],
@@ -487,7 +487,7 @@
    {
     "key": "6816f79cc0a8016401c5a33be04be441",
     "label": "Santhan K",
-    "count": 524,
+    "count": 610,
     "share": 0.953,
     "spark": null,
     "delta": null,
@@ -496,7 +496,7 @@
    {
     "key": "62d78687c0a8010e00b3d84178adc913",
     "label": "Ron Kettering",
-    "count": 7,
+    "count": 8,
     "share": 0.013,
     "spark": null,
     "delta": null,
@@ -505,8 +505,17 @@
    {
     "key": "a6826bf03710200044e0bfc8bcbe5de6",
     "label": "Boris Catino",
-    "count": 6,
+    "count": 7,
     "share": 0.011,
+    "spark": null,
+    "delta": null,
+    "change": null
+   },
+   {
+    "key": "46d14f04a9fe19810142e40c6b071512",
+    "label": "Wayne Webb",
+    "count": 6,
+    "share": 0.009,
     "spark": null,
     "delta": null,
     "change": null
@@ -515,16 +524,7 @@
     "key": "46d85d4aa9fe198101e36eb956587fe7",
     "label": "Sam Sorokin",
     "count": 5,
-    "share": 0.009,
-    "spark": null,
-    "delta": null,
-    "change": null
-   },
-   {
-    "key": "46d14f04a9fe19810142e40c6b071512",
-    "label": "Wayne Webb",
-    "count": 5,
-    "share": 0.009,
+    "share": 0.008,
     "spark": null,
     "delta": null,
     "change": null
@@ -533,7 +533,7 @@
     "key": "46bbf3daa9fe1981001fd0ccdd391f83",
     "label": "Ted Bozelle",
     "count": 2,
-    "share": 0.004,
+    "share": 0.003,
     "spark": null,
     "delta": null,
     "change": null
@@ -541,14 +541,14 @@
    {
     "key": "ee826bf03710200044e0bfc8bcbe5de6",
     "label": "Bernard Laboy",
-    "count": 1,
-    "share": 0.002,
+    "count": 2,
+    "share": 0.003,
     "spark": null,
     "delta": null,
     "change": null
    }
   ],
-  "total": 550,
+  "total": 640,
   "periods": [],
   "grain": "month",
   "span": 2,
@@ -562,9 +562,9 @@
    "isRef": false,
    "offer": false,
    "reason": "Category is empty on 99.1% of these records",
-   "fill": 0.00909090909090909,
+   "fill": 0.009375,
    "distinct": 2,
-   "rows": 160,
+   "rows": 180,
    "declaredParent": "topic",
    "declaredParentLabel": "Topic"
   },
@@ -577,13 +577,13 @@
    "reason": "every record here has the same wiki",
    "fill": 1,
    "distinct": 0,
-   "rows": 160,
+   "rows": 180,
    "declaredParent": "short_description",
    "declaredParentLabel": "Short description"
   }
  ],
  "scan": {
-  "spentMs": 5294,
+  "spentMs": 5288,
   "allowanceMs": 5000,
   "scans": 5,
   "starved": 7,
@@ -591,37 +591,37 @@
   "log": [
    {
     "via": "proof",
-    "ms": 763,
-    "rows": 160,
+    "ms": 974,
+    "rows": 180,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 3260,
-    "rows": 550,
+    "ms": 3243,
+    "rows": 640,
     "n": 17,
     "budget": 3200
    },
    {
     "via": "reduce",
-    "ms": 979,
-    "rows": 520,
+    "ms": 790,
+    "rows": 420,
     "n": 1,
-    "budget": 977
+    "budget": 783
    },
    {
     "via": "proof",
-    "ms": 21,
+    "ms": 20,
     "rows": 11,
     "budget": 250
    },
    {
     "via": "proof",
-    "ms": 271,
-    "rows": 70,
+    "ms": 261,
+    "rows": 130,
     "budget": 250
    }
   ]
  },
- "timingMs": 5474
+ "timingMs": 5476
 }

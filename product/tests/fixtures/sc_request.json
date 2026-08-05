@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-05 06:43:55",
+ "generated": "2026-08-05 08:23:59",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -149,7 +149,7 @@
   }
  ],
  "scan": {
-  "spentMs": 12,
+  "spentMs": 15,
   "allowanceMs": 5000,
   "scans": 2,
   "starved": 0,
@@ -157,18 +157,18 @@
   "log": [
    {
     "via": "proof",
-    "ms": 3,
+    "ms": 7,
     "rows": 1,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 9,
+    "ms": 8,
     "rows": 1,
     "n": 11,
     "budget": 3200
    }
   ]
  },
- "timingMs": 164
+ "timingMs": 160
 }
