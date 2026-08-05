@@ -152,6 +152,40 @@ def main():
                          "%dp %df %dk" % (len(panels), len(set(forms)),
                                           len(p.get("kpis") or []))))
 
+    # Drilldown, end to end through the URL.
+    #
+    # This is here because the parse is a few lines of Jelly that no offline suite
+    # can reach, and it was silently broken: RP.getParameterValue returns a
+    # java.lang.String, so split('|') bound to Java's split(regex) and split between
+    # every character. "category:software" became sixteen drill levels, one per
+    # letter. Every page still returned 200 with eleven panels, so nothing except an
+    # assertion on the filtered row count would have caught it.
+    if "incident" in tables:
+        print("\ndrilldown")
+        steps = ["", "category:software", "category:software|priority:3"]
+        last = None
+        for depth, pth in enumerate(steps):
+            u = "/cmd_dashboard.do?table=incident&months=12"
+            if pth:
+                u += "&path=" + urllib.parse.quote(pth)
+            p = payload_of(fetch(inst, u)[0])
+            got, crumbs = p["subject"]["rows"], p["path"]
+            print("  depth %d  %-34s %d rows" % (depth, pth or "(top)", got))
+            if len(crumbs) != depth:
+                fail("drill depth %d: %d breadcrumbs, expected %d -- the path did "
+                     "not parse" % (depth, len(crumbs), depth))
+            if last is not None and got >= last:
+                fail("drill depth %d: %d rows, not fewer than the %d above it -- the "
+                     "filter is not reaching the query" % (depth, got, last))
+            # The terminal step hands off to the platform list view, so its query
+            # has to be the real one; the platform enforces row security there.
+            for seg in pth.split("|") if pth else []:
+                f = seg.split(":")[0]
+                if f and f + "=" not in urllib.parse.unquote(p["subject"]["listUrl"]):
+                    fail("drill depth %d: %r missing from the record-list query"
+                         % (depth, f))
+            last = got
+
     # A verdict that changes between identical requests is worse than a slow page.
     print("\nstability, %d identical requests each" % STABILITY_RUNS)
     for t in [x for x in STABILITY_TABLES if x in tables]:

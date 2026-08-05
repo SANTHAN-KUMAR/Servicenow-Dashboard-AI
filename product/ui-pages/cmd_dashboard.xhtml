@@ -25,8 +25,18 @@
 -->
 
 <g:evaluate var="jvar_b64" jelly="true">
-  var table = RP.getParameterValue('table') || 'incident';
-  var rawPath = RP.getParameterValue('path') || '';
+  var table = '' + (RP.getParameterValue('table') || 'incident');
+
+  /* Coerced to a JavaScript string before anything is done to it, and this is
+     load-bearing rather than tidiness. RP.getParameterValue returns a
+     java.lang.String, so `.split('|')` binds to Java's split(regex), not
+     JavaScript's split(literal) -- and in a regex `|` is alternation, so Java
+     splits on the empty pattern and returns one element per character.
+     "category:software" parsed into sixteen drill levels, one per letter, each
+     read as a field name, and the record-list query built from them was
+     "cISEMPTY^aISEMPTY^tISEMPTY". Same trap as the java.lang.String `.length`
+     one in CmdData, in a different disguise. */
+  var rawPath = '' + (RP.getParameterValue('path') || '');
 
   /* The drill path travels in the URL as field:key|field:key, so a drill state is
      shareable and the browser back button reverses it for free. */
