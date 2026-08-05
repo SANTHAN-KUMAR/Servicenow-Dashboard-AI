@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-04 11:33:47",
+ "generated": "2026-08-05 06:44:16",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -389,7 +389,7 @@
   }
  ],
  "scan": {
-  "spentMs": 43,
+  "spentMs": 40,
   "allowanceMs": 5000,
   "scans": 5,
   "starved": 0,
@@ -397,37 +397,37 @@
   "log": [
    {
     "via": "proof",
-    "ms": 3,
+    "ms": 5,
     "rows": 5,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 23,
+    "ms": 21,
     "rows": 5,
     "n": 15,
     "budget": 3200
    },
    {
     "via": "proof",
-    "ms": 2,
+    "ms": 1,
     "rows": 0,
     "budget": 2500
    },
    {
     "via": "proof",
-    "ms": 2,
+    "ms": 1,
     "rows": 0,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 13,
+    "ms": 12,
     "rows": 5,
     "n": 3,
     "budget": 3200
    }
   ]
  },
- "timingMs": 236
+ "timingMs": 260
 }

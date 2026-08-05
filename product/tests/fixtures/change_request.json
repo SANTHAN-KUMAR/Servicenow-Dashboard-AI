@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-04 11:33:12",
+ "generated": "2026-08-05 06:43:36",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -1504,10 +1504,10 @@
     "previous": 150,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.122,
-    "paceAdjusted": 1462,
-    "delta": 1312,
-    "change": 8.747,
+    "elapsedFraction": 0.147,
+    "paceAdjusted": 1207,
+    "delta": 1057,
+    "change": 7.047,
     "rawDelta": 28,
     "rawChange": 0.187,
     "partial": true,
@@ -1517,7 +1517,7 @@
    "caveats": [
     {
      "severity": "info",
-     "text": "This month is 12% elapsed, so the comparison is projected to a full month. Actual so far is 178 against 150 last month."
+     "text": "This month is 15% elapsed, so the comparison is projected to a full month. Actual so far is 178 against 150 last month."
     }
    ]
   },
@@ -1891,7 +1891,7 @@
   }
  ],
  "scan": {
-  "spentMs": 3608,
+  "spentMs": 4079,
   "allowanceMs": 5000,
   "scans": 13,
   "starved": 0,
@@ -1899,93 +1899,93 @@
   "log": [
    {
     "via": "proof",
-    "ms": 334,
+    "ms": 314,
     "rows": 1505,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 650,
+    "ms": 580,
     "rows": 1505,
     "n": 14,
     "budget": 3200
    },
    {
     "via": "proof",
-    "ms": 35,
+    "ms": 31,
     "rows": 178,
     "budget": 2500
    },
    {
     "via": "proof",
-    "ms": 29,
+    "ms": 27,
     "rows": 150,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 350,
+    "ms": 411,
     "rows": 1505,
     "n": 6,
     "budget": 3200
    },
    {
     "via": "reduce",
-    "ms": 252,
+    "ms": 485,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 248,
+    "ms": 223,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 228,
+    "ms": 243,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 380,
+    "ms": 407,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 236,
+    "ms": 304,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 222,
+    "ms": 245,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 214,
+    "ms": 212,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 430,
+    "ms": 597,
     "rows": 1505,
     "n": 1,
     "budget": 1200
    }
   ]
  },
- "timingMs": 4370
+ "timingMs": 4977
 }

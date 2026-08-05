@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-04 11:33:18",
+ "generated": "2026-08-05 06:43:44",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -1319,10 +1319,10 @@
     "previous": 71,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.122,
-    "paceAdjusted": 526,
-    "delta": 455,
-    "change": 6.408,
+    "elapsedFraction": 0.147,
+    "paceAdjusted": 434,
+    "delta": 363,
+    "change": 5.113,
     "rawDelta": -7,
     "rawChange": -0.099,
     "partial": true,
@@ -1332,7 +1332,7 @@
    "caveats": [
     {
      "severity": "info",
-     "text": "This month is 12% elapsed, so the comparison is projected to a full month. Actual so far is 64 against 71 last month."
+     "text": "This month is 15% elapsed, so the comparison is projected to a full month. Actual so far is 64 against 71 last month."
     }
    ]
   },
@@ -1625,7 +1625,7 @@
   }
  ],
  "scan": {
-  "spentMs": 1587,
+  "spentMs": 1481,
   "allowanceMs": 5000,
   "scans": 11,
   "starved": 0,
@@ -1633,13 +1633,13 @@
   "log": [
    {
     "via": "proof",
-    "ms": 121,
+    "ms": 311,
     "rows": 544,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 330,
+    "ms": 269,
     "rows": 544,
     "n": 16,
     "budget": 3200
@@ -1652,60 +1652,60 @@
    },
    {
     "via": "proof",
-    "ms": 14,
+    "ms": 12,
     "rows": 71,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 439,
+    "ms": 148,
     "rows": 544,
     "n": 9,
     "budget": 3200
    },
    {
     "via": "reduce",
-    "ms": 93,
+    "ms": 79,
     "rows": 544,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 101,
+    "ms": 284,
     "rows": 544,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 100,
+    "ms": 87,
     "rows": 544,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 94,
+    "ms": 97,
     "rows": 544,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 82,
+    "ms": 91,
     "rows": 544,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 202,
+    "ms": 92,
     "rows": 544,
     "n": 1,
     "budget": 1200
    }
   ]
  },
- "timingMs": 2012
+ "timingMs": 1719
 }

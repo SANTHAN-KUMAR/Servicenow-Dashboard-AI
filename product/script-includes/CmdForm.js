@@ -313,7 +313,8 @@ CmdForm.prototype = {
         if (c.n > 0 && c.n < T.LOW_N) {
             caveats.push({
                 code: 'low_n', severity: 'info',
-                text: 'Only ' + fmt(c.n) + ' records. Treat the shape as indicative.'
+                text: 'Only ' + fmt(c.n) + (c.n === 1 ? ' record' : ' records') +
+                      '. Treat the shape as indicative.'
             });
         }
 

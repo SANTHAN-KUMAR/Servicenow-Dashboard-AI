@@ -209,5 +209,45 @@ eq('a constant column has no correlation',
    correlationOf([{ x: 1, y: 5 }, { x: 2, y: 5 }, { x: 3, y: 5 }]), null);
 eq('too few points to say', correlationOf([{ x: 1, y: 1 }, { x: 2, y: 2 }]), null);
 
+/* The regression these exist for: the projection used to divide elapsed-since-row-
+   zero by rows-so-far, which charges every row for the query setup that happened
+   once. On incident that read 0.64ms/row against a true 0.21ms/row and abandoned a
+   proof that fits its budget three times over -- and because the overestimate races
+   setup cost, identical page loads disagreed, showing 4,266 records or 50.
+   The numbers below are the ones measured on dev390988. */
+console.log('projectProof');
+var projectProof = sandbox.CmdData.projectProof;
+var MARGIN = sandbox.CmdData.PREDICT_MARGIN;
+
+/* incident, solved from the two points the instance actually logged: a complete
+   proof of 4,266 rows took 909ms, and a scan that bailed at row 50 had spent 32ms.
+   Those give 0.208ms/row with 21.6ms of fixed setup -- so setup is two thirds of
+   the elapsed time at row 50, which is exactly what the old estimate mistook for
+   per-row cost. At row 150 the scan has spent 52.8ms and the last 100 rows took
+   20.8ms. */
+var inc = projectProof(52.8, 20.8, 100, 4266 - 150);
+near('incident is projected at the 909ms it actually took', inc, 909, 15);
+ok('so incident is allowed to finish', inc <= 2500 * MARGIN, 'projected ' + inc);
+
+/* The old arithmetic on the same scan, at the row it actually gave up on. */
+var oldWay = (32 / 50) * 4266;
+ok('the old arithmetic overshot the budget and abandoned it', oldWay > 2500,
+   'old projected ' + Math.round(oldWay) + 'ms for a proof that costs 909ms');
+
+/* kb_knowledge: genuinely expensive at ~5ms/row. It must still be abandoned, and
+   abandoned early -- 150 rows in, not after burning the whole budget. */
+var kb = projectProof(760, 500, 100, 757 - 150);
+ok('a genuinely hopeless proof is still abandoned', kb > 2500 * MARGIN,
+   'projected ' + kb);
+
+/* A table whose true cost sits just over the budget is run rather than flipped on,
+   because a projection from 100 rows cannot resolve a difference that small. */
+var borderline = projectProof(300, 260, 100, 1000);
+ok('borderline stays inside the margin', borderline > 2500 && borderline <= 2500 * MARGIN,
+   'projected ' + borderline);
+
+eq('nothing left to admit costs nothing more', projectProof(400, 100, 100, 0), 400);
+eq('an empty window cannot set a rate', projectProof(400, 0, 0, 900), 400);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

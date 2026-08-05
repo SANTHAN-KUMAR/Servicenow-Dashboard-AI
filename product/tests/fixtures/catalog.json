@@ -22,7 +22,7 @@
      "table": "alm_asset",
      "label": "Asset",
      "area": "Assets and configuration",
-     "rows": 730,
+     "rows": 580,
      "capped": true,
      "atLeast": 120,
      "reports": 12,
@@ -37,7 +37,7 @@
      "table": "cmdb_ci_computer",
      "label": "Computer",
      "area": "Assets and configuration",
-     "rows": 510,
+     "rows": 570,
      "capped": true,
      "atLeast": 120,
      "reports": 12,
@@ -52,7 +52,7 @@
      "table": "cmdb_ci",
      "label": "Configuration Item",
      "area": "Assets and configuration",
-     "rows": 750,
+     "rows": 780,
      "capped": true,
      "atLeast": 120,
      "reports": 9,
@@ -67,8 +67,8 @@
      "table": "samp_sw_reclamation_candidate",
      "label": "Removal Candidate",
      "area": "Assets and configuration",
-     "rows": 520,
-     "capped": true,
+     "rows": 627,
+     "capped": false,
      "atLeast": 120,
      "reports": 8,
      "dimensions": 58,
@@ -82,24 +82,24 @@
       "top": [
        {
         "label": "Low Usage",
-        "count": 450,
-        "share": 0.8653846153846154
+        "count": 542,
+        "share": 0.8644338118022329
        },
        {
         "label": "Overlapping",
-        "count": 48,
-        "share": 0.09230769230769231
+        "count": 55,
+        "share": 0.08771929824561403
        },
        {
         "label": "Unlicensed",
-        "count": 14,
-        "share": 0.026923076923076925
+        "count": 15,
+        "share": 0.023923444976076555
        }
       ],
-      "restShare": 0.015384615384615385,
+      "restShare": 0.023923444976076555,
       "fill": 1,
-      "sampled": true,
-      "scanned": 520
+      "sampled": false,
+      "scanned": 627
      },
      "url": "/cmd_dashboard.do?table=samp_sw_reclamation_candidate"
     },
@@ -107,7 +107,7 @@
      "table": "cmdb_sam_sw_install",
      "label": "Software Installation",
      "area": "Assets and configuration",
-     "rows": 660,
+     "rows": 750,
      "capped": true,
      "atLeast": 120,
      "reports": 4,
@@ -119,7 +119,7 @@
      "url": "/cmd_dashboard.do?table=cmdb_sam_sw_install"
     }
    ],
-   "rows": 3292
+   "rows": 3429
   },
   {
    "area": "IT service management",
@@ -128,7 +128,7 @@
      "table": "change_request",
      "label": "Change Request",
      "area": "IT service management",
-     "rows": 720,
+     "rows": 330,
      "capped": true,
      "atLeast": 120,
      "reports": 73,
@@ -143,24 +143,24 @@
       "top": [
        {
         "label": "Network",
-        "count": 180,
-        "share": 0.25
+        "count": 100,
+        "share": 0.30303030303030304
        },
        {
         "label": "Software",
-        "count": 170,
-        "share": 0.2361111111111111
+        "count": 68,
+        "share": 0.20606060606060606
        },
        {
         "label": "Hardware",
-        "count": 123,
-        "share": 0.17083333333333334
+        "count": 43,
+        "share": 0.1303030303030303
        }
       ],
-      "restShare": 0.34305555555555556,
+      "restShare": 0.3606060606060606,
       "fill": 1,
       "sampled": true,
-      "scanned": 720
+      "scanned": 330
      },
      "url": "/cmd_dashboard.do?table=change_request"
     },
@@ -168,7 +168,7 @@
      "table": "incident",
      "label": "Incident",
      "area": "IT service management",
-     "rows": 530,
+     "rows": 850,
      "capped": true,
      "atLeast": 120,
      "reports": 72,
@@ -182,25 +182,25 @@
       "distinct": 6,
       "top": [
        {
+        "label": "Walk-in",
+        "count": 163,
+        "share": 0.19358669833729217
+       },
+       {
         "label": "Phone",
-        "count": 99,
-        "share": 0.1896551724137931
+        "count": 150,
+        "share": 0.17814726840855108
        },
        {
         "label": "Self-service",
-        "count": 97,
-        "share": 0.18582375478927204
-       },
-       {
-        "label": "Walk-in",
-        "count": 94,
-        "share": 0.18007662835249041
+        "count": 149,
+        "share": 0.17695961995249407
        }
       ],
-      "restShare": 0.4444444444444444,
-      "fill": 0.9849056603773585,
+      "restShare": 0.4513064133016627,
+      "fill": 0.9905882352941177,
       "sampled": true,
-      "scanned": 530
+      "scanned": 850
      },
      "url": "/cmd_dashboard.do?table=incident"
     },
@@ -248,7 +248,7 @@
      "table": "task",
      "label": "Task",
      "area": "IT service management",
-     "rows": 130,
+     "rows": 140,
      "capped": true,
      "atLeast": 120,
      "reports": 8,
@@ -263,29 +263,29 @@
       "top": [
        {
         "label": "Not Yet Requested",
-        "count": 122,
-        "share": 0.9384615384615385
+        "count": 132,
+        "share": 0.9428571428571428
        },
        {
         "label": "Approved",
         "count": 5,
-        "share": 0.038461538461538464
+        "share": 0.03571428571428571
        },
        {
         "label": "Requested",
         "count": 3,
-        "share": 0.023076923076923078
+        "share": 0.02142857142857143
        }
       ],
       "restShare": 0,
       "fill": 1,
       "sampled": true,
-      "scanned": 130
+      "scanned": 140
      },
      "url": "/cmd_dashboard.do?table=task"
     }
    ],
-   "rows": 1924
+   "rows": 1864
   },
   {
    "area": "Other",
@@ -305,17 +305,22 @@
      "preview": {
       "field": "report_type",
       "fieldLabel": "Report type",
-      "distinct": 2,
+      "distinct": 3,
       "top": [
        {
         "label": "(3)",
-        "count": 50,
-        "share": 0.8333333333333334
+        "count": 49,
+        "share": 0.8166666666666667
        },
        {
         "label": "(2)",
         "count": 10,
         "share": 0.16666666666666666
+       },
+       {
+        "label": "(1)",
+        "count": 1,
+        "share": 0.016666666666666666
        }
       ],
       "restShare": 0,
@@ -329,7 +334,7 @@
      "table": "cert_follow_on_task",
      "label": "Follow On Task",
      "area": "Other",
-     "rows": 347,
+     "rows": 363,
      "capped": false,
      "atLeast": 120,
      "reports": 5,
@@ -344,24 +349,24 @@
       "top": [
        {
         "label": "Remedy the discrepancies listed in the Audit Results below",
-        "count": 147,
-        "share": 0.42363112391930835
+        "count": 157,
+        "share": 0.4325068870523416
        },
        {
         "label": "See the audit results below for the discrepancies that must be addressed",
-        "count": 119,
-        "share": 0.34293948126801155
+        "count": 125,
+        "share": 0.3443526170798898
        },
        {
         "label": "Ensure this database has all support staff listed, manager, support group, etc.",
         "count": 38,
-        "share": 0.10951008645533142
+        "share": 0.1046831955922865
        }
       ],
-      "restShare": 0.1239193083573487,
+      "restShare": 0.1184573002754821,
       "fill": 1,
       "sampled": false,
-      "scanned": 347
+      "scanned": 363
      },
      "url": "/cmd_dashboard.do?table=cert_follow_on_task"
     },
@@ -369,7 +374,7 @@
      "table": "sp_log",
      "label": "Service Portal Log Entry",
      "area": "Other",
-     "rows": 140,
+     "rows": 350,
      "capped": true,
      "atLeast": 120,
      "reports": 5,
@@ -384,8 +389,8 @@
      "table": "cert_audit_result",
      "label": "Audit Result",
      "area": "Other",
-     "rows": 330,
-     "capped": true,
+     "rows": 368,
+     "capped": false,
      "atLeast": 120,
      "reports": 4,
      "dimensions": 13,
@@ -399,29 +404,29 @@
       "top": [
        {
         "label": "In Limit",
-        "count": 251,
-        "share": 0.7606060606060606
-       },
-       {
-        "label": "Pending",
-        "count": 41,
-        "share": 0.12424242424242424
+        "count": 269,
+        "share": 0.7309782608695652
        },
        {
         "label": "Exceeded",
-        "count": 38,
-        "share": 0.11515151515151516
+        "count": 50,
+        "share": 0.1358695652173913
+       },
+       {
+        "label": "Pending",
+        "count": 49,
+        "share": 0.1331521739130435
        }
       ],
       "restShare": 0,
       "fill": 1,
-      "sampled": true,
-      "scanned": 330
+      "sampled": false,
+      "scanned": 368
      },
      "url": "/cmd_dashboard.do?table=cert_audit_result"
     }
    ],
-   "rows": 877
+   "rows": 1141
   },
   {
    "area": "Assessments and surveys",
@@ -470,8 +475,8 @@
      "table": "asmt_metric",
      "label": "Assessment Metric",
      "area": "Assessments and surveys",
-     "rows": 128,
-     "capped": false,
+     "rows": 80,
+     "capped": true,
      "atLeast": 120,
      "reports": 4,
      "dimensions": 38,
@@ -485,7 +490,7 @@
      "table": "asmt_category_result",
      "label": "Assessment Category Result",
      "area": "Assessments and surveys",
-     "rows": 30,
+     "rows": 40,
      "capped": true,
      "atLeast": 120,
      "reports": 3,
@@ -500,29 +505,29 @@
       "top": [
        {
         "label": "NPS category",
-        "count": 15,
-        "share": 0.5
+        "count": 22,
+        "share": 0.55
        },
        {
         "label": "Service Desk Satisfaction Survey",
-        "count": 8,
-        "share": 0.26666666666666666
+        "count": 11,
+        "share": 0.275
        },
        {
         "label": "Politeness",
         "count": 3,
-        "share": 0.1
+        "share": 0.075
        }
       ],
-      "restShare": 0.13333333333333333,
+      "restShare": 0.1,
       "fill": 1,
       "sampled": true,
-      "scanned": 30
+      "scanned": 40
      },
      "url": "/cmd_dashboard.do?table=asmt_category_result"
     }
    ],
-   "rows": 298
+   "rows": 260
   },
   {
    "area": "Knowledge",
@@ -576,7 +581,7 @@
    "table": "change_request",
    "label": "Change Request",
    "area": "IT service management",
-   "rows": 720,
+   "rows": 330,
    "capped": true,
    "atLeast": 120,
    "reports": 73,
@@ -591,24 +596,24 @@
     "top": [
      {
       "label": "Network",
-      "count": 180,
-      "share": 0.25
+      "count": 100,
+      "share": 0.30303030303030304
      },
      {
       "label": "Software",
-      "count": 170,
-      "share": 0.2361111111111111
+      "count": 68,
+      "share": 0.20606060606060606
      },
      {
       "label": "Hardware",
-      "count": 123,
-      "share": 0.17083333333333334
+      "count": 43,
+      "share": 0.1303030303030303
      }
     ],
-    "restShare": 0.34305555555555556,
+    "restShare": 0.3606060606060606,
     "fill": 1,
     "sampled": true,
-    "scanned": 720
+    "scanned": 330
    },
    "url": "/cmd_dashboard.do?table=change_request"
   },
@@ -616,7 +621,7 @@
    "table": "incident",
    "label": "Incident",
    "area": "IT service management",
-   "rows": 530,
+   "rows": 850,
    "capped": true,
    "atLeast": 120,
    "reports": 72,
@@ -630,25 +635,25 @@
     "distinct": 6,
     "top": [
      {
+      "label": "Walk-in",
+      "count": 163,
+      "share": 0.19358669833729217
+     },
+     {
       "label": "Phone",
-      "count": 99,
-      "share": 0.1896551724137931
+      "count": 150,
+      "share": 0.17814726840855108
      },
      {
       "label": "Self-service",
-      "count": 97,
-      "share": 0.18582375478927204
-     },
-     {
-      "label": "Walk-in",
-      "count": 94,
-      "share": 0.18007662835249041
+      "count": 149,
+      "share": 0.17695961995249407
      }
     ],
-    "restShare": 0.4444444444444444,
-    "fill": 0.9849056603773585,
+    "restShare": 0.4513064133016627,
+    "fill": 0.9905882352941177,
     "sampled": true,
-    "scanned": 530
+    "scanned": 850
    },
    "url": "/cmd_dashboard.do?table=incident"
   },
@@ -751,7 +756,7 @@
    "table": "alm_asset",
    "label": "Asset",
    "area": "Assets and configuration",
-   "rows": 730,
+   "rows": 580,
    "capped": true,
    "atLeast": 120,
    "reports": 12,
@@ -766,7 +771,7 @@
    "table": "cmdb_ci_computer",
    "label": "Computer",
    "area": "Assets and configuration",
-   "rows": 510,
+   "rows": 570,
    "capped": true,
    "atLeast": 120,
    "reports": 12,
@@ -781,7 +786,7 @@
    "table": "cmdb_ci",
    "label": "Configuration Item",
    "area": "Assets and configuration",
-   "rows": 750,
+   "rows": 780,
    "capped": true,
    "atLeast": 120,
    "reports": 9,
@@ -796,8 +801,8 @@
    "table": "samp_sw_reclamation_candidate",
    "label": "Removal Candidate",
    "area": "Assets and configuration",
-   "rows": 520,
-   "capped": true,
+   "rows": 627,
+   "capped": false,
    "atLeast": 120,
    "reports": 8,
    "dimensions": 58,
@@ -811,24 +816,24 @@
     "top": [
      {
       "label": "Low Usage",
-      "count": 450,
-      "share": 0.8653846153846154
+      "count": 542,
+      "share": 0.8644338118022329
      },
      {
       "label": "Overlapping",
-      "count": 48,
-      "share": 0.09230769230769231
+      "count": 55,
+      "share": 0.08771929824561403
      },
      {
       "label": "Unlicensed",
-      "count": 14,
-      "share": 0.026923076923076925
+      "count": 15,
+      "share": 0.023923444976076555
      }
     ],
-    "restShare": 0.015384615384615385,
+    "restShare": 0.023923444976076555,
     "fill": 1,
-    "sampled": true,
-    "scanned": 520
+    "sampled": false,
+    "scanned": 627
    },
    "url": "/cmd_dashboard.do?table=samp_sw_reclamation_candidate"
   },
@@ -876,7 +881,7 @@
    "table": "task",
    "label": "Task",
    "area": "IT service management",
-   "rows": 130,
+   "rows": 140,
    "capped": true,
    "atLeast": 120,
    "reports": 8,
@@ -891,24 +896,24 @@
     "top": [
      {
       "label": "Not Yet Requested",
-      "count": 122,
-      "share": 0.9384615384615385
+      "count": 132,
+      "share": 0.9428571428571428
      },
      {
       "label": "Approved",
       "count": 5,
-      "share": 0.038461538461538464
+      "share": 0.03571428571428571
      },
      {
       "label": "Requested",
       "count": 3,
-      "share": 0.023076923076923078
+      "share": 0.02142857142857143
      }
     ],
     "restShare": 0,
     "fill": 1,
     "sampled": true,
-    "scanned": 130
+    "scanned": 140
    },
    "url": "/cmd_dashboard.do?table=task"
   },
@@ -927,17 +932,22 @@
    "preview": {
     "field": "report_type",
     "fieldLabel": "Report type",
-    "distinct": 2,
+    "distinct": 3,
     "top": [
      {
       "label": "(3)",
-      "count": 50,
-      "share": 0.8333333333333334
+      "count": 49,
+      "share": 0.8166666666666667
      },
      {
       "label": "(2)",
       "count": 10,
       "share": 0.16666666666666666
+     },
+     {
+      "label": "(1)",
+      "count": 1,
+      "share": 0.016666666666666666
      }
     ],
     "restShare": 0,
@@ -951,7 +961,7 @@
    "table": "cert_follow_on_task",
    "label": "Follow On Task",
    "area": "Other",
-   "rows": 347,
+   "rows": 363,
    "capped": false,
    "atLeast": 120,
    "reports": 5,
@@ -966,24 +976,24 @@
     "top": [
      {
       "label": "Remedy the discrepancies listed in the Audit Results below",
-      "count": 147,
-      "share": 0.42363112391930835
+      "count": 157,
+      "share": 0.4325068870523416
      },
      {
       "label": "See the audit results below for the discrepancies that must be addressed",
-      "count": 119,
-      "share": 0.34293948126801155
+      "count": 125,
+      "share": 0.3443526170798898
      },
      {
       "label": "Ensure this database has all support staff listed, manager, support group, etc.",
       "count": 38,
-      "share": 0.10951008645533142
+      "share": 0.1046831955922865
      }
     ],
-    "restShare": 0.1239193083573487,
+    "restShare": 0.1184573002754821,
     "fill": 1,
     "sampled": false,
-    "scanned": 347
+    "scanned": 363
    },
    "url": "/cmd_dashboard.do?table=cert_follow_on_task"
   },
@@ -991,7 +1001,7 @@
    "table": "sp_log",
    "label": "Service Portal Log Entry",
    "area": "Other",
-   "rows": 140,
+   "rows": 350,
    "capped": true,
    "atLeast": 120,
    "reports": 5,
@@ -1006,7 +1016,7 @@
    "table": "cmdb_sam_sw_install",
    "label": "Software Installation",
    "area": "Assets and configuration",
-   "rows": 660,
+   "rows": 750,
    "capped": true,
    "atLeast": 120,
    "reports": 4,
@@ -1021,8 +1031,8 @@
    "table": "cert_audit_result",
    "label": "Audit Result",
    "area": "Other",
-   "rows": 330,
-   "capped": true,
+   "rows": 368,
+   "capped": false,
    "atLeast": 120,
    "reports": 4,
    "dimensions": 13,
@@ -1036,24 +1046,24 @@
     "top": [
      {
       "label": "In Limit",
-      "count": 251,
-      "share": 0.7606060606060606
-     },
-     {
-      "label": "Pending",
-      "count": 41,
-      "share": 0.12424242424242424
+      "count": 269,
+      "share": 0.7309782608695652
      },
      {
       "label": "Exceeded",
-      "count": 38,
-      "share": 0.11515151515151516
+      "count": 50,
+      "share": 0.1358695652173913
+     },
+     {
+      "label": "Pending",
+      "count": 49,
+      "share": 0.1331521739130435
      }
     ],
     "restShare": 0,
     "fill": 1,
-    "sampled": true,
-    "scanned": 330
+    "sampled": false,
+    "scanned": 368
    },
    "url": "/cmd_dashboard.do?table=cert_audit_result"
   },
@@ -1061,8 +1071,8 @@
    "table": "asmt_metric",
    "label": "Assessment Metric",
    "area": "Assessments and surveys",
-   "rows": 128,
-   "capped": false,
+   "rows": 80,
+   "capped": true,
    "atLeast": 120,
    "reports": 4,
    "dimensions": 38,
@@ -1076,7 +1086,7 @@
    "table": "asmt_category_result",
    "label": "Assessment Category Result",
    "area": "Assessments and surveys",
-   "rows": 30,
+   "rows": 40,
    "capped": true,
    "atLeast": 120,
    "reports": 3,
@@ -1091,30 +1101,30 @@
     "top": [
      {
       "label": "NPS category",
-      "count": 15,
-      "share": 0.5
+      "count": 22,
+      "share": 0.55
      },
      {
       "label": "Service Desk Satisfaction Survey",
-      "count": 8,
-      "share": 0.26666666666666666
+      "count": 11,
+      "share": 0.275
      },
      {
       "label": "Politeness",
       "count": 3,
-      "share": 0.1
+      "share": 0.075
      }
     ],
-    "restShare": 0.13333333333333333,
+    "restShare": 0.1,
     "fill": 1,
     "sampled": true,
-    "scanned": 30
+    "scanned": 40
    },
    "url": "/cmd_dashboard.do?table=asmt_category_result"
   }
  ],
  "stats": {
-  "ms": 9160,
+  "ms": 8456,
   "user": "Santhan K",
   "userName": "admin",
   "offered": 18,

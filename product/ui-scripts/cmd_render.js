@@ -87,6 +87,14 @@
     return (neg ? '-' : '') + out;
   }
 
+  /* "1 records" appeared in the page subheader, in every chart tooltip, and in the
+     reason text on every rejected drill level, because the count and the noun were
+     concatenated at twenty-one separate sites. Small, but it is the kind of thing a
+     client reads as carelessness in everything else on the page. */
+  function recs(n) {
+    return fmt(n) + (Math.round(Math.abs(n)) === 1 ? ' record' : ' records');
+  }
+
   function compact(n) {
     var a = Math.abs(n);
     if (a >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'b';
@@ -253,7 +261,7 @@
       var mk = svgEl('circle', { cx: x(m), cy: y(pts[m].count), r: 3.4,
         fill: v('--surface'), stroke: v('--c1'), 'stroke-width': 2,
         opacity: pts[m].partial ? 0.6 : 1 });
-      tip(mk, [pts[m].label, fmt(pts[m].count) + ' records',
+      tip(mk, [pts[m].label, recs(pts[m].count),
                pts[m].partial ? 'this period is still open' : 'complete period']);
       s.appendChild(mk);
     }
@@ -317,7 +325,7 @@
         x: padL, y: yy, width: w, height: barH, rx: 4,
         fill: rows[i].isOther ? v(OTHER) : v('--c1')
       });
-      tip(rb, [label(rows[i]), fmt(rows[i].count) + ' records',
+      tip(rb, [label(rows[i]), recs(rows[i].count),
                pct(rows[i].count / (total || 1)) + ' of the total']);
       if (!rows[i].isOther) drillable(rb, panel.field, rows[i].key);
       s.appendChild(rb);
@@ -350,7 +358,7 @@
       var bh = Math.max(2, (rows[i].count / max) * ih);
       var cb = svgEl('rect', { x: cx - bw / 2, y: padT + ih - bh, width: bw,
         height: bh, rx: 4, fill: rows[i].isOther ? v(OTHER) : v('--c1') });
-      tip(cb, [label(rows[i]), fmt(rows[i].count) + ' records',
+      tip(cb, [label(rows[i]), recs(rows[i].count),
                pct(rows[i].count / (colTotal || 1)) + ' of the total']);
       if (!rows[i].isOther) drillable(cb, panel.field, rows[i].key);
       s.appendChild(cb);
@@ -386,7 +394,7 @@
                  : catColour(i);
       var sg = svgEl('rect', { x: x, y: barY, width: seg, height: barH,
         rx: i === 0 || i === rows.length - 1 ? 4 : 0, fill: colour });
-      tip(sg, [label(rows[i]), fmt(rows[i].count) + ' records',
+      tip(sg, [label(rows[i]), recs(rows[i].count),
                pct(rows[i].count / total) + ' of the total']);
       if (!rows[i].isOther) drillable(sg, panel.field, rows[i].key);
       s.appendChild(sg);
@@ -441,7 +449,7 @@
         d: arc(cx, cy, r, r - thick, a0, Math.max(a0, a1 - gapA)),
         fill: rows[i].isOther ? v(OTHER) : catColour(i)
       });
-      tip(sl, [label(rows[i]), fmt(rows[i].count) + ' records',
+      tip(sl, [label(rows[i]), recs(rows[i].count),
                pct(rows[i].count / total) + ' of ' + fmt(total)]);
       if (!rows[i].isOther) drillable(sl, panel.field, rows[i].key);
       s.appendChild(sl);
@@ -503,7 +511,7 @@
         rx: 3,
         fill: c.item.row.isOther ? v(OTHER) : v(SEQ[step])
       });
-      tip(tm, [label(c.item.row), fmt(c.item.value) + ' records',
+      tip(tm, [label(c.item.row), recs(c.item.value),
                pct(c.item.value / total) + ' of the total']);
       if (!c.item.row.isOther) drillable(tm, panel.field, c.item.row.key);
       s.appendChild(tm);
@@ -602,7 +610,7 @@
       var hb = svgEl('rect', { x: padL + slot * k + 0.5, y: padT + ih - bh,
         width: Math.max(1, slot - 1), height: bh, rx: 2, fill: v('--c1') });
       tip(hb, [num(lo + k * width) + ' to ' + num(lo + (k + 1) * width),
-               fmt(buckets[k]) + ' records']);
+               recs(buckets[k])]);
       s.appendChild(hb);
     }
     s.appendChild(text(padL, h - 10, compact(lo), 'tk', 'start'));
@@ -839,7 +847,7 @@
           opacity: periods[j].partial ? 0.6 : 1
         });
         tip(mk, [series[i].label || '(not set)', periods[j].label,
-                 fmt(series[i].counts[j] || 0) + ' records' +
+                 recs(series[i].counts[j] || 0) +
                  (periods[j].partial ? '  (period still open)' : '')]);
         drillable(mk, panel.field, series[i].key);
         p.s.appendChild(mk);
@@ -921,7 +929,7 @@
         ? (series[i].counts[n - 1] || 0) / totals[n - 1] : 0;
       tip(band, [series[i].label || '(not set)',
                  'latest share ' + pct(lastShare),
-                 fmt(series[i].total) + ' records across the window']);
+                 recs(series[i].total) + ' across the window']);
       drillable(band, panel.field, series[i].key);
       p.s.appendChild(band);
     }
@@ -990,7 +998,7 @@
       var hit = svgEl('rect', { x: cx, y: cy, width: cw, height: chH,
         fill: 'transparent' });
       tip(hit, [series[i].label || '(not set)',
-                fmt(series[i].total) + ' records',
+                recs(series[i].total),
                 'peak ' + fmt(Math.max.apply(null, series[i].counts)) +
                 ' in one ' + (panel.grain || 'period')]);
       drillable(hit, panel.field, series[i].key);
@@ -1143,7 +1151,7 @@
        diverging pair, which is the one place in this product two hues encode
        direction rather than identity. */
     bar(0, base, panel.start, v(OTHER), fmt(panel.start),
-        [panel.startLabel, fmt(panel.start) + ' records'], null);
+        [panel.startLabel, recs(panel.start)], null);
     p.s.appendChild(valueLabel(p.x0 + slot * 0 + slot / 2, p.h - 24,
       truncate(panel.startLabel, 10), 'tk'));
 
@@ -1155,7 +1163,7 @@
         st.isOther ? v(OTHER) : (st.delta >= 0 ? v('--up') : v('--down')),
         (st.delta > 0 ? '+' : '') + fmt(st.delta),
         [st.label || '(not set)',
-         (st.delta > 0 ? 'added ' : 'removed ') + fmt(Math.abs(st.delta)) + ' records',
+         (st.delta > 0 ? 'added ' : 'removed ') + recs(Math.abs(st.delta)),
          st.isOther ? 'folded from the smaller movers'
                     : fmt(st.from) + ' then ' + fmt(st.to)],
         st.isOther ? null : st.key);
@@ -1168,7 +1176,7 @@
     }
 
     bar(n - 1, base, panel.end, v(OTHER), fmt(panel.end),
-        [panel.endLabel, fmt(panel.end) + ' records'], null);
+        [panel.endLabel, recs(panel.end)], null);
     p.s.appendChild(valueLabel(p.x0 + slot * (n - 1) + slot / 2, p.h - 24,
       truncate(panel.endLabel, 10), 'tk'));
 
@@ -1231,11 +1239,11 @@
         });
         tip(cell, isCycle
           ? [rowLabels[r] + ' at ' + colLabels[c] + ':00 UTC',
-             fmt(val) + ' records',
+             recs(val),
              pct(panel.total ? val / panel.total : 0) + ' of the week']
           : [panel.rowFieldLabel + ': ' + rowLabels[r],
              panel.colFieldLabel + ': ' + colLabels[c],
-             fmt(val) + ' records',
+             recs(val),
              pct(panel.grand ? val / panel.grand : 0) + ' of the total']);
         s.appendChild(cell);
         /* A number in the cell only where the cell is big enough and the grid
@@ -1302,7 +1310,7 @@
           width: cell, height: cell, rx: 2.5,
           fill: val === 0 ? v('--q0') : seqStep(t)
         });
-        tip(rect, [iso, fmt(val) + (val === 1 ? ' record' : ' records')]);
+        tip(rect, [iso, recs(val)]);
         s.appendChild(rect);
 
         if (dd === 0) {
@@ -1386,7 +1394,7 @@
       var rect = svgEl('rect', { x: p.x0 + slot * i + 0.5, y: p.y1 - bh,
         width: Math.max(1, slot - 1), height: bh, rx: 2, fill: v('--c1') });
       tip(rect, [num(bins[i].from) + ' to ' + num(bins[i].to),
-                 fmt(bins[i].count) + ' records',
+                 recs(bins[i].count),
                  pct(panel.n ? bins[i].count / panel.n : 0) + ' of the total']);
       p.s.appendChild(rect);
     }
@@ -1475,7 +1483,7 @@
                 'median ' + num(row.median),
                 'middle half ' + num(row.q1) + ' to ' + num(row.q3),
                 'range ' + num(row.lo) + ' to ' + num(row.hi),
-                fmt(row.n) + ' records' +
+                recs(row.n) +
                 (row.outliers.length ? ', ' + row.outliers.length + ' outliers' : '')]);
       drillable(box, panel.groupField, row.key);
       p.s.appendChild(box);
@@ -1567,7 +1575,7 @@
       }
       legendRow(p, items, p.h - 8);
     } else {
-      p.s.appendChild(text(p.x0, p.h - 8, fmt(pts.length) + ' records' +
+      p.s.appendChild(text(p.x0, p.h - 8, recs(pts.length) +
         (panel.corr === null ? '' : '  ·  r = ' + panel.corr), 'tk', 'start'));
     }
     return p.s;
@@ -1608,7 +1616,7 @@
       var rect = svgEl('rect', { x: cx - bw / 2, y: p.y1 - bh, width: bw, height: bh,
         rx: 4, fill: inHead ? v('--c1') : v(OTHER) });
       tip(rect, [rows[i].label || '(not set)',
-                 fmt(rows[i].count) + ' records',
+                 recs(rows[i].count),
                  pct(rows[i].count / panel.total) + ' of the total',
                  'cumulative ' + pct(rows[i].cumulative)]);
       drillable(rect, panel.field, rows[i].key);
@@ -1662,7 +1670,7 @@
       var rect = svgEl('rect', { x: cx, y: y, width: w, height: rowH - 14, rx: 4,
         fill: seqStep(0.25 + 0.7 * t) });
       tip(rect, [st.label,
-                 fmt(st.count) + ' records',
+                 recs(st.count),
                  pct(st.share) + ' of the first stage',
                  i === 0 ? 'the entry stage'
                    : pct(st.stepShare) + ' carried through from ' + stages[i - 1].label]);
@@ -2143,7 +2151,7 @@
     left.appendChild(el('h1', 'd2', payload.subject.label + ' analysis'));
 
     var sub = el('div', 'sub');
-    sub.appendChild(el('span', '', fmt(payload.subject.rows) + ' records'));
+    sub.appendChild(el('span', '', recs(payload.subject.rows)));
     sub.appendChild(el('span', 'dot', '·'));
     sub.appendChild(el('span', '', 'built in ' + payload.timingMs + 'ms'));
     left.appendChild(sub);
@@ -2190,8 +2198,9 @@
       c.className = 'chip warn';
       c.appendChild(el('span', 'dot'));
       c.appendChild(el('span', '', 'Filtered to your access'));
-      c.title = fmt(acl.delta) + ' records exist that you cannot read. They are ' +
-                'excluded from every number on this page.';
+      c.title = recs(acl.delta) + ' exist that you cannot read. ' +
+                (acl.delta === 1 ? 'It is' : 'They are') +
+                ' excluded from every number on this page.';
     } else if (acl.mode === 'BOUNDED') {
       c.className = 'chip warn';
       c.appendChild(el('span', 'dot'));

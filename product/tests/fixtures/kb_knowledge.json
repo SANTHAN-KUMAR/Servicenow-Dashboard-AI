@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-04 11:33:31",
+ "generated": "2026-08-05 06:43:58",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -9,14 +9,14 @@
   "table": "kb_knowledge",
   "label": "Knowledge",
   "query": "",
-  "rows": 50,
+  "rows": 160,
   "listUrl": "/kb_knowledge_list.do?sysparm_query=&sysparm_view="
  },
  "acl": {
   "mode": "BOUNDED",
   "aggregate": 757,
-  "secure": 50,
-  "delta": 707,
+  "secure": 160,
+  "delta": 597,
   "capped": true
  },
  "path": [],
@@ -96,17 +96,17 @@
     {
      "period": "2026-07",
      "label": "Jul '26",
-     "count": 551,
+     "count": 541,
      "partial": false
     },
     {
      "period": "2026-08",
      "label": "Aug '26",
-     "count": 560,
+     "count": 550,
      "partial": true
     }
    ],
-   "stillOpen": 30,
+   "stillOpen": 28,
    "span": 2,
    "caveats": [
     {
@@ -128,26 +128,26 @@
     {
      "key": "6816f79cc0a8016401c5a33be04be441",
      "label": "Santhan K",
-     "count": 534,
-     "cumulative": 0.954
+     "count": 524,
+     "cumulative": 0.953
     },
     {
      "key": "62d78687c0a8010e00b3d84178adc913",
      "label": "Ron Kettering",
      "count": 7,
-     "cumulative": 0.966
+     "cumulative": 0.965
     },
     {
      "key": "a6826bf03710200044e0bfc8bcbe5de6",
      "label": "Boris Catino",
      "count": 6,
-     "cumulative": 0.977
+     "cumulative": 0.976
     },
     {
      "key": "46d85d4aa9fe198101e36eb956587fe7",
      "label": "Sam Sorokin",
      "count": 5,
-     "cumulative": 0.986
+     "cumulative": 0.985
     },
     {
      "key": "46d14f04a9fe19810142e40c6b071512",
@@ -168,7 +168,7 @@
      "cumulative": 1
     }
    ],
-   "total": 560,
+   "total": 550,
    "eightyAt": 1,
    "span": 2,
    "caveats": [],
@@ -179,14 +179,14 @@
    "kind": "distribution",
    "form": "histogram",
    "question": "How is view count distributed?",
-   "reason": "11 equal-width bins over 560 values, sized by the interquartile range rather than by a fixed count",
+   "reason": "11 equal-width bins over 550 values, sized by the interquartile range rather than by a fixed count",
    "field": "sys_view_count",
    "fieldLabel": "View count",
    "bins": [
     {
      "from": 0,
      "to": 8.182,
-     "count": 546
+     "count": 536
     },
     {
      "from": 8.182,
@@ -241,8 +241,8 @@
    ],
    "lo": 0,
    "hi": 90,
-   "n": 560,
-   "mean": 0.929,
+   "n": 550,
+   "mean": 0.945,
    "median": 0,
    "q1": 0,
    "q3": 0,
@@ -264,7 +264,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 560 records you can read. 197 more exist that you do not have access to."
+     "text": "Filtered to the 550 records you can read. 207 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -277,7 +277,7 @@
      {
       "key": "6816f79cc0a8016401c5a33be04be441",
       "label": "Santhan K",
-      "count": 534
+      "count": 524
      },
      {
       "key": "62d78687c0a8010e00b3d84178adc913",
@@ -315,8 +315,8 @@
    "shape": {
     "distinct": 7,
     "fill": 1,
-    "topShare": 0.954,
-    "concentration": 0.966
+    "topShare": 0.953,
+    "concentration": 0.965
    },
    "ordinal": false,
    "span": 1
@@ -334,7 +334,7 @@
     "reason": "7 values, populated on 100%",
     "fill": 1,
     "distinct": 7,
-    "rows": 50
+    "rows": 160
    },
    {
     "field": "article_type",
@@ -345,7 +345,7 @@
     "reason": "every record here has the same article type",
     "fill": 1,
     "distinct": 1,
-    "rows": 50
+    "rows": 160
    },
    {
     "field": "active",
@@ -356,7 +356,7 @@
     "reason": "every record here has the same active",
     "fill": 1,
     "distinct": 1,
-    "rows": 50
+    "rows": 160
    },
    {
     "field": "helpful_count",
@@ -365,9 +365,9 @@
     "isRef": false,
     "offer": false,
     "reason": "every record here has the same helpful count",
-    "fill": 0.9303571428571429,
+    "fill": 0.9290909090909091,
     "distinct": 1,
-    "rows": 50
+    "rows": 160
    },
    {
     "field": "category",
@@ -376,9 +376,9 @@
     "isRef": false,
     "offer": false,
     "reason": "Category is empty on 99.1% of these records",
-    "fill": 0.008928571428571428,
+    "fill": 0.00909090909090909,
     "distinct": 2,
-    "rows": 50
+    "rows": 160
    },
    {
     "field": "base_version",
@@ -387,14 +387,14 @@
     "isRef": true,
     "offer": false,
     "reason": "Base Version is empty on 98.9% of these records",
-    "fill": 0.010714285714285714,
+    "fill": 0.01090909090909091,
     "distinct": 6,
-    "rows": 50
+    "rows": 160
    }
   ]
  },
  "notes": [
-  "This subject is expensive to permission-check, so the page stopped reading rows after 5.3s. 6 further measurements were not attempted, and the panels shown are built from the rows that were read."
+  "This subject is expensive to permission-check, so the page stopped reading rows after 5.3s. 7 further measurements were not attempted, and the panels shown are built from the rows that were read."
  ],
  "kpis": [
   {
@@ -403,21 +403,21 @@
    "span": 1,
    "question": "How many records, and is that more or fewer than before?",
    "fieldLabel": "Records",
-   "value": 50,
+   "value": 160,
    "capped": true,
    "form": "stat_tile_delta",
    "reason": "compared with the previous month on sys_created_on",
    "delta": {
     "current": 11,
-    "previous": 20,
+    "previous": 70,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.122,
-    "paceAdjusted": 90,
-    "delta": 70,
-    "change": 3.5,
-    "rawDelta": -9,
-    "rawChange": -0.45,
+    "elapsedFraction": 0.147,
+    "paceAdjusted": 75,
+    "delta": 5,
+    "change": 0.071,
+    "rawDelta": -59,
+    "rawChange": -0.843,
     "partial": true,
     "mode": "VERIFIED",
     "capped": true
@@ -425,7 +425,7 @@
    "caveats": [
     {
      "severity": "info",
-     "text": "This month is 12% elapsed, so the comparison is projected to a full month. Actual so far is 11 against 20 last month."
+     "text": "This month is 15% elapsed, so the comparison is projected to a full month. Actual so far is 11 against 70 last month."
     }
    ]
   },
@@ -437,11 +437,11 @@
    "question": "Where does view count sit against complete?",
    "fieldLabel": "View count",
    "field": "sys_view_count",
-   "value": 0.929,
+   "value": 0.945,
    "target": 100,
    "median": 0,
-   "n": 560,
-   "reason": "measured range is 0 to 90 across 560 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
+   "n": 550,
+   "reason": "measured range is 0 to 90 across 550 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
    "capped": true
   },
   {
@@ -451,11 +451,11 @@
    "form": "stat_tile",
    "question": "How long does one take, from created to valid to?",
    "fieldLabel": "Mean hours, Created to Valid to",
-   "value": 645283.9,
+   "value": 645309.7,
    "unit": "h",
    "median": 643592.1,
-   "n": 530,
-   "reason": "measured over 530 records where both dates are set",
+   "n": 522,
+   "reason": "measured over 522 records where both dates are set",
    "caveats": [],
    "capped": true
   },
@@ -470,8 +470,8 @@
    "value": 1,
    "mean": 0.002,
    "median": 0,
-   "n": 559,
-   "reason": "summed over 559 records where the field is set",
+   "n": 549,
+   "reason": "summed over 549 records where the field is set",
    "capped": true
   }
  ],
@@ -487,8 +487,8 @@
    {
     "key": "6816f79cc0a8016401c5a33be04be441",
     "label": "Santhan K",
-    "count": 534,
-    "share": 0.954,
+    "count": 524,
+    "share": 0.953,
     "spark": null,
     "delta": null,
     "change": null
@@ -548,7 +548,7 @@
     "change": null
    }
   ],
-  "total": 560,
+  "total": 550,
   "periods": [],
   "grain": "month",
   "span": 2,
@@ -562,9 +562,9 @@
    "isRef": false,
    "offer": false,
    "reason": "Category is empty on 99.1% of these records",
-   "fill": 0.008928571428571428,
+   "fill": 0.00909090909090909,
    "distinct": 2,
-   "rows": 50,
+   "rows": 160,
    "declaredParent": "topic",
    "declaredParentLabel": "Topic"
   },
@@ -577,58 +577,51 @@
    "reason": "every record here has the same wiki",
    "fill": 1,
    "distinct": 0,
-   "rows": 50,
+   "rows": 160,
    "declaredParent": "short_description",
    "declaredParentLabel": "Short description"
   }
  ],
  "scan": {
-  "spentMs": 5325,
+  "spentMs": 5294,
   "allowanceMs": 5000,
-  "scans": 6,
-  "starved": 6,
+  "scans": 5,
+  "starved": 7,
   "exhausted": true,
   "log": [
    {
     "via": "proof",
-    "ms": 527,
-    "rows": 50,
+    "ms": 763,
+    "rows": 160,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 3242,
-    "rows": 560,
+    "ms": 3260,
+    "rows": 550,
     "n": 17,
     "budget": 3200
    },
    {
     "via": "reduce",
-    "ms": 1221,
-    "rows": 610,
+    "ms": 979,
+    "rows": 520,
     "n": 1,
-    "budget": 1200
-   },
-   {
-    "via": "reduce",
-    "ms": 43,
-    "rows": 10,
-    "n": 1,
-    "budget": 10
+    "budget": 977
    },
    {
     "via": "proof",
-    "ms": 17,
+    "ms": 21,
     "rows": 11,
     "budget": 250
    },
    {
     "via": "proof",
-    "ms": 275,
-    "rows": 20,
+    "ms": 271,
+    "rows": 70,
     "budget": 250
    }
   ]
  },
- "timingMs": 5471
+ "timingMs": 5474
 }

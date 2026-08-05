@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-04 11:33:48",
+ "generated": "2026-08-05 06:44:18",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -555,7 +555,7 @@
     "previous": 1,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.122,
+    "elapsedFraction": 0.147,
     "paceAdjusted": 0,
     "delta": -1,
     "change": -1,
@@ -568,7 +568,7 @@
    "caveats": [
     {
      "severity": "info",
-     "text": "This month is 12% elapsed, so the comparison is projected to a full month. Actual so far is 0 against 1 last month."
+     "text": "This month is 15% elapsed, so the comparison is projected to a full month. Actual so far is 0 against 1 last month."
     }
    ]
   }
@@ -740,7 +740,7 @@
  },
  "declared": [],
  "scan": {
-  "spentMs": 545,
+  "spentMs": 347,
   "allowanceMs": 5000,
   "scans": 5,
   "starved": 0,
@@ -748,13 +748,13 @@
   "log": [
    {
     "via": "proof",
-    "ms": 52,
+    "ms": 84,
     "rows": 86,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 442,
+    "ms": 193,
     "rows": 86,
     "n": 15,
     "budget": 3200
@@ -773,12 +773,12 @@
    },
    {
     "via": "reduce",
-    "ms": 47,
+    "ms": 66,
     "rows": 86,
     "n": 4,
     "budget": 3200
    }
   ]
  },
- "timingMs": 704
+ "timingMs": 588
 }

@@ -94,6 +94,14 @@ files.forEach(function (file) {
     ok(name + ' produced marks', counts.total > 20,
        'only ' + counts.total + ' nodes');
 
+    /* Agreement between a count and the noun it counts. The page subheader, every
+       tooltip and every drill rejection built this string separately, so "1 records"
+       reached a client-facing page from twenty-one different places. */
+    var text = shim.textOf(r.mount);
+    var bad = text.match(/(^|[^,.\d])1 (records|subjects|levels|periods|stages)\b/);
+    ok(name + ' agrees with itself on singular and plural', !bad,
+       bad ? 'found ' + JSON.stringify(bad[0].trim()) : '');
+
     if (view === 'dashboard') {
         var expected = (payload.panels || []).length +
                        (payload.kpis || []).length + (payload.matrix ? 1 : 0);

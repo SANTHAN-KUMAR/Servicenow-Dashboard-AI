@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-04 11:33:29",
+ "generated": "2026-08-05 06:43:55",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -30,7 +30,7 @@
     "isOrdinal": false,
     "isRef": false,
     "offer": false,
-    "reason": "only 1 records left, too few to break down further",
+    "reason": "only 1 record left, too few to break down further",
     "fill": null,
     "distinct": null,
     "rows": 1
@@ -41,7 +41,7 @@
     "isOrdinal": true,
     "isRef": false,
     "offer": false,
-    "reason": "only 1 records left, too few to break down further",
+    "reason": "only 1 record left, too few to break down further",
     "fill": null,
     "distinct": null,
     "rows": 1
@@ -52,7 +52,7 @@
     "isOrdinal": false,
     "isRef": true,
     "offer": false,
-    "reason": "only 1 records left, too few to break down further",
+    "reason": "only 1 record left, too few to break down further",
     "fill": null,
     "distinct": null,
     "rows": 1
@@ -63,7 +63,7 @@
     "isOrdinal": false,
     "isRef": false,
     "offer": false,
-    "reason": "only 1 records left, too few to break down further",
+    "reason": "only 1 record left, too few to break down further",
     "fill": null,
     "distinct": null,
     "rows": 1
@@ -74,7 +74,7 @@
     "isOrdinal": false,
     "isRef": false,
     "offer": false,
-    "reason": "only 1 records left, too few to break down further",
+    "reason": "only 1 record left, too few to break down further",
     "fill": null,
     "distinct": null,
     "rows": 1
@@ -85,7 +85,7 @@
     "isOrdinal": false,
     "isRef": false,
     "offer": false,
-    "reason": "only 1 records left, too few to break down further",
+    "reason": "only 1 record left, too few to break down further",
     "fill": null,
     "distinct": null,
     "rows": 1
@@ -114,7 +114,7 @@
    "isOrdinal": false,
    "isRef": true,
    "offer": false,
-   "reason": "only 1 records left, too few to break down further",
+   "reason": "only 1 record left, too few to break down further",
    "fill": null,
    "distinct": null,
    "rows": 1,
@@ -127,7 +127,7 @@
    "isOrdinal": false,
    "isRef": true,
    "offer": false,
-   "reason": "only 1 records left, too few to break down further",
+   "reason": "only 1 record left, too few to break down further",
    "fill": null,
    "distinct": null,
    "rows": 1,
@@ -140,7 +140,7 @@
    "isOrdinal": false,
    "isRef": true,
    "offer": false,
-   "reason": "only 1 records left, too few to break down further",
+   "reason": "only 1 record left, too few to break down further",
    "fill": null,
    "distinct": null,
    "rows": 1,
@@ -149,7 +149,7 @@
   }
  ],
  "scan": {
-  "spentMs": 16,
+  "spentMs": 12,
   "allowanceMs": 5000,
   "scans": 2,
   "starved": 0,
@@ -157,7 +157,7 @@
   "log": [
    {
     "via": "proof",
-    "ms": 7,
+    "ms": 3,
     "rows": 1,
     "budget": 2500
    },
@@ -170,5 +170,5 @@
    }
   ]
  },
- "timingMs": 330
+ "timingMs": 164
 }

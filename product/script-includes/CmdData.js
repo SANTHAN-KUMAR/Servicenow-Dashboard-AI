@@ -46,13 +46,55 @@ CmdData.PROOF_MS = 2500;
  * evaluation that costs milliseconds. */
 CmdData.CHECK_EVERY = 10;
 
-/* Rows to observe before extrapolating what a full permission proof would cost.
+/* Rows to discard before timing anything, and rows to time once discarding is done.
  *
- * Low enough to bail out of a hopeless proof quickly, high enough that the
- * estimate is not dominated by the first few rows, which are always the slowest
- * while caches warm. Fifty rows costs incident about 10ms and kb_knowledge about
- * 250ms, and either is enough to tell the two apart by an order of magnitude. */
+ * The first version of this measured from row zero after fifty rows had passed, on
+ * the reasoning that fifty was "high enough that the estimate is not dominated by
+ * the first few rows". Measurement disproved that. Elapsed time at row fifty is
+ * mostly fixed setup -- the query, the first fetch, the ACL evaluator warming --
+ * and dividing that by fifty attributes all of it to per-row cost. On incident the
+ * estimate came out at 0.64ms/row against a true 0.21ms/row, a three-fold
+ * overestimate, which predicted 2.7s for a proof that actually finishes in 0.9s.
+ *
+ * The visible effect was worse than a slow page. The overestimate is a race
+ * against setup cost, so identical requests disagreed: the same incident dashboard
+ * returned VERIFIED with 4,266 records on one load and BOUNDED with 50 on the
+ * next. A headline number that changes by two orders of magnitude on refresh
+ * destroys trust in every other number on the page.
+ *
+ * So the rate is measured over a window that starts *after* setup: discard
+ * PREDICT_AFTER rows, then time the next PREDICT_WARM. The discarded rows still
+ * count toward elapsed time, they simply do not contribute to the rate. */
 CmdData.PREDICT_AFTER = 50;
+CmdData.PREDICT_WARM = 100;
+
+/* How far a projected proof must exceed its budget before it is abandoned.
+ *
+ * The projection is an estimate from a hundred rows, so it carries real error. A
+ * bare `predicted > budget` test turns that error into a coin flip for any table
+ * whose true cost lands near the budget, and the coin is flipped again on every
+ * page load. Requiring a clear overshoot means only proofs that are decisively
+ * hopeless are abandoned, and borderline ones are simply run -- at worst that
+ * spends the budget that was there to be spent. */
+CmdData.PREDICT_MARGIN = 1.3;
+
+/**
+ * What a full permission proof will have cost by the time it finishes.
+ *
+ * Pure arithmetic, kept out of the scan loop so it can be tested without an
+ * instance -- the bug this replaced was in exactly this calculation, and it was
+ * invisible from the outside because a wrong answer here does not throw, it just
+ * abandons a proof that would have succeeded.
+ *
+ * @param spentMs    elapsed since the scan began, including setup
+ * @param windowMs   elapsed across the measured window only
+ * @param windowRows rows admitted during that window
+ * @param rowsLeft   rows still to admit
+ */
+CmdData.projectProof = function (spentMs, windowMs, windowRows, rowsLeft) {
+    if (!windowRows || rowsLeft <= 0) return spentMs;
+    return spentMs + (windowMs / windowRows) * rowsLeft;
+};
 
 /* Wall-clock budget for one secure group-by, the per-panel fallback when the ACL
    verdict is not trusted. Smaller than the proof budget because a page runs several
@@ -254,13 +296,18 @@ CmdData.prototype = {
         gr.query();
 
         var n = 0, capped = false, timedOut = false, predicted = 0;
+        var warmT = 0, warmN = 0;
         while (gr.next()) {
             if (n >= CmdData.SECURE_SCAN_CAP) { capped = true; break; }
             n++;
 
             if (n % CmdData.CHECK_EVERY === 0) {
-                var spent = new Date().getTime() - t0;
+                var now = new Date().getTime();
+                var spent = now - t0;
                 if (spent > budgetMs) { timedOut = true; break; }
+
+                /* Start the measured window once setup is behind us. */
+                if (!warmN && n >= CmdData.PREDICT_AFTER) { warmT = now; warmN = n; }
 
                 /* Don't start what you cannot finish.
                  *
@@ -278,10 +325,19 @@ CmdData.prototype = {
                  * and reaches an identical verdict.
                  *
                  * It can only ever cause an earlier BOUNDED, never a wrong VERIFIED,
-                 * so the correctness claim is untouched. */
-                if (n >= CmdData.PREDICT_AFTER && target > n) {
-                    predicted = (spent / n) * target;
-                    if (predicted > budgetMs) { timedOut = true; break; }
+                 * so the soundness of the claim is untouched -- but see PREDICT_WARM
+                 * for why an unsound-in-the-other-direction estimate still did real
+                 * damage, by making the verdict differ between identical requests.
+                 *
+                 * The rate comes from the window since warmN, so fixed setup cost is
+                 * excluded rather than amortised across the rows that follow it. */
+                if (warmN && n - warmN >= CmdData.PREDICT_WARM && target > n) {
+                    predicted = CmdData.projectProof(
+                        spent, now - warmT, n - warmN, target - n);
+                    if (predicted > budgetMs * CmdData.PREDICT_MARGIN) {
+                        timedOut = true;
+                        break;
+                    }
                 }
             }
         }

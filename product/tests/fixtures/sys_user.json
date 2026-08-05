@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-04 11:33:45",
+ "generated": "2026-08-05 06:44:13",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -650,10 +650,10 @@
     "previous": 14,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.122,
-    "paceAdjusted": 16,
-    "delta": 2,
-    "change": 0.143,
+    "elapsedFraction": 0.147,
+    "paceAdjusted": 14,
+    "delta": 0,
+    "change": 0,
     "rawDelta": -12,
     "rawChange": -0.857,
     "partial": true,
@@ -663,7 +663,7 @@
    "caveats": [
     {
      "severity": "info",
-     "text": "This month is 12% elapsed, so the comparison is projected to a full month. Actual so far is 2 against 14 last month."
+     "text": "This month is 15% elapsed, so the comparison is projected to a full month. Actual so far is 2 against 14 last month."
     }
    ]
   },
@@ -924,7 +924,7 @@
   }
  ],
  "scan": {
-  "spentMs": 519,
+  "spentMs": 406,
   "allowanceMs": 5000,
   "scans": 5,
   "starved": 0,
@@ -932,20 +932,20 @@
   "log": [
    {
     "via": "proof",
-    "ms": 131,
+    "ms": 100,
     "rows": 664,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 280,
+    "ms": 222,
     "rows": 664,
     "n": 14,
     "budget": 3200
    },
    {
     "via": "proof",
-    "ms": 4,
+    "ms": 3,
     "rows": 2,
     "budget": 2500
    },
@@ -957,12 +957,12 @@
    },
    {
     "via": "reduce",
-    "ms": 99,
+    "ms": 76,
     "rows": 664,
     "n": 3,
     "budget": 3200
    }
   ]
  },
- "timingMs": 730
+ "timingMs": 604
 }

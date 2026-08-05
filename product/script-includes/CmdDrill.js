@@ -122,7 +122,8 @@ CmdDrill.prototype = {
             return res;
         }
         if (total.count < G.MIN_ROWS) {
-            res.reason = 'only ' + total.count + ' records left, too few to break down further';
+            res.reason = 'only ' + total.count + (total.count === 1 ? ' record' : ' records') +
+                         ' left, too few to break down further';
             return res;
         }
 

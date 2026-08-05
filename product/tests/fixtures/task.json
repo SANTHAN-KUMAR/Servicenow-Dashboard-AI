@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-04 11:33:21",
+ "generated": "2026-08-05 06:43:48",
  "viewer": {
   "name": "admin",
   "display": "Santhan K"
@@ -9,14 +9,14 @@
   "table": "task",
   "label": "Task",
   "query": "",
-  "rows": 50,
+  "rows": 150,
   "listUrl": "/task_list.do?sysparm_query=&sysparm_view="
  },
  "acl": {
   "mode": "BOUNDED",
-  "aggregate": 7527,
-  "secure": 50,
-  "delta": 7477,
+  "aggregate": 7551,
+  "secure": 150,
+  "delta": 7401,
   "capped": true
  },
  "path": [],
@@ -34,7 +34,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 50 records you can read. 7,477 more exist that you do not have access to."
+     "text": "Filtered to the 150 records you can read. 7,401 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -51,42 +51,42 @@
     {
      "period": "2025-09",
      "label": "Sep '25",
-     "count": 17,
+     "count": 19,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2025-10",
      "label": "Oct '25",
-     "count": 13,
+     "count": 14,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2025-11",
      "label": "Nov '25",
-     "count": 29,
+     "count": 34,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2025-12",
      "label": "Dec '25",
-     "count": 42,
+     "count": 47,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-01",
      "label": "Jan '26",
-     "count": 29,
+     "count": 30,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-02",
      "label": "Feb '26",
-     "count": 27,
+     "count": 30,
      "partial": false,
      "bounded": true
     },
@@ -100,75 +100,75 @@
     {
      "period": "2026-04",
      "label": "Apr '26",
-     "count": 67,
+     "count": 72,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-05",
      "label": "May '26",
-     "count": 42,
+     "count": 51,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-06",
      "label": "Jun '26",
-     "count": 93,
+     "count": 101,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-07",
      "label": "Jul '26",
-     "count": 87,
+     "count": 90,
      "partial": false,
      "bounded": true
     },
     {
      "period": "2026-08",
      "label": "Aug '26",
-     "count": 76,
+     "count": 83,
      "partial": true,
      "bounded": true
     }
    ],
-   "story": "The last three periods run 128% above the average of the 8 before them.",
+   "story": "The last three periods run 129% above the average of the 8 before them.",
    "span": 2,
    "annotation": {
-    "slope": 6.96,
-    "intercept": 9,
-    "sigma": 14.7,
+    "slope": 7.36,
+    "intercept": 10.82,
+    "sigma": 15.56,
     "direction": "rising",
-    "perPeriod": 7,
+    "perPeriod": 7.4,
     "anomalies": [],
     "forecast": [
      {
       "index": 12,
-      "value": 93,
-      "lo": 62,
-      "hi": 123
+      "value": 99,
+      "lo": 67,
+      "hi": 132
      },
      {
       "index": 13,
-      "value": 100,
-      "lo": 68,
-      "hi": 131
+      "value": 107,
+      "lo": 73,
+      "hi": 140
      },
      {
       "index": 14,
-      "value": 106,
-      "lo": 73,
-      "hi": 140
+      "value": 114,
+      "lo": 79,
+      "hi": 149
      }
     ],
     "fitFrom": {
      "index": 0,
-     "value": 9
+     "value": 11
     },
     "fitTo": {
      "index": 10,
-     "value": 79
+     "value": 84
     },
     "method": "least squares on 11 complete periods, band at 2 residual standard deviations"
    }
@@ -188,77 +188,77 @@
     {
      "period": "2025-09",
      "label": "Sep '25",
-     "count": 42,
+     "count": 49,
      "partial": false
     },
     {
      "period": "2025-10",
      "label": "Oct '25",
-     "count": 55,
+     "count": 63,
      "partial": false
     },
     {
      "period": "2025-11",
      "label": "Nov '25",
-     "count": 84,
+     "count": 97,
      "partial": false
     },
     {
      "period": "2025-12",
      "label": "Dec '25",
-     "count": 126,
+     "count": 144,
      "partial": false
     },
     {
      "period": "2026-01",
      "label": "Jan '26",
-     "count": 155,
+     "count": 174,
      "partial": false
     },
     {
      "period": "2026-02",
      "label": "Feb '26",
-     "count": 182,
+     "count": 204,
      "partial": false
     },
     {
      "period": "2026-03",
      "label": "Mar '26",
-     "count": 218,
+     "count": 240,
      "partial": false
     },
     {
      "period": "2026-04",
      "label": "Apr '26",
-     "count": 285,
+     "count": 312,
      "partial": false
     },
     {
      "period": "2026-05",
      "label": "May '26",
-     "count": 327,
+     "count": 363,
      "partial": false
     },
     {
      "period": "2026-06",
      "label": "Jun '26",
-     "count": 420,
+     "count": 464,
      "partial": false
     },
     {
      "period": "2026-07",
      "label": "Jul '26",
-     "count": 507,
+     "count": 554,
      "partial": false
     },
     {
      "period": "2026-08",
      "label": "Aug '26",
-     "count": 583,
+     "count": 637,
      "partial": true
     }
    ],
-   "stillOpen": 490,
+   "stillOpen": 538,
    "span": 2,
    "caveats": [
     {
@@ -273,14 +273,14 @@
    "kind": "distribution",
    "form": "histogram",
    "question": "How is reassignment count distributed?",
-   "reason": "11 equal-width bins over 606 values, sized by the interquartile range rather than by a fixed count",
+   "reason": "11 equal-width bins over 666 values, sized by the interquartile range rather than by a fixed count",
    "field": "reassignment_count",
    "fieldLabel": "Reassignment count",
    "bins": [
     {
      "from": 0,
      "to": 0.182,
-     "count": 600
+     "count": 660
     },
     {
      "from": 0.182,
@@ -335,8 +335,8 @@
    ],
    "lo": 0,
    "hi": 2,
-   "n": 606,
-   "mean": 0.012,
+   "n": 666,
+   "mean": 0.011,
    "median": 0,
    "q1": 0,
    "q3": 0,
@@ -361,16 +361,16 @@
      0,
      1,
      22,
-     19,
+     20,
      9,
-     7,
      8,
-     6,
      10,
-     7,
+     6,
+     11,
      7,
      9,
-     8,
+     10,
+     9,
      4,
      9,
      2,
@@ -388,47 +388,47 @@
      4,
      15,
      30,
-     4,
-     9,
-     7,
-     4,
-     3,
-     1,
-     8,
      5,
-     8,
-     3,
-     0,
-     0,
-     2,
-     1,
-     0
-    ],
-    [
-     0,
-     2,
-     5,
-     0,
-     0,
-     1,
-     0,
      10,
+     7,
      5,
-     11,
-     7,
-     3,
-     9,
      4,
-     3,
-     6,
-     7,
-     2,
-     3,
      1,
+     9,
+     5,
+     8,
+     3,
+     0,
+     0,
+     2,
+     1,
+     0
+    ],
+    [
+     0,
+     2,
+     5,
+     0,
+     0,
+     1,
+     0,
+     15,
+     7,
+     11,
+     8,
+     3,
+     10,
+     4,
+     4,
+     7,
+     7,
+     3,
+     5,
+     2,
      14,
      0,
      0,
-     0
+     1
     ],
     [
      0,
@@ -438,23 +438,23 @@
      1,
      1,
      3,
+     20,
+     7,
+     6,
+     26,
+     4,
+     7,
+     4,
      17,
-     7,
-     5,
-     23,
-     4,
-     7,
-     4,
-     14,
-     8,
+     10,
      8,
      2,
+     1,
+     2,
+     0,
      0,
      1,
-     0,
-     0,
-     1,
-     8
+     11
     ],
     [
      0,
@@ -464,19 +464,19 @@
      2,
      2,
      7,
-     9,
+     10,
      8,
      6,
-     7,
-     9,
      8,
-     4,
+     12,
+     8,
+     5,
      7,
      7,
-     2,
-     4,
      3,
-     2,
+     6,
+     3,
+     4,
      0,
      1,
      9,
@@ -502,7 +502,7 @@
      1,
      0,
      2,
-     0,
+     1,
      0,
      1,
      0,
@@ -522,7 +522,7 @@
      1,
      1,
      0,
-     1,
+     2,
      2,
      0,
      1,
@@ -536,7 +536,7 @@
     ]
    ],
    "maxCell": 30,
-   "total": 610,
+   "total": 670,
    "rowLabels": [
     "Mon",
     "Tue",
@@ -560,38 +560,38 @@
    "kind": "calendar",
    "form": "calendar_heatmap",
    "question": "Which days were busy?",
-   "reason": "215 days with records, drawn as a calendar so weekends, gaps and spikes are visible as position rather than as a dip in a line",
+   "reason": "227 days with records, drawn as a calendar so weekends, gaps and spikes are visible as position rather than as a dip in a line",
    "dateField": "sys_created_on",
    "byDay": {
     "2026-07-28": 8,
-    "2024-08-29": 18,
-    "2025-11-05": 9,
+    "2024-08-29": 22,
+    "2025-11-05": 11,
     "2025-12-06": 9,
     "2025-09-25": 1,
     "2025-12-02": 2,
     "2026-06-24": 4,
-    "2026-05-15": 4,
+    "2026-05-15": 5,
     "2026-08-04": 9,
     "2016-08-10": 3,
     "2026-05-22": 2,
     "2026-06-22": 5,
     "2026-07-14": 3,
-    "2026-02-05": 12,
+    "2026-02-05": 14,
     "2026-08-10": 1,
     "2026-06-01": 4,
-    "2026-06-10": 15,
+    "2026-06-10": 16,
     "2026-05-08": 3,
     "2026-01-05": 2,
     "2025-09-02": 4,
     "2026-07-13": 3,
-    "2026-04-07": 22,
-    "2026-05-07": 8,
+    "2026-04-07": 23,
+    "2026-05-07": 12,
     "2026-04-01": 1,
     "2026-03-20": 1,
     "2026-05-05": 2,
     "2026-06-15": 10,
     "2026-07-25": 10,
-    "2026-06-08": 16,
+    "2026-06-08": 19,
     "2026-08-03": 19,
     "2026-03-05": 3,
     "2026-04-19": 2,
@@ -603,6 +603,7 @@
     "2026-06-04": 2,
     "2025-11-07": 2,
     "2026-04-28": 2,
+    "2026-08-05": 7,
     "2026-03-27": 7,
     "2025-10-07": 2,
     "2025-12-01": 4,
@@ -616,13 +617,13 @@
     "2027-05-17": 1,
     "2025-10-16": 1,
     "2026-02-16": 1,
-    "2026-07-31": 6,
+    "2026-07-31": 7,
     "2026-03-31": 2,
     "2026-08-21": 4,
     "2026-07-21": 2,
     "2026-07-29": 1,
     "2026-06-09": 2,
-    "2026-07-30": 16,
+    "2026-07-30": 17,
     "2025-09-18": 2,
     "2025-10-22": 2,
     "2025-12-22": 4,
@@ -639,27 +640,27 @@
     "2026-08-02": 4,
     "2015-07-01": 1,
     "2026-08-06": 2,
-    "2026-08-28": 1,
-    "2024-08-30": 2,
+    "2026-08-28": 2,
+    "2024-08-30": 3,
     "2026-08-14": 2,
     "2026-03-10": 1,
     "2026-06-20": 1,
     "2026-04-04": 1,
     "2025-09-12": 1,
-    "2020-10-09": 11,
+    "2020-10-09": 14,
     "2026-08-17": 4,
-    "2026-06-12": 14,
+    "2026-06-12": 15,
     "2026-04-03": 1,
     "2026-04-21": 1,
-    "2025-11-12": 3,
+    "2025-11-12": 4,
     "2025-12-21": 1,
     "2025-12-29": 1,
     "2026-03-02": 2,
-    "2026-05-14": 2,
+    "2026-05-14": 4,
     "2026-04-23": 1,
     "2015-08-17": 1,
     "2025-10-21": 1,
-    "2025-12-08": 5,
+    "2025-12-08": 6,
     "2025-11-11": 1,
     "2026-04-30": 2,
     "2026-05-28": 2,
@@ -668,7 +669,7 @@
     "2026-06-06": 2,
     "2026-08-19": 3,
     "2026-05-04": 3,
-    "2026-07-24": 2,
+    "2026-07-24": 3,
     "2026-01-25": 1,
     "2026-03-04": 2,
     "2026-01-17": 1,
@@ -680,8 +681,8 @@
     "2025-12-16": 4,
     "2026-06-23": 2,
     "2026-01-02": 1,
-    "2026-06-16": 2,
-    "2026-04-22": 3,
+    "2026-06-16": 3,
+    "2026-04-22": 4,
     "2025-10-09": 1,
     "2026-07-16": 2,
     "2026-06-19": 5,
@@ -692,7 +693,7 @@
     "2026-07-27": 9,
     "2026-04-17": 3,
     "2025-09-13": 2,
-    "2026-06-11": 3,
+    "2026-06-11": 4,
     "2026-01-08": 2,
     "2026-08-12": 2,
     "2026-07-03": 3,
@@ -701,10 +702,9 @@
     "2026-08-23": 1,
     "2026-12-16": 5,
     "2024-08-27": 1,
-    "2025-12-24": 2,
+    "2025-12-24": 3,
     "2026-04-27": 1,
-    "2026-08-05": 2,
-    "2026-04-06": 3,
+    "2026-04-06": 4,
     "2026-08-11": 6,
     "2026-02-10": 1,
     "2026-07-09": 1,
@@ -720,19 +720,19 @@
     "2025-12-03": 1,
     "2026-02-25": 1,
     "2026-07-20": 3,
-    "2021-10-04": 2,
+    "2021-10-04": 3,
     "2025-11-10": 1,
     "2026-05-27": 2,
     "2026-06-25": 1,
-    "2026-05-18": 3,
+    "2026-05-18": 4,
     "2026-02-20": 2,
     "2026-04-09": 2,
     "2026-04-24": 2,
     "2026-07-08": 3,
-    "2026-04-20": 3,
+    "2026-04-20": 4,
     "2026-01-16": 2,
     "2025-11-21": 1,
-    "2026-08-13": 1,
+    "2026-08-13": 2,
     "2026-04-10": 2,
     "2025-11-13": 1,
     "2026-07-07": 1,
@@ -741,7 +741,7 @@
     "2026-07-02": 1,
     "2025-09-04": 1,
     "2025-11-19": 1,
-    "2015-08-06": 1,
+    "2015-08-06": 2,
     "2018-08-30": 1,
     "2026-05-19": 1,
     "2025-12-11": 1,
@@ -768,19 +768,31 @@
     "2026-05-13": 3,
     "2026-06-30": 1,
     "2025-11-01": 1,
-    "2026-04-15": 1,
+    "2026-04-15": 2,
     "2026-08-29": 1,
     "2026-03-11": 1,
     "2026-06-26": 1,
     "2026-03-12": 1,
     "2025-10-14": 1,
     "2025-09-24": 1,
-    "2026-02-04": 1,
+    "2026-02-04": 2,
     "2025-11-26": 1,
-    "2026-08-26": 1
+    "2026-08-26": 1,
+    "2025-09-27": 1,
+    "2025-11-06": 1,
+    "2026-01-26": 1,
+    "2025-10-01": 1,
+    "2026-05-12": 1,
+    "2025-12-12": 1,
+    "2025-09-16": 1,
+    "2025-12-10": 1,
+    "2026-06-14": 1,
+    "2025-12-09": 1,
+    "2025-11-28": 1,
+    "2024-08-21": 1
    },
-   "maxCell": 22,
-   "total": 610,
+   "maxCell": 23,
+   "total": 670,
    "endDay": "2027-05-17",
    "days": 182,
    "span": 2,
@@ -806,7 +818,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 610 records you can read. 6,917 more exist that you do not have access to."
+     "text": "Filtered to the 670 records you can read. 6,881 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -819,12 +831,12 @@
      {
       "key": "2",
       "label": "2 - Medium",
-      "count": 350
+      "count": 386
      },
      {
       "key": "3",
       "label": "3 - Low",
-      "count": 247
+      "count": 271
      },
      {
       "key": "1",
@@ -837,8 +849,8 @@
    "shape": {
     "distinct": 3,
     "fill": 1,
-    "topShare": 0.574,
-    "concentration": 0.574
+    "topShare": 0.576,
+    "concentration": 0.576
    },
    "ordinal": true,
    "span": 1
@@ -849,15 +861,15 @@
    "question": "Approval as a share of the whole",
    "field": "approval",
    "fieldLabel": "Approval",
-   "form": "semi_donut",
-   "selectedForm": "semi_donut",
+   "form": "donut",
+   "selectedForm": "donut",
    "demoted": false,
-   "reason": "a part-to-whole with very few slices, where a half arc reads cleaner and leaves room for the total",
+   "reason": "a part-to-whole with few enough slices for arcs to stay comparable",
    "caveats": [
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 610 records you can read. 6,917 more exist that you do not have access to."
+     "text": "Filtered to the 670 records you can read. 6,881 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -870,26 +882,31 @@
      {
       "key": "not requested",
       "label": "Not Yet Requested",
-      "count": 568
+      "count": 621
      },
      {
       "key": "requested",
       "label": "Requested",
-      "count": 25
+      "count": 29
      },
      {
       "key": "approved",
       "label": "Approved",
-      "count": 17
+      "count": 19
+     },
+     {
+      "key": "not_required",
+      "label": "No Longer Required",
+      "count": 1
      }
     ],
     "other": null
    },
    "shape": {
-    "distinct": 3,
+    "distinct": 4,
     "fill": 1,
-    "topShare": 0.931,
-    "concentration": 0.931
+    "topShare": 0.927,
+    "concentration": 0.927
    },
    "ordinal": false,
    "span": 1
@@ -908,7 +925,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 610 records you can read. 6,917 more exist that you do not have access to."
+     "text": "Filtered to the 670 records you can read. 6,881 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -921,7 +938,7 @@
      {
       "key": "0",
       "label": "0",
-      "count": 600
+      "count": 660
      },
      {
       "key": "1",
@@ -943,9 +960,9 @@
    },
    "shape": {
     "distinct": 3,
-    "fill": 0.9934426229508196,
-    "topShare": 0.984,
-    "concentration": 0.984
+    "fill": 0.9940298507462687,
+    "topShare": 0.985,
+    "concentration": 0.985
    },
    "ordinal": false,
    "span": 1
@@ -964,7 +981,7 @@
     {
      "code": "acl_filtered",
      "severity": "info",
-     "text": "Filtered to the 610 records you can read. 6,917 more exist that you do not have access to."
+     "text": "Filtered to the 670 records you can read. 6,881 more exist that you do not have access to."
     },
     {
      "code": "capped",
@@ -977,12 +994,12 @@
      {
       "key": "1",
       "label": "true",
-      "count": 479
+      "count": 528
      },
      {
       "key": "0",
       "label": "false",
-      "count": 131
+      "count": 142
      }
     ],
     "other": null
@@ -990,8 +1007,8 @@
    "shape": {
     "distinct": 2,
     "fill": 1,
-    "topShare": 0.785,
-    "concentration": 0.785
+    "topShare": 0.788,
+    "concentration": 0.788
    },
    "ordinal": false,
    "span": 1
@@ -1006,10 +1023,10 @@
     "isOrdinal": false,
     "isRef": false,
     "offer": true,
-    "reason": "3 values, populated on 100%",
+    "reason": "4 values, populated on 100%",
     "fill": 1,
-    "distinct": 3,
-    "rows": 50
+    "distinct": 4,
+    "rows": 150
    },
    {
     "field": "active",
@@ -1020,7 +1037,7 @@
     "reason": "2 values, populated on 100%",
     "fill": 1,
     "distinct": 2,
-    "rows": 50
+    "rows": 150
    },
    {
     "field": "reassignment_count",
@@ -1028,10 +1045,10 @@
     "isOrdinal": false,
     "isRef": false,
     "offer": true,
-    "reason": "3 values, populated on 99.3%",
-    "fill": 0.9934426229508196,
+    "reason": "3 values, populated on 99.4%",
+    "fill": 0.9940298507462687,
     "distinct": 3,
-    "rows": 50
+    "rows": 150
    },
    {
     "field": "contact_type",
@@ -1039,10 +1056,10 @@
     "isOrdinal": false,
     "isRef": false,
     "offer": true,
-    "reason": "covers the 21.5% of records that have a contact type",
-    "fill": 0.21475409836065573,
+    "reason": "covers the 20.6% of records that have a contact type",
+    "fill": 0.20597014925373133,
     "distinct": 2,
-    "rows": 50,
+    "rows": 150,
     "partial": true
    },
    {
@@ -1054,7 +1071,7 @@
     "reason": "every record here has the same escalation",
     "fill": 1,
     "distinct": 1,
-    "rows": 50
+    "rows": 150
    },
    {
     "field": "additional_assignee_list",
@@ -1065,12 +1082,12 @@
     "reason": "Additional assignee list is empty on 100% of these records",
     "fill": 0,
     "distinct": 0,
-    "rows": 50
+    "rows": 150
    }
   ]
  },
  "notes": [
-  "This subject is expensive to permission-check, so the page stopped reading rows after 5.2s. 15 further measurements were not attempted, and the panels shown are built from the rows that were read."
+  "This subject is expensive to permission-check, so the page stopped reading rows after 5.5s. 15 further measurements were not attempted, and the panels shown are built from the rows that were read."
  ],
  "kpis": [
   {
@@ -1079,21 +1096,21 @@
    "span": 1,
    "question": "How many records, and is that more or fewer than before?",
    "fieldLabel": "Records",
-   "value": 50,
+   "value": 150,
    "capped": true,
    "form": "stat_tile_delta",
    "reason": "compared with the previous month on sys_created_on",
    "delta": {
-    "current": 50,
-    "previous": 50,
+    "current": 110,
+    "previous": 150,
     "currentLabel": "Aug '26",
     "previousLabel": "Jul '26",
-    "elapsedFraction": 0.122,
-    "paceAdjusted": 411,
-    "delta": 361,
-    "change": 7.22,
-    "rawDelta": 0,
-    "rawChange": 0,
+    "elapsedFraction": 0.147,
+    "paceAdjusted": 746,
+    "delta": 596,
+    "change": 3.973,
+    "rawDelta": -40,
+    "rawChange": -0.267,
     "partial": true,
     "mode": "BOUNDED",
     "capped": true
@@ -1101,7 +1118,7 @@
    "caveats": [
     {
      "severity": "info",
-     "text": "This month is 12% elapsed, so the comparison is projected to a full month. Actual so far is 50 against 50 last month."
+     "text": "This month is 15% elapsed, so the comparison is projected to a full month. Actual so far is 110 against 150 last month."
     }
    ]
   },
@@ -1113,11 +1130,11 @@
    "question": "Where does reassignment count sit against complete?",
    "fieldLabel": "Reassignment count",
    "field": "reassignment_count",
-   "value": 0.012,
+   "value": 0.011,
    "target": 100,
    "median": 0,
-   "n": 606,
-   "reason": "measured range is 0 to 2 across 606 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
+   "n": 666,
+   "reason": "measured range is 0 to 2 across 666 records, which is a percentage, so 100 is a target the column declares rather than one we chose",
    "capped": true
   },
   {
@@ -1127,11 +1144,11 @@
    "form": "stat_tile",
    "question": "How long does one take, from created to expected start?",
    "fieldLabel": "Mean hours, Created to Expected start",
-   "value": 66755.5,
+   "value": 64378.3,
    "unit": "h",
    "median": 80480.2,
-   "n": 120,
-   "reason": "measured over 120 records where both dates are set",
+   "n": 132,
+   "reason": "measured over 132 records where both dates are set",
    "caveats": [],
    "capped": true
   }
@@ -1148,8 +1165,8 @@
    {
     "key": "2",
     "label": "2 - Medium",
-    "count": 350,
-    "share": 0.574,
+    "count": 386,
+    "share": 0.576,
     "spark": null,
     "delta": null,
     "change": null
@@ -1157,8 +1174,8 @@
    {
     "key": "3",
     "label": "3 - Low",
-    "count": 247,
-    "share": 0.405,
+    "count": 271,
+    "share": 0.404,
     "spark": null,
     "delta": null,
     "change": null
@@ -1167,13 +1184,13 @@
     "key": "1",
     "label": "1 - High",
     "count": 13,
-    "share": 0.021,
+    "share": 0.019,
     "spark": null,
     "delta": null,
     "change": null
    }
   ],
-  "total": 610,
+  "total": 670,
   "periods": [],
   "grain": "month",
   "span": 2,
@@ -1186,10 +1203,10 @@
    "isOrdinal": false,
    "isRef": true,
    "offer": true,
-   "reason": "26 values, populated on 72%",
-   "fill": 0.719672131147541,
+   "reason": "26 values, populated on 70.7%",
+   "fill": 0.7074626865671642,
    "distinct": 26,
-   "rows": 50,
+   "rows": 150,
    "declaredParent": "assignment_group",
    "declaredParentLabel": "Assignment group"
   },
@@ -1202,7 +1219,7 @@
    "reason": "every record here has the same configuration item",
    "fill": 1,
    "distinct": 0,
-   "rows": 50,
+   "rows": 150,
    "declaredParent": "company",
    "declaredParentLabel": "Company"
   },
@@ -1215,13 +1232,13 @@
    "reason": "every record here has the same location",
    "fill": 1,
    "distinct": 0,
-   "rows": 50,
+   "rows": 150,
    "declaredParent": "company",
    "declaredParentLabel": "Company"
   }
  ],
  "scan": {
-  "spentMs": 5229,
+  "spentMs": 5469,
   "allowanceMs": 5000,
   "scans": 6,
   "starved": 15,
@@ -1229,44 +1246,44 @@
   "log": [
    {
     "via": "proof",
-    "ms": 86,
-    "rows": 50,
+    "ms": 397,
+    "rows": 150,
     "budget": 2500
    },
    {
     "via": "reduce",
-    "ms": 3236,
-    "rows": 610,
+    "ms": 3229,
+    "rows": 670,
     "n": 14,
     "budget": 3200
    },
    {
     "via": "reduce",
-    "ms": 1202,
-    "rows": 750,
+    "ms": 1206,
+    "rows": 780,
     "n": 1,
     "budget": 1200
    },
    {
     "via": "reduce",
-    "ms": 579,
-    "rows": 310,
+    "ms": 174,
+    "rows": 90,
     "n": 1,
-    "budget": 476
+    "budget": 168
    },
    {
     "via": "proof",
-    "ms": 59,
-    "rows": 50,
+    "ms": 265,
+    "rows": 110,
     "budget": 250
    },
    {
     "via": "proof",
-    "ms": 67,
-    "rows": 50,
+    "ms": 198,
+    "rows": 150,
     "budget": 250
    }
   ]
  },
- "timingMs": 5617
+ "timingMs": 5701
 }
