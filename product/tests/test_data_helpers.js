@@ -249,5 +249,173 @@ ok('borderline stays inside the margin', borderline > 2500 && borderline <= 2500
 eq('nothing left to admit costs nothing more', projectProof(400, 100, 100, 0), 400);
 eq('an empty window cannot set a rate', projectProof(400, 0, 0, 900), 400);
 
+/* The regression: MySQL's default collation is case-insensitive, so GROUP BY
+   folds `hardware` and `Hardware` into one bucket and returns an arbitrary
+   casing, while the secure path reads each row and splits them into two. The
+   same category therefore merged or split depending on which path ran, and the
+   key -- which drill filters, ordinal sorts and choice lookups all compare
+   exactly -- was not the declared value. Measured on dev390988: sys_choice
+   declares one entry, value `hardware`, and the payload carried key `Hardware`. */
+console.log('_canonKey — snapping grouped values to their declared spelling');
+var data = new sandbox.CmdData();
+data.meta = function () {
+    return {
+        choices: function (table, field) {
+            if (table === 'incident' && field === 'category') {
+                return [
+                    { value: 'hardware', label: 'Hardware' },
+                    { value: 'network', label: 'Network' },
+                    { value: 'password_reset', label: 'Password Reset' }
+                ];
+            }
+            return [];                                   // not a choice field
+        }
+    };
+};
+
+eq('a wrongly-cased value snaps to the declared one',
+   data._canonKey('incident', 'category', 'Hardware'), 'hardware');
+eq('an already-canonical value is untouched',
+   data._canonKey('incident', 'category', 'network'), 'network');
+eq('underscored values snap too',
+   data._canonKey('incident', 'category', 'Password_Reset'), 'password_reset');
+eq('a value absent from the list is left alone, not invented',
+   data._canonKey('incident', 'category', 'Outllook SPA mailbox'),
+   'Outllook SPA mailbox');
+eq('a field with no choice list is never rewritten',
+   data._canonKey('incident', 'short_description', 'Hardware'), 'Hardware');
+eq('empty stays empty', data._canonKey('incident', 'category', ''), '');
+eq('null becomes empty', data._canonKey('incident', 'category', null), '');
+/* Reference and free-text fields must survive verbatim: rewriting a sys_id or a
+   person's name to match some unrelated choice list would be far worse than the
+   bug this fixes. */
+eq('a sys_id is never touched',
+   data._canonKey('incident', 'assigned_to', '681ccaf9c0a8016400b98a06818d57c7'),
+   '681ccaf9c0a8016400b98a06818d57c7');
+
+/* F1 from the 2026-08-10 adversarial review: a drill URL widened with `^OR` or
+   `^NQ` was accepted as a subset of an already-proven query and handed to an
+   unchecked GlideRecord cursor. Confirmed live on dev390988:
+   `category=software^ORsys_idISNOTEMPTY` against `incident`, proven trusted on
+   the empty base query, returned all 4,266 rows -- the whole table -- still
+   labelled VERIFIED. This is the fix, tested at both layers the review asked
+   for: the pure predicate, and _trustedFor wired to it. */
+console.log('_wideningOperator / _trustedFor — the ^OR / ^NQ query-injection fix');
+var widening = sandbox.CmdData._wideningOperator;
+
+eq('a plain AND clause does not widen', widening('category=software'), false);
+eq('empty adds nothing', widening(''), false);
+eq('null is not widening', widening(null), false);
+eq('OR right after the proven prefix widens',
+   widening('ORsys_idISNOTEMPTY'), true);
+eq('OR after a later ^ widens',
+   widening('category=software^ORsys_idISNOTEMPTY'), true);
+eq('NQ widens the same way', widening('category=software^NQsys_idISNOTEMPTY'), true);
+eq('a lowercase field starting "or..." is not mistaken for the operator',
+   widening('order_number=5'), false);
+eq('a real clause containing the letters "or" mid-field is untouched',
+   widening('category=software^priority=1'), false);
+
+var d2 = new sandbox.CmdData();
+d2._verdict = {};
+
+/* The live scenario: an empty base query proven trusted, exactly the common
+   case -- "the page proves the whole table once and every panel inherits it." */
+d2._verdict['incident|'] = { trusted: true };
+eq('a narrowing AND clause is trusted (the normal, safe drill)',
+   d2._trustedFor('incident', 'category=software'), true);
+eq('the injected OR widening is REFUSED, not silently trusted',
+   d2._trustedFor('incident', 'category=software^ORsys_idISNOTEMPTY'), false);
+eq('the injected NQ widening is REFUSED the same way',
+   d2._trustedFor('incident', 'category=software^NQsys_idISNOTEMPTY'), false);
+eq('an untrusted table never becomes trusted',
+   d2._trustedFor('change_request', 'category=software'), false);
+
+/* The scenario the review's proof used: trust proven on a NARROWER base than the
+   empty query (a time-windowed slice), so the fix must hold there too, not only
+   in the common empty-base case. */
+var d3 = new sandbox.CmdData();
+d3._verdict = {};
+d3._verdict['incident|opened_at>=2025-08-10 00:00:00'] = { trusted: true };
+eq('narrowing a proven non-empty base is trusted',
+   d3._trustedFor('incident', 'opened_at>=2025-08-10 00:00:00^category=software'),
+   true);
+eq('widening a proven non-empty base is refused',
+   d3._trustedFor('incident',
+     'opened_at>=2025-08-10 00:00:00^category=software^ORsys_idISNOTEMPTY'),
+   false);
+eq('an exact match to the proven base, no extra clause, is trusted',
+   d3._trustedFor('incident', 'opened_at>=2025-08-10 00:00:00'), true);
+
+/* F4 from the review, plus the performance question the fix raised: dateSpread's
+   nonEmpty count used to be an unchecked fastCount() sitting right below a
+   comment explaining why the rest of the function is secure. Routing it through
+   total()/aclVerdict is correct, but aclVerdict re-proves from scratch for every
+   distinct query string -- and dateSpread calls it once per candidate date
+   field, each with its own field-specific query. Naively that would trade one
+   correctness bug for a new one-proof-scan-per-field performance cost.
+   aclVerdict now checks _trustedFor before proving, so a query that only
+   narrows an already-trusted one inherits that trust instead. Tested here by
+   stubbing out the Glide-backed methods so the LOGIC is exercised without an
+   instance: does the narrowed query really skip secureCountBoxed. */
+console.log('aclVerdict — inherits trust from a wider proof instead of re-proving');
+
+function verdictProbe() {
+    var d = new sandbox.CmdData();
+    d._verdict = {};
+    d._counts = {};
+    d.canRead = function () { return true; };
+    d.fastCount = function (table, query) {
+        /* A stand-in table where the fast count of any subset of the proven
+           base equals its true (secure) count -- i.e. ACLs filter nothing for
+           this viewer, the case that makes trust transfer sound at all. */
+        var known = { '': 100, 'category=software': 40,
+                       'category=software^ORsys_idISNOTEMPTY': 100 };
+        return known[query || ''] !== undefined ? known[query || ''] : 0;
+    };
+    var proofCalls = 0;
+    d.secureCountBoxed = function (table, query, budgetMs) {
+        proofCalls++;
+        var n = d.fastCount(table, query);
+        return { count: n, capped: false, timedOut: false, predictedMs: 0,
+                target: n, ms: 1 };
+    };
+    d.proofCalls = function () { return proofCalls; };
+    return d;
+}
+
+var vp = verdictProbe();
+var root = vp.aclVerdict('incident', '');
+eq('the first call for a table proves it, and finds it trusted', root.trusted, true);
+eq('exactly one proof ran for the root query', vp.proofCalls(), 1);
+
+var narrowed = vp.aclVerdict('incident', 'category=software');
+eq('a query that only narrows the proven root is trusted too',
+   narrowed.trusted, true);
+eq('...without a second proof -- it inherited trust from _trustedFor',
+   vp.proofCalls(), 1);
+eq('its count is the fast count for THIS query, not the root\'s',
+   narrowed.aggregate, 40);
+
+/* The security fix and the performance fix must not cancel each other out: a
+   widened query must still fall through to a real proof, never inherit trust
+   silently. */
+var widened = vp.aclVerdict('incident', 'category=software^ORsys_idISNOTEMPTY');
+eq('a widened query does NOT inherit trust -- it triggers its own proof',
+   vp.proofCalls(), 2);
+eq('and that proof is what decides its trusted-ness, not a false inheritance',
+   widened.trusted, true);                       // true here only because the
+                                                   // stub's fast/secure agree for
+                                                   // this query too; the point is
+                                                   // proofCalls incremented, i.e.
+                                                   // it was actually re-checked.
+
+/* A second, unrelated table must never inherit another table's trust. */
+var other = verdictProbe();
+other.aclVerdict('incident', '');
+var untouched = other.aclVerdict('change_request', 'category=software');
+eq('an unrelated table is proved on its own, not inherited from incident',
+   other.proofCalls(), 2);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

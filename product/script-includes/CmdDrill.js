@@ -204,6 +204,59 @@ CmdDrill.prototype = {
     },
 
     /**
+     * Cuts a drill path down to its longest safe prefix.
+     *
+     * The path arrives from a URL query parameter, decoded and otherwise
+     * unvalidated, and it is walked straight into stepQuery, which concatenates
+     * `field + '=' + key` into an encoded query with no escaping. Two things make
+     * that dangerous rather than merely untidy:
+     *
+     *   1. `field` was never checked against the table. Any string reaches the
+     *      query as a clause.
+     *   2. `key` was never checked for `^`, which is the encoded-query clause
+     *      separator. A key of `software^ORsys_idISNOTEMPTY` does not narrow the
+     *      drill to Software, it ORs in a clause that matches every row.
+     *
+     * That second one defeats CmdData._trustedFor, which decides an unchecked
+     * cursor is safe by testing whether the query is a narrower version of one
+     * already proven -- true for `^` used as AND, false for `^OR` and `^NQ`,
+     * which widen instead. Confirmed live on dev390988: a drill path of
+     * `category:software^ORsys_idISNOTEMPTY` returned all 4,266 incidents,
+     * labelled VERIFIED, and the widened clause was carried verbatim into the
+     * terminal record-list link.
+     *
+     * So every segment is checked before any of it reaches a query: `field` must
+     * be one of the table's own dimensions, and `key` must not contain `^`. The
+     * first bad segment truncates the path there -- a drill three levels deep
+     * with a poisoned second step is not "partially honoured with the bad part
+     * removed," it is cut back to one level, because a level's meaning depends on
+     * the ones above it.
+     *
+     * This is one of two independent checks. CmdData._trustedFor also refuses to
+     * transfer trust across `^OR` / `^NQ` on its own, so a path that reached a
+     * query through any other caller is still caught.
+     */
+    sanitizePath: function (table, path) {
+        var out = [];
+        if (!path || !path.length) return out;
+
+        var dims = this.meta.dimensions(table);
+        var valid = {};
+        var i;
+        for (i = 0; i < dims.length; i++) valid[dims[i].name] = true;
+
+        for (i = 0; i < path.length; i++) {
+            var seg = path[i];
+            if (!seg || !valid[seg.field]) break;
+            var key = seg.key;
+            if (key !== '' && key !== null && key !== undefined &&
+                String(key).indexOf('^') !== -1) break;
+            out.push(seg);
+        }
+        return out;
+    },
+
+    /**
      * The URL for the terminal step: the platform's own list view.
      *
      * This is the one place where being inside ServiceNow beats Power BI rather

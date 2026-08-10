@@ -96,6 +96,26 @@ CmdData.projectProof = function (spentMs, windowMs, windowRows, rowsLeft) {
     return spentMs + (windowMs / windowRows) * rowsLeft;
 };
 
+/**
+ * Whether an encoded-query fragment widens rather than narrows.
+ *
+ * Pure, and kept out of _trustedFor so it can be tested without an instance --
+ * exactly the shape of gap that let a query-injection bug through. `^` joins
+ * encoded-query clauses with AND by default, which is what makes "the query
+ * extends an already-proven one" the same fact as "the query matches a subset of
+ * proven-safe rows." `^OR` and `^NQ` are the two operators that break that: they
+ * join the next clause with OR, or start an entirely new disjunct, so anything
+ * after either one can match rows the proof never covered.
+ *
+ * `frag` is whatever comes after the proven prefix, matched at the very start of
+ * the fragment as well as after any later `^`, so a proven query of `''` (the
+ * common case: the whole table was proven once) checks the entire remaining
+ * query, not just its first clause.
+ */
+CmdData._wideningOperator = function (frag) {
+    return !!frag && /(^|\^)(OR|NQ)/.test(frag);
+};
+
 /* Wall-clock budget for one secure group-by, the per-panel fallback when the ACL
    verdict is not trusted. Smaller than the proof budget because a page runs several
    of these where it runs one proof. */
@@ -219,6 +239,26 @@ CmdData.prototype = {
         }
 
         var fast = this.fastCount(table, query);
+
+        /* If a wider query on this table is already proven trusted this request,
+           and this query only narrows it (the same AND-only relationship
+           _trustedFor already requires before handing out an unchecked cursor
+           elsewhere), then this query is trusted too, for the same reason: a
+           viewer who can read every row of the wider query can read every row
+           of a subset of it. No new proof needed -- re-running one would only
+           ever reach the same answer, on this request's own budget.
+           This is what makes dateSpread() affordable: it calls total() once per
+           candidate date field with a field-specific narrowed query, and each of
+           those inherits the page's one base-query proof instead of opening a
+           fresh secure scan per field. */
+        if (this._trustedFor(table, query)) {
+            v = { trusted: true, denied: false, aggregate: fast, secure: fast,
+                  delta: 0, capped: false, timedOut: false,
+                  proof: 'a wider query on this table was already proven safe ' +
+                         'this request, and this one only narrows it' };
+            this._verdict[key] = v;
+            return v;
+        }
 
         /* The proof is a row scan, time-boxed.
          *
@@ -468,7 +508,7 @@ CmdData.prototype = {
         while (ga.next()) {
             var raw = ga.getValue(field);
             all.push({
-                key: raw === null || raw === '' ? '' : String(raw),
+                key: this._canonKey(table, field, raw),
                 label: this._label(ga, field, raw),
                 count: parseInt(ga.getAggregate('COUNT'), 10) || 0
             });
@@ -511,7 +551,13 @@ CmdData.prototype = {
             if (scanned >= CmdData.SECURE_SCAN_CAP) { capped = true; break; }
             scanned++;
             var raw = gr.getValue(field);
-            var k = raw === null || raw === '' ? '' : String(raw);
+            /* Canonicalised for the same reason as fastGroupBy, and here it also
+               changes the counts rather than only the key. This path reads each
+               row's stored value, so `hardware` and `Hardware` land in two buckets,
+               where the aggregate path's case-insensitive GROUP BY folds them into
+               one. Without this the same subject splits or merges a category
+               depending on whether the ACL verdict happened to be trusted. */
+            var k = this._canonKey(table, field, raw);
             counts[k] = (counts[k] || 0) + 1;
             if (labels[k] === undefined) {
                 labels[k] = k === '' ? '' : (gr.getDisplayValue(field) || k);
@@ -566,7 +612,7 @@ CmdData.prototype = {
             for (i = 0; i < fields.length; i++) {
                 var f = fields[i];
                 var raw = gr.getValue(f);
-                var k = (raw === null || raw === '') ? '' : String(raw);
+                var k = this._canonKey(table, f, raw);
                 counts[f][k] = (counts[f][k] || 0) + 1;
                 if (labels[f][k] === undefined) {
                     labels[f][k] = k === '' ? '' : (gr.getDisplayValue(f) || k);
@@ -986,7 +1032,11 @@ CmdData.prototype = {
             for (i = 0; i < valueFields.length; i++) {
                 var f = valueFields[i];
                 var raw = gr.getValue(f);
-                row[f] = (raw === null || raw === undefined) ? '' : String(raw);
+                /* Canonicalised here too, because this row object feeds every
+                   accumulator in the shared scan -- group, cross-tab, time-group
+                   and pair alike. Snapping once at the read is what keeps a
+                   category spelled the same way in all of them. */
+                row[f] = this._canonKey(table, f, raw);
             }
             for (i = 0; i < displayFields.length; i++) {
                 var df = displayFields[i], rv = row[df];
@@ -1062,6 +1112,21 @@ CmdData.prototype = {
      * nothing about the table, so a verdict is only ever borrowed by a query that
      * contains it, never the reverse. When nothing matches, the answer is no and the
      * scan is permission-checked.
+     *
+     * That reasoning holds only if every extra clause is AND'd on. `^` joins
+     * clauses with AND by default, but `^OR` and `^NQ` widen the query instead of
+     * narrowing it -- `A^ORB` matches A or B, which is not a subset of A, and a
+     * viewer entitled to read A is not thereby entitled to read B. The prefix test
+     * below used to accept any query starting with `provenQuery + '^'` regardless
+     * of what came after, which made a trusted verdict on a narrow slice
+     * transferable to the whole table by appending `^ORsys_idISNOTEMPTY`.
+     * Confirmed live: a drill query of `category=software^ORsys_idISNOTEMPTY`
+     * against `incident` was accepted as trusted and returned all 4,266 rows
+     * through an unchecked cursor, still labelled VERIFIED.
+     *
+     * CmdDrill.sanitizePath is the other half of this fix and stops a drill URL
+     * from producing such a query in the first place. This check does not depend
+     * on that one -- a query built any other way is refused here regardless.
      */
     _trustedFor: function (table, query) {
         query = query || '';
@@ -1073,6 +1138,11 @@ CmdData.prototype = {
             var vq = k.substring(prefix.length);
             if (vq === '' || query === vq ||
                 query.substring(0, vq.length + 1) === vq + '^') {
+                /* Whatever the query adds beyond the proven prefix: the whole
+                   query when the proven base is empty, otherwise everything past
+                   the '^' that follows it. Empty when query === vq exactly. */
+                var extra = query.substring(vq.length + (vq === '' ? 0 : 1));
+                if (CmdData._wideningOperator(extra)) continue;
                 return true;
             }
         }
@@ -1807,7 +1877,23 @@ CmdData.prototype = {
             hi.query();
             if (hi.next()) out.max = hi.getValue(field) || '';
 
-            out.nonEmpty = this.fastCount(table, q);
+            /* total(), not fastCount(). This used to be an unchecked
+               GlideAggregate count sitting three lines below a comment
+               explaining why min/max are secure -- "this decides what the
+               viewer is shown." nonEmpty is never itself rendered, but
+               CmdPayload and CmdAnalysis both use it to decide whether a date
+               field is worth a trend panel at all, which makes it a gate, not
+               a display value, and the rule this engagement wrote for itself
+               is that gates run against the viewer's own permitted rows. An
+               unchecked count here could offer a trend built on a field
+               that's only populated in rows this viewer cannot read.
+               This runs once per candidate date field, so a naive fix would
+               cost one new secure proof scan per field. It doesn't: aclVerdict
+               now checks _trustedFor before proving anything, so as long as the
+               page's own base query was already established trusted -- the
+               common case -- every field-specific query here inherits that
+               trust instead of opening a new scan. */
+            out.nonEmpty = this.total(table, q).count;
 
             if (out.max && out.min.length >= 7 && out.max.length >= 7) {
                 var y0 = parseInt(out.min.substr(0, 4), 10);
@@ -1990,6 +2076,43 @@ CmdData.prototype = {
         if (raw === null || raw === '') return '';
         var d = ga.getDisplayValue(field);
         return d || String(raw);
+    },
+
+    /**
+     * The declared choice value for a grouped result, when one exists.
+     *
+     * MySQL's default collation is case-insensitive, so `GROUP BY category` folds
+     * `hardware` and `Hardware` into a single bucket and hands back whichever
+     * casing it happened to meet first. On dev390988 that surfaced as a key of
+     * `Hardware` sitting beside lowercase `network` and `software`, while
+     * `sys_choice` declares exactly one entry, value `hardware`, label `Hardware`.
+     *
+     * The count was never wrong -- the fold is what the platform's own reports see
+     * too -- but the key is what a drill filter, an ordinal sort and a choice
+     * lookup are all built from, and those compare exactly. A key that is not the
+     * declared value silently misses every one of them.
+     *
+     * So a grouped value is snapped back to its declared spelling when it differs
+     * only by case. Anything with no choice list, or a value genuinely absent from
+     * one, is returned untouched: free text and reference fields are not choices
+     * and must not be rewritten.
+     */
+    _canonKey: function (table, field, raw) {
+        if (raw === null || raw === '') return '';
+        var s = String(raw);
+        var list;
+        try {
+            list = this.meta().choices(table, field);
+        } catch (e) {
+            return s;
+        }
+        if (!list || !list.length) return s;
+        var lower = s.toLowerCase();
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].value === s) return s;                  // already canonical
+            if (String(list[i].value).toLowerCase() === lower) return list[i].value;
+        }
+        return s;
     },
 
     /**

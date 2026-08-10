@@ -2942,10 +2942,14 @@
     head.appendChild(el('div', 'card-sub', k.table));
     card.appendChild(head);
 
+    /* Two stats, not three. A "reports" count used to sit here, sourced from an
+       ACL-unchecked GlideAggregate over sys_report -- which carries private,
+       owner-scoped rows -- so it could show a viewer a number that included
+       reports they cannot open. It never reaches the payload now; see
+       CmdCatalog.build(). Everything still shown here is a checked number. */
     var stats = el('div', 'card-stats');
     stats.appendChild(stat(k.capped ? compact(k.rows) + '+' : compact(k.rows), 'records'));
     stats.appendChild(stat(String(k.dimensions), 'dimensions'));
-    stats.appendChild(stat(String(k.reports), 'reports'));
     card.appendChild(stats);
 
     if (k.preview && k.preview.top.length) {

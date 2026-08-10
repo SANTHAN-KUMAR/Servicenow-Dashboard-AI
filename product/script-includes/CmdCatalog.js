@@ -132,7 +132,18 @@ CmdCatalog.prototype = {
      * The catalog for the current user.
      *
      * Returns areas, each with cards, plus the counts the header needs. Every
-     * number here is ACL-checked; nothing is a GlideAggregate total.
+     * number ON A CARD is ACL-checked -- `rows` comes from a bounded
+     * GlideRecordSecure scan (secureMultiGroupBy), and `dimensions`/`dates` are
+     * schema metadata, not row data, so there is nothing to check.
+     *
+     * `sys_report`'s own report count is the one number in this file that is
+     * NOT ACL-checked, and it does not reach a card: `sys_report` carries
+     * genuinely private, owner-scoped rows, and counting them with
+     * fastGroupBy (GlideAggregate) would both display a number the viewer
+     * cannot verify and rank candidate tables by reports they cannot see. It
+     * is read once, in _candidates, purely to decide which tables are worth
+     * offering at all and in what order -- an internal ranking signal, never
+     * a displayed fact. See _candidates for where that line is drawn.
      */
     build: function (limit) {
         limit = limit || CmdCatalog.MAX_CANDIDATES;
@@ -191,7 +202,10 @@ CmdCatalog.prototype = {
                 rows: probe.scanned,
                 capped: probe.capped,
                 atLeast: CmdCatalog.MIN_ROWS,
-                reports: t.reports,
+                /* t.reports (sys_report count) deliberately does not appear here.
+                   It is an ACL-unchecked, owner-scoped number -- see build()'s
+                   docstring -- and stops at ranking candidates in _candidates.
+                   It must never reach a card. */
                 dimensions: dims.length,
                 dates: dates.length,
                 /* What the card previews: the first offered dimension is what the
@@ -233,6 +247,14 @@ CmdCatalog.prototype = {
      * subject somebody cares about; a table with none is speculative. This is the
      * same principle as the form engine, applied to the catalog: read what the
      * instance can actually tell us instead of deciding for it.
+     *
+     * The count comes from fastGroupBy -- GlideAggregate, not ACL-checked -- and
+     * that is deliberate here, not an oversight: it exists only to rank and
+     * shortlist candidates, is never rendered, and never reaches the client.
+     * A viewer's card counts (rows, dimensions, dates) are computed separately,
+     * later, and ARE checked. Do not wire this count to anything user-facing
+     * without switching it to a secure count first -- sys_report rows are
+     * privately owned and this number does not survive that scrutiny as-is.
      */
     _candidates: function (limit) {
         var rows = this.data.fastGroupBy('sys_report', 'table', 'tableISNOTEMPTY');

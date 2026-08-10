@@ -26,6 +26,7 @@ import http.cookiejar
 import json
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -35,9 +36,35 @@ HERE = Path(__file__).parent
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0 Safari/537.36")
 
+# A shared development instance stalls for tens of seconds at a time under its own
+# background jobs, so a single timeout is not evidence of anything. Transport
+# failures retry; HTTP errors do not, because a 403 will still be a 403.
+RETRIES = 5
+LOGIN_TIMEOUT = 120
+CALL_TIMEOUT = 180
+
 
 class InstanceError(RuntimeError):
     pass
+
+
+def _with_retry(fn, label, tries=RETRIES, verbose=False):
+    """Retry a transport-level failure with linear backoff."""
+    last = None
+    for n in range(tries):
+        try:
+            return fn()
+        except urllib.error.HTTPError:
+            raise                              # the server answered; it means it
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            last = e
+            if n == tries - 1:
+                break
+            wait = 3 * (n + 1)
+            if verbose:
+                print(f"  {label}: {str(e)[:60]}, retry in {wait}s", file=sys.stderr)
+            time.sleep(wait)
+    raise InstanceError(f"{label} failed after {tries} attempts: {last}")
 
 
 class Instance:
@@ -71,15 +98,19 @@ class Instance:
 
     def login(self):
         """UI form login, then lift the CSRF token off an authenticated page."""
-        self._op.open(f"{self.base}/login.do", timeout=30).read()
+        _with_retry(lambda: self._op.open(f"{self.base}/login.do",
+                                          timeout=LOGIN_TIMEOUT).read(),
+                    "login GET", verbose=self.verbose)
 
         body = urllib.parse.urlencode({
             "user_name": self._user,
             "user_password": self._pw,
             "sys_action": "sysverb_login",
         }).encode()
-        r = self._op.open(f"{self.base}/login.do", body, timeout=30)
-        html = r.read().decode("utf-8", "replace")
+        html = _with_retry(
+            lambda: self._op.open(f"{self.base}/login.do", body,
+                                  timeout=LOGIN_TIMEOUT).read().decode("utf-8", "replace"),
+            "login POST", verbose=self.verbose)
 
         names = {ck.name for ck in self._jar}
         if "glide_user_session" not in names and "JSESSIONID" not in names:
@@ -101,8 +132,10 @@ class Instance:
                      "/nav_to.do?uri=sys_ui_page_list.do",
                      "/home.do"):
             try:
-                page = self._op.open(self.base + path, timeout=30) \
-                              .read().decode("utf-8", "replace")
+                page = _with_retry(
+                    lambda: self._op.open(self.base + path, timeout=LOGIN_TIMEOUT)
+                                    .read().decode("utf-8", "replace"),
+                    "csrf")
             except Exception:
                 continue
             for pat in (r"var g_ck\s*=\s*['\"]([0-9a-zA-Z_\-]+)['\"]",
@@ -130,8 +163,10 @@ class Instance:
 
         req = urllib.request.Request(url, data=data, headers=headers, method=method)
         try:
-            with self._op.open(req, timeout=90) as r:
-                raw = r.read().decode("utf-8", "replace")
+            raw = _with_retry(
+                lambda: self._op.open(req, timeout=CALL_TIMEOUT)
+                                .read().decode("utf-8", "replace"),
+                f"{method} {path}", verbose=self.verbose)
         except urllib.error.HTTPError as e:
             detail = e.read().decode("utf-8", "replace")[:400]
             raise InstanceError(f"{method} {path} -> HTTP {e.code}: {detail}")

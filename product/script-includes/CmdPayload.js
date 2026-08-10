@@ -163,6 +163,13 @@ CmdPayload.prototype = {
         if (!d.exists) return this._error(table, 'That table does not exist on this instance.');
         if (!d.canRead) return this._error(table, 'You do not have read access to this table.');
 
+        /* The path arrives from a URL parameter and is cut to its longest safe
+           prefix before anything downstream sees it -- an unvalidated field name
+           or a key containing '^' reaches stepQuery as an arbitrary query clause
+           otherwise. See CmdDrill.sanitizePath. Everything below this line, and
+           _pathOut's breadcrumbs, use the sanitized path, never the raw one. */
+        path = this.drill.sanitizePath(table, path);
+
         /* The drill path becomes the query. Built through CmdDrill so the empty
            slice is expressed as ISEMPTY rather than an equality against '', which
            is what makes the "(none)" bar clickable. */

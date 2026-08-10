@@ -278,7 +278,6 @@ def main():
                 {"script": src, "active": "true", "sys_scope": GLOBAL_SCOPE,
                  "description": f"COMMAND dashboards client asset. content hash {h}"},
                 verify_field="script")
-        prune_assets(inst, current)
 
     # Pages carry the content hashes of the client assets, so a UI script can
     # never be deployed without them. Separating the two is what let a correct
@@ -291,6 +290,19 @@ def main():
                  "sys_scope": GLOBAL_SCOPE,
                  "description": "COMMAND dashboards surface"},
                 verify_field="html")
+
+    # Pruning old assets happens LAST, after the pages that reference the new
+    # ones have already landed. It used to run right after the new scripts were
+    # written and before the pages were rewritten, which left a window where the
+    # live page still pointed at the asset name this call was about to delete --
+    # a dashboard serving HTTP 200 with no client JavaScript at all, no error
+    # anywhere. On a healthy instance the window was a few seconds; on one
+    # answering as slowly as dev390988 sometimes has, a single write in that gap
+    # taking 90 seconds means the dashboard is broken for the full 90 seconds.
+    # There is no version of this ordering that is fine to get wrong "just this
+    # once" -- flip it back and the window returns immediately.
+    if args.only in (None, "ui"):
+        prune_assets(inst, current)
 
     print(f"\n  all writes verified by readback")
     print(f"  catalog:   https://{inst.host}/cmd_catalog.do")

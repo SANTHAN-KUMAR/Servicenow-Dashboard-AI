@@ -27,6 +27,7 @@ Two rules keep it defensible:
 """
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -59,19 +60,35 @@ CHANGE_PIPELINE = [
 # CmdAnalysis.rankShift() looks for when deciding between a bump chart and a slope
 # chart -- a series that climbs and then falls back is precisely the case the two
 # endpoints of a slope would hide.
+#
+# Every category seed.py can write MUST appear here, at every month.
+#
+# It did not, and that was a real bug with a visible consequence. seed.py writes
+# six categories including password_reset at weight 8; this table listed five.
+# Reshaping assigns each record a category drawn only from this table, so the
+# first shaping run moved every password_reset incident to something else and no
+# later run could ever put one back. Measured on dev390988 afterwards:
+# password_reset was extinct table-wide, 0 records, against the 2,237 recorded
+# before we touched the instance. It is still a live, active choice on the
+# dictionary, so the platform's own reports carried an empty category that the
+# data says should be populated -- we had silently deleted a category from the
+# client's demo data.
+#
+# password_reset is parked at a constant 8, matching seed.py's own weight, and
+# clear of database at 10 so the two never trade ranks on sampling noise alone.
 INCIDENT_MIX = [
-    {"network": 34, "software": 18, "hardware": 16, "inquiry": 14, "database": 10},
-    {"network": 31, "software": 21, "hardware": 16, "inquiry": 14, "database": 10},
-    {"network": 27, "software": 25, "hardware": 16, "inquiry": 14, "database": 10},
-    {"network": 22, "software": 30, "hardware": 17, "inquiry": 13, "database": 10},
-    {"network": 18, "software": 34, "hardware": 18, "inquiry": 12, "database": 10},
-    {"network": 16, "software": 35, "hardware": 20, "inquiry": 11, "database": 10},
-    {"network": 17, "software": 33, "hardware": 22, "inquiry": 11, "database": 10},
-    {"network": 21, "software": 29, "hardware": 22, "inquiry": 11, "database": 10},
-    {"network": 26, "software": 25, "hardware": 21, "inquiry": 11, "database": 10},
-    {"network": 30, "software": 22, "hardware": 20, "inquiry": 11, "database": 10},
-    {"network": 33, "software": 20, "hardware": 19, "inquiry": 11, "database": 10},
-    {"network": 35, "software": 19, "hardware": 18, "inquiry": 11, "database": 10},
+    {"network": 34, "software": 18, "hardware": 16, "inquiry": 14, "database": 10, "password_reset": 8},
+    {"network": 31, "software": 21, "hardware": 16, "inquiry": 14, "database": 10, "password_reset": 8},
+    {"network": 27, "software": 25, "hardware": 16, "inquiry": 14, "database": 10, "password_reset": 8},
+    {"network": 22, "software": 30, "hardware": 17, "inquiry": 13, "database": 10, "password_reset": 8},
+    {"network": 18, "software": 34, "hardware": 18, "inquiry": 12, "database": 10, "password_reset": 8},
+    {"network": 16, "software": 35, "hardware": 20, "inquiry": 11, "database": 10, "password_reset": 8},
+    {"network": 17, "software": 33, "hardware": 22, "inquiry": 11, "database": 10, "password_reset": 8},
+    {"network": 21, "software": 29, "hardware": 22, "inquiry": 11, "database": 10, "password_reset": 8},
+    {"network": 26, "software": 25, "hardware": 21, "inquiry": 11, "database": 10, "password_reset": 8},
+    {"network": 30, "software": 22, "hardware": 20, "inquiry": 11, "database": 10, "password_reset": 8},
+    {"network": 33, "software": 20, "hardware": 19, "inquiry": 11, "database": 10, "password_reset": 8},
+    {"network": 35, "software": 19, "hardware": 18, "inquiry": 11, "database": 10, "password_reset": 8},
 ]
 
 # Problem category mix: the same idea without the reversal. Hardware climbs
@@ -278,12 +295,38 @@ def render(tpl, **kw):
     return tpl
 
 
+def check_mix_covers_seed():
+    """Every category seed.py can write must be reachable after reshaping.
+
+    Reshaping draws only from the mix, so a category seed.py writes but the mix
+    omits is not merely under-represented -- it is deleted on the first run and
+    can never come back. That is how password_reset went from 2,237 records to
+    zero without anyone noticing. This turns a silent data loss into a failure
+    before a single record is touched.
+    """
+    seed_src = (Path(__file__).parent / "seed.py").read_text()
+    m = re.search(r"var CATS = \[(.*?)\];", seed_src, re.S)
+    if not m:
+        return                                   # seed.py restructured; nothing to check
+    seed_cats = set(re.findall(r"\['([a-z_]+)'", m.group(1)))
+    for month, mix in enumerate(INCIDENT_MIX):
+        missing = seed_cats - set(mix)
+        if missing:
+            raise SystemExit(
+                "shape.py refuses to run: INCIDENT_MIX month %d omits %s, which "
+                "seed.py writes. Reshaping would delete those categories "
+                "permanently. Add them to every month of the mix."
+                % (month, ", ".join(sorted(missing))))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--credentials", default=None)
     args = ap.parse_args()
+
+    check_mix_covers_seed()
 
     inst = Instance(args.credentials, verbose=False).login()
     print()
