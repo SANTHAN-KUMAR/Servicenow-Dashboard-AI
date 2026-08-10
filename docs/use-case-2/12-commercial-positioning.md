@@ -94,9 +94,13 @@ nothing more.
 tooling gap. It is a decision-making gap, and it is the one we automate.
 
 **A second finding, same shape.** The schema declares that Category rolls up to
-Subcategory. On 13,986 incidents, subcategory is filled on **42 of them** — empty
-99.7% of the time. So a customer clicking into "Software" (2,651 incidents) would
-land on a level where 99.3% of records read "(none)".
+Subcategory. Measured pre-seeding, 2026-08-03, on 13,986 incidents, subcategory
+was filled on **42 of them** — empty 99.7% of the time. *That row count predates
+this engagement's own demo seeding and is not the instance's current state —
+re-measure before quoting it to the client.* The pattern it demonstrates is
+still the right one to make in a pitch: a customer clicking into "Software"
+lands on a level where the overwhelming majority of records read "(none)",
+because a declared hierarchy is not evidence that the data uses it.
 
 The lesson generalises: **the platform's metadata records what somebody intended,
 not what is true of the data.** Every chart and every drill level we offer is

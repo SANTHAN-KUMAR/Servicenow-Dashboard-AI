@@ -164,11 +164,24 @@ also less work.
 
 ### 2.2 The measured problem: declared hierarchies are mostly empty
 
+> ⚠️ **Correction, 2026-08-10.** The row counts below (13,986 total, 42 with
+> subcategory set) were measured on 2026-08-03, before this engagement's own
+> demo seeding and reshaping work ran. Confirmed by an independent adversarial
+> review the same day: the instance now holds 4,266 incidents, 98.4% of them
+> synthetic data this engagement created, and no query against the current
+> state reproduces 13,986. See `13-adversarial-review-findings.md` §F7.
+> **The design conclusion this section reaches is unaffected** — a declared
+> hierarchy being sparse is a property of the schema and how it's actually
+> used, not of which specific rows happen to be in the table on a given day —
+> but do not repeat 13,986 or 42 as a current measurement, in front of the
+> client or anywhere else, without re-running this query against the live
+> instance first.
+
 The obvious way to build this is to read the dictionary's dependent-field
 declarations, which is where `category` to `subcategory` lives, and use them as
 the drill hierarchy. We checked what that would actually produce.
 
-On `incident`, 13,986 records:
+On `incident`, 13,986 records, measured 2026-08-03:
 
 | category | subcategory | records |
 |---|---|---:|

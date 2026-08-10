@@ -234,12 +234,18 @@ scratch and do not treat it as an absolute ban on custom charting. The resolved 
 - **DRIFT: building drilldown off the dictionary's declared hierarchies without measuring
   whether they hold in the data.** `sys_dictionary.dependent_on` says someone *intended* a
   hierarchy, exactly as `sys_report.type` says someone *picked* a chart. Neither is a property
-  of the rows. Measured on this instance: `incident.subcategory` is set on **42 of 13,986
-  records**, so the declared category-to-subcategory drill is 99.7% empty, while
-  `change_request` category-to-type is fully populated. **Correction:** a drill level is offered
-  only after passing fill-rate and cardinality gates *on the viewer's permitted rows*, and a
-  rejected level shows its reason rather than a dead-end click. Same profiler, same discipline,
-  one question further down. See section 2 of `10-client-review-and-revised-scope.md`.
+  of the rows. Measured on this instance **on 2026-08-03, before demo seeding**:
+  `incident.subcategory` was set on **42 of 13,986 records**, so the declared
+  category-to-subcategory drill was 99.7% empty, while `change_request` category-to-type was
+  fully populated. ⚠️ **That row count is stale — do not quote it as current.** Demo seeding and
+  reshaping since then has made `incident` 98.4% synthetic (4,266 rows total as of
+  2026-08-10); no query against the live instance now returns 13,986. Re-measure before
+  repeating either number, especially in front of the client. **Correction (still valid, the
+  seeding date doesn't change it):** a drill level is offered only after passing fill-rate and
+  cardinality gates *on the viewer's permitted rows*, and a rejected level shows its reason
+  rather than a dead-end click. Same profiler, same discipline, one question further down. See
+  section 2 of `10-client-review-and-revised-scope.md`, corrected 2026-08-10, and
+  `13-adversarial-review-findings.md` §F7.
 
 - **DRIFT: letting anything reach the runtime over a CDN.** External libraries and fonts are
   permitted in the *build*, and the client agreed to that, but a runtime request to an outside

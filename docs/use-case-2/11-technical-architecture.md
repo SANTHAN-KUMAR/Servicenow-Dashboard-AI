@@ -261,11 +261,17 @@ check this themselves.**
 
 ### 6.2 Drilldown · Built, depth 3
 
-Using the schema's declared hierarchies naively fails: on `incident`, 13,986 records,
-**subcategory is set on 42** — empty 99.70%. A user clicking into Software (2,651
-incidents) would land where 99.3% read "(none)". On `change_request`, Category→Type is
-fully populated. So drill quality is a property of a specific field pair on a
-specific table.
+Using the schema's declared hierarchies naively fails: measured on `incident`
+pre-seeding, 2026-08-03, 13,986 records, **subcategory was set on 42** — empty
+99.70%. **That row count no longer describes the instance** — this session's
+own seeding and reshaping work has since made `incident` 98.4% synthetic data
+(4,266 rows total), and the current subcategory fill has not been re-measured
+against that state. The design conclusion is unaffected — declared hierarchies
+being sparse on some tables and not others is a property of the schema, not of
+which rows happen to be in the table on a given day — but do not quote 13,986 or
+42 as a live number without re-measuring first. On `change_request`,
+Category→Type was, at the same 2026-08-03 measurement, fully populated. So drill
+quality is a property of a specific field pair on a specific table.
 
 **The general lesson: platform metadata records what an author intended, not what is
 true of the rows.** A drill level is offered only after passing fill-rate and
