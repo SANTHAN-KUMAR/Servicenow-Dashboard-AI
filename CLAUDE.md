@@ -187,6 +187,49 @@ scratch and do not treat it as an absolute ban on custom charting. The resolved 
   the only one that got stronger under red-teaming — not the third pillar. **Correction:** every aggregate binding must be checked against the viewer's persona before
   it's considered done. This is also where the AI moat and the correctness obligation are the same
   piece of work — don't treat them as separate backlog items.
+  ✅ **Resolved and superseded, 2026-08-15.** The 2026-08-11 correction that stood here was
+  wrong, and it was wrong in the direction that matters: it concluded the differentiator could
+  not be demonstrated live on this instance, and that conclusion came from a broken test rather
+  than from the instance. Two things were measured incorrectly.
+
+  **`gs.impersonate()` in a background script does not apply row-level ACLs.** Every persona
+  test this engagement ran used it, so every one came back showing the persona reading every
+  row, which read as "nothing is filtered here" instead of as "this test does not work". A
+  role-less user appeared to read all 7,808 rows of `task`, a table with no read ACL that grants
+  them anything. **`GlideImpersonate` does apply them** and is what persona tests must use.
+
+  **`glide.sm.default_mode` is `deny` on dev390988**, so the wildcard `*` read ACL whose script
+  is `gs.getProperty('glide.sm.default_mode') == 'allow'` grants nothing. `problem`, `task` and
+  `kb_knowledge` carry no unconditional open read ACL and genuinely do filter. `incident` does
+  carry one at the table level, and still filters at the row level through a separate ACL
+  scripted as `answer = (current.category == "hardware")`.
+
+  Measured live on 2026-08-15 against a role-less persona, with **no change to the instance's
+  security configuration**:
+
+  | table | GlideAggregate | readable | verdict |
+  |---|---|---|---|
+  | `incident` | 4,266 | **815** | FILTERED |
+  | `task` | 7,808 | **815** | FILTERED |
+  | `kb_knowledge` | 757 | **669** | FILTERED |
+  | `problem` | 544 | **0** | DENIED |
+  | `change_request` | 1,505 | **0** | DENIED |
+  | `sys_user` | 665 | 665 | VERIFIED |
+
+  This replaces the stale 67-vs-0 figure, is repeatable, and is the number to put in front of
+  the client: **native reporting counts 4,266 incidents for this user and they can open 815, an
+  overstatement of 3,451 records.** All three verdicts occur naturally, so FILTERED, BOUNDED and
+  DENIED now have live coverage and not only offline assertions.
+
+  The first live run also found that the product did not work for these viewers at all.
+  `GlideRecord.canRead()` evaluates read ACLs with no record in context, so an ACL testing
+  `current` fails it for someone who can still read a real subset. Three call sites treated it
+  as authoritative: the dashboard answered "You do not have read access to this table" to a
+  viewer holding 815 readable incidents, the catalog dropped their cards, and `aclVerdict`
+  returned DENIED without ever running the proof — which is why those branches had no live
+  coverage. Fixed in `bd07082`. **The standing lesson is the one this whole entry is about: an
+  ACL claim tested only as admin is untested, and a persona test that finds nothing filtered
+  should be assumed broken before the instance is.**
 
 - **DRIFT: reaching for Highcharts by default.** It requires a paid commercial license, and an OEM
   license (quote-only, perpetual) if embedded in something distributed to and hosted by customers

@@ -164,18 +164,31 @@ also less work.
 
 ### 2.2 The measured problem: declared hierarchies are mostly empty
 
-> ⚠️ **Correction, 2026-08-10.** The row counts below (13,986 total, 42 with
-> subcategory set) were measured on 2026-08-03, before this engagement's own
-> demo seeding and reshaping work ran. Confirmed by an independent adversarial
-> review the same day: the instance now holds 4,266 incidents, 98.4% of them
-> synthetic data this engagement created, and no query against the current
-> state reproduces 13,986. See `13-adversarial-review-findings.md` §F7.
-> **The design conclusion this section reaches is unaffected** — a declared
-> hierarchy being sparse is a property of the schema and how it's actually
-> used, not of which specific rows happen to be in the table on a given day —
-> but do not repeat 13,986 or 42 as a current measurement, in front of the
-> client or anywhere else, without re-running this query against the live
-> instance first.
+> ⚠️ **Re-measured 2026-08-15, and the example below is now false on this
+> instance.** The figures in this section (13,986 incidents, 42 with subcategory
+> set, 99.7% empty) were measured on 2026-08-03, before this engagement's own
+> demo seeding and reshaping ran. Measured live today:
+>
+> | | 2026-08-03 | 2026-08-15 |
+> |---|---|---|
+> | incidents | 13,986 | **4,266** |
+> | subcategory set | 42 | **2,175** |
+> | fill rate | 0.3% | **51.0%** |
+> | distinct subcategories | not recorded | **18** |
+>
+> **Do not demonstrate this section's example live.** At 51% fill with 18 distinct
+> values the gate will now *offer* the category-to-subcategory drill, so the
+> document and the screen would contradict each other in front of the client. The
+> seeding this engagement ran is what changed it.
+>
+> **The design conclusion is unaffected and is worth separating from the example
+> that motivated it**: a drill level must be offered on measured fill and
+> cardinality over the viewer's own permitted rows, never on the dictionary's
+> declaration alone. That the same instance moved from 0.3% to 51% on the same
+> declared hierarchy in twelve days is, if anything, a stronger argument for
+> measuring than the original 99.7% was — a declaration that was equally true on
+> both dates predicted neither. Use `change_request` category-to-type, which was
+> fully populated on both measurements, if a live example is needed.
 
 The obvious way to build this is to read the dictionary's dependent-field
 declarations, which is where `category` to `subcategory` lives, and use them as

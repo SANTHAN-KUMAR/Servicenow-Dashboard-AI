@@ -17,6 +17,92 @@ non-admin persona and current subcategory fill that this session did not obtain 
 
 ---
 
+## 0. Status addendum, 2026-08-15
+
+This review was written against commit `a4f605f`. Five days of work later, this is
+what is closed and what is not. The addendum sits at the top rather than the bottom
+because the review's own headline finding turned out to understate the problem.
+
+| | Finding | Status |
+|---|---|---|
+| F1 | Drill URL turns the permission proof off | **Closed** in `ab760f9` |
+| F2 | Nothing is ever tested as a non-admin | **Closed** in `bd07082`, and it was worse than reported |
+| F3 | Catalog contradicts its own guarantee | **Closed** |
+| F4 | ACL-unsafe count decides panel offers | **Closed** |
+| F5 | Scatter panel is 87% of the payload | **Open**, unchanged |
+| F6 | Deploy deletes live assets too early | **Closed** |
+| F7 | Drill evidence cannot be reproduced | **Closed** by re-measurement, and the example is now false |
+| F8 | Base64 costs 1.5× in gzip | Open, informational |
+| F9 | Built is not the documented architecture | **Open**, unchanged |
+
+### F2 was right, and the reason it stayed open was itself a bug
+
+The review said the FILTERED, BOUNDED and DENIED branches had never executed
+against a genuinely filtered viewer. Correct. Two follow-up attempts concluded the
+instance had no restricted viewer available to test with, and recorded in CLAUDE.md
+that all relevant tables carried an open `*` read ACL. **That conclusion was wrong
+and came from a broken test.**
+
+`gs.impersonate()` in a background script does not apply row-level ACLs. Every
+persona test used it, so every one reported the persona reading every row — which
+reads as "nothing is filtered here" rather than "this test does not work". A
+role-less user appeared to read all 7,808 rows of `task`, a table whose read ACLs
+grant them nothing. `GlideImpersonate` does apply them. Separately,
+`glide.sm.default_mode` is `deny` here, so the wildcard ACL that looked open grants
+nothing.
+
+With both corrected, and with **no change to the instance's security config**:
+
+| table | GlideAggregate | readable | verdict |
+|---|---|---|---|
+| `incident` | 4,266 | 815 | FILTERED |
+| `task` | 7,808 | 815 | FILTERED |
+| `kb_knowledge` | 757 | 669 | FILTERED |
+| `problem` | 544 | 0 | DENIED |
+| `change_request` | 1,505 | 0 | DENIED |
+| `sys_user` | 665 | 665 | VERIFIED |
+
+The first live run then found the product did not work for those viewers at all.
+`GlideRecord.canRead()` evaluates read ACLs with no record in context, so an ACL
+testing `current` fails it for a viewer who can read a real subset. `incident`
+carries `answer = (current.category == "hardware")`, exactly that shape. Three call
+sites treated `canRead()` as authoritative: the dashboard answered "You do not have
+read access to this table" to a viewer holding 815 readable incidents, the catalog
+dropped their cards, and `aclVerdict` returned DENIED without running the proof.
+
+So the review's finding was not "an untested path"; it was "an untested path that
+did not work". That is the strongest available argument for its own recommendation.
+
+### F5 and F9 are unchanged and remain the two largest open items
+
+F5: still no canvas fallback, no `content-visibility`, no `IntersectionObserver`,
+no server-side binning, and `PAIR_CAP` is still 4000.
+
+F9: still Script Includes and UI Pages in the global scope, still no scoped
+application, no roles, no navigation entry and no Store route. The UXF spike is
+still unrun, and it now gates the performance answer as well as drilldown.
+
+### Performance, re-measured
+
+Section 4 of this review recorded a catalog at 12.2s and a dashboard at 9.7s. After
+three fixes — a memo guard that never hit because an empty array is falsy in this
+script engine, a box-plot builder rescanning the table once per ordinal dimension,
+and a trusted table planning group-by accumulators onto a row scan an index could
+answer — measured today:
+
+| Surface | Review | Now |
+|---|---|---|
+| Catalog | 12.2s | ~4.6s |
+| `sys_user` | not recorded | 1.0s |
+| `problem` | not recorded | 1.7s |
+| `change_request` | not recorded | 3.7s |
+| `incident` | 9.7s | 6.0s |
+
+The budget is still missed on large subjects, and the reason is structural rather
+than a remaining optimisation. See `14-client-questions-answered.md` §5.
+
+---
+
 ## 1. Findings, worst first
 
 ### F1 — A drill URL can turn the permission proof off (High, confirmed live)
