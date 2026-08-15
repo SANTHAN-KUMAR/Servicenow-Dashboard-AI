@@ -161,7 +161,16 @@ CmdPayload.prototype = {
 
         var d = this.meta.describe(table);
         if (!d.exists) return this._error(table, 'That table does not exist on this instance.');
-        if (!d.canRead) return this._error(table, 'You do not have read access to this table.');
+
+        /* There is deliberately no table-level canRead() gate here. It was one,
+           and it was wrong: canRead() evaluates the read ACLs with no record in
+           context, so a condition or script referencing `current` fails it for a
+           viewer who can still read a real subset of the rows. Live on dev390988 a
+           role-less persona holds 815 readable incidents and 669 readable
+           knowledge articles, and this line reported "You do not have read access
+           to this table" to them for both. Access is decided below by
+           data.aclVerdict, which reaches its answer from a permission-checked
+           scan rather than from a context-free ACL evaluation. */
 
         /* The path arrives from a URL parameter and is cut to its longest safe
            prefix before anything downstream sees it -- an unvalidated field name
@@ -212,7 +221,14 @@ CmdPayload.prototype = {
         };
 
         if (total.count === 0) {
-            payload.notes.push('No records match this filter for you.');
+            /* Distinguish the two zeroes. "Nothing matches" and "nothing here is
+               yours to see" look identical in a count and are entirely different
+               facts to put in front of a viewer, and only the verdict knows which
+               one this is. */
+            payload.notes.push(verdict.denied
+                ? ('This subject holds ' + verdict.aggregate + ' records and your ' +
+                   'permissions do not admit any of them, so there is nothing to show.')
+                : 'No records match this filter for you.');
             payload.timingMs = new Date().getTime() - t0;
             return payload;
         }

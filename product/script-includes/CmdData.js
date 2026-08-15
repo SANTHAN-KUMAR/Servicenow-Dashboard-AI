@@ -27,6 +27,14 @@ var CmdData = Class.create();
    must be labelled as one. Never present a capped count as exact. */
 CmdData.SECURE_SCAN_CAP = 20000;
 
+/* Membership probes (hasAtLeast) over-fetch, because GlideRecordSecure discards
+   ACL-denied rows *after* setLimit has already bounded the fetch. A viewer who
+   reads one row in five would otherwise never reach any threshold. The
+   multiplier is what that viewer's card costs; the cap is what a viewer with no
+   access costs. */
+CmdData.MEMBERSHIP_OVERFETCH = 40;
+CmdData.MEMBERSHIP_SCAN_CAP = 6000;
+
 /* Cap on distinct groups returned before the tail is folded into Other. Set well
    above the form engine's display thresholds so truncation is a rendering
    decision, not a data one. */
@@ -231,14 +239,46 @@ CmdData.prototype = {
         if (this._verdict[key]) return this._verdict[key];
 
         var v;
-        if (!this.canRead(table)) {
-            v = { trusted: false, denied: true, aggregate: 0, secure: 0,
-                  delta: 0, capped: false, timedOut: false, proof: 'no read access' };
+
+        /* canRead() is NOT authoritative, and treating it as such hid the entire
+           FILTERED path from every test this engagement ever ran.
+         *
+         * GlideRecord.canRead() evaluates the table's read ACLs with no record in
+         * context. A read ACL whose script or condition references `current`
+         * therefore evaluates false, and canRead() returns false, for a viewer who
+         * can nonetheless read a real subset of the rows.
+         *
+         * Measured live on dev390988, 2026-08-15, as a role-less persona:
+         *
+         *     table        GlideAggregate   GlideRecordSecure   canRead()
+         *     incident              4,266                 815       false
+         *     kb_knowledge            757                 669       false
+         *     problem                 544                   0       false
+         *     task                  7,808                 815       false
+         *
+         * `incident` carries a read ACL of `answer = (current.category ==
+         * "hardware")`, which is exactly this shape. Bailing out on canRead()
+         * reported "You do not have read access to this table" to a viewer holding
+         * 815 readable incidents, and the FILTERED/BOUNDED/DENIED branches below
+         * never executed against a real restricted viewer even once.
+         *
+         * The only authoritative test is the permission-checked scan that runs
+         * below anyway. So canRead() is kept as a cheap hint that we are not on the
+         * common unfiltered path, and the verdict is decided by the proof. */
+        var tableCanRead = this.canRead(table);
+
+        var fast = this.fastCount(table, query);
+
+        /* An empty table is not a denial, so denial is only ever concluded when
+           there was something there to be denied. */
+        if (fast === 0) {
+            v = { trusted: true, denied: false, aggregate: 0, secure: 0,
+                  delta: 0, capped: false, timedOut: false,
+                  tableCanRead: tableCanRead,
+                  proof: 'the query matches no rows at all, so there is nothing to check' };
             this._verdict[key] = v;
             return v;
         }
-
-        var fast = this.fastCount(table, query);
 
         /* If a wider query on this table is already proven trusted this request,
            and this query only narrows it (the same AND-only relationship
@@ -254,6 +294,7 @@ CmdData.prototype = {
         if (this._trustedFor(table, query)) {
             v = { trusted: true, denied: false, aggregate: fast, secure: fast,
                   delta: 0, capped: false, timedOut: false,
+                  tableCanRead: tableCanRead,
                   proof: 'a wider query on this table was already proven safe ' +
                          'this request, and this one only narrows it' };
             this._verdict[key] = v;
@@ -279,15 +320,30 @@ CmdData.prototype = {
          * floor rather than to a slow page. */
         var proof = this.secureCountBoxed(table, query, CmdData.PROOF_MS);
 
+        /* Denial is a conclusion of the proof, not a precondition of it: the query
+           matches rows (fast > 0, checked above) and the permission-checked scan
+           admitted none of them. Whether the scan ran to completion or stopped at
+           its bound only changes how strongly that is stated, not what is shown --
+           either way the honest answer is that this viewer has nothing here. */
+        var denied = (proof.count === 0);
+
         v = {
             trusted: (!proof.capped && !proof.timedOut && proof.count === fast),
-            denied: false,
+            denied: denied,
             aggregate: fast,
             secure: proof.count,
             delta: fast - proof.count,
             capped: proof.capped || proof.timedOut,
             timedOut: proof.timedOut,
-            proof: proof.timedOut
+            tableCanRead: tableCanRead,
+            proof: denied
+                ? ((proof.capped || proof.timedOut || fast > CmdData.SECURE_SCAN_CAP)
+                    ? 'no row this viewer may read was found within the ' +
+                      CmdData.SECURE_SCAN_CAP + ' row scan bound, of ' + fast +
+                      ' matching rows'
+                    : 'all ' + fast + ' matching rows were permission-checked and ' +
+                      'none of them may be read by this viewer')
+                : proof.timedOut
                 ? (proof.predictedMs > 0
                     ? 'a full permission check of ' + proof.target + ' rows was ' +
                       'measured at about ' + Math.round(proof.predictedMs / 100) / 10 +
@@ -464,13 +520,32 @@ CmdData.prototype = {
      * `enough` rows have been seen, so a table with a million readable rows costs
      * the same as one with `enough`.
      */
+    /**
+     * Does this viewer have at least `enough` readable rows here?
+     *
+     * The obvious implementation, setLimit(enough), is wrong for exactly the
+     * viewer this product exists to get right. setLimit bounds the rows the
+     * database returns, and GlideRecordSecure then discards the ones the viewer
+     * may not read, so a viewer who can read one row in five never reaches the
+     * threshold no matter how many rows they actually hold. Measured live on
+     * dev390988: a role-less persona holds 815 readable incidents, and
+     * hasAtLeast('incident', '', 25) under setLimit(25) returned atLeast=false,
+     * which dropped the card from their catalog entirely.
+     *
+     * So over-fetch, and stop as soon as the threshold is met. The multiplier
+     * bounds the cost for a viewer who genuinely has nothing: a denied table
+     * costs one capped read rather than a full scan.
+     */
     hasAtLeast: function (table, query, enough) {
         var gr = new GlideRecordSecure(table);
         if (query) gr.addEncodedQuery(query);
-        gr.setLimit(enough);
+        gr.setLimit(Math.min(CmdData.MEMBERSHIP_SCAN_CAP, enough * CmdData.MEMBERSHIP_OVERFETCH));
         gr.query();
         var n = 0;
-        while (gr.next()) n++;
+        while (gr.next()) {
+            n++;
+            if (n >= enough) break;
+        }
         return { count: n, atLeast: n >= enough };
     },
 

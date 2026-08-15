@@ -160,9 +160,22 @@ CmdCatalog.prototype = {
             var d = this.meta.describe(t.table);
             if (!d.exists) continue;
 
-            /* Table-level read check first, because it is free and because a
-               viewer who fails it must not even learn the row count. */
-            if (!d.canRead) { denied++; continue; }
+            /* There is deliberately no table-level canRead() gate here.
+             *
+             * It was one, and it emptied the catalog for exactly the viewers the
+             * catalog is supposed to be scoped for. canRead() evaluates the read
+             * ACLs with no record in context, so any ACL whose condition or script
+             * mentions `current` fails it for a viewer who can still read plenty of
+             * rows. Live on dev390988 a role-less persona fails canRead() on
+             * `incident` and `kb_knowledge` while holding 815 and 669 readable rows
+             * respectively, and this line removed both cards.
+             *
+             * Membership is decided instead by the permission-checked probe below,
+             * which is the same thing the card's own numbers are built from. It
+             * costs more than a context-free ACL evaluation and it is the only one
+             * of the two that answers the question actually being asked. A viewer
+             * who genuinely has nothing still learns nothing: the probe returns
+             * zero and the card is dropped before any count is computed. */
 
             /* One bounded, permission-checked scan per card, doing double duty.
              *
@@ -183,8 +196,14 @@ CmdCatalog.prototype = {
                it is bounded by rows rather than by time and a table with expensive
                ACLs cannot disappear from the catalog just for being slow. Two
                subjects vanished that way before this split. */
-            if (!this.data.hasAtLeast(t.table, '', CmdCatalog.MIN_ROWS).atLeast) {
-                tooSmall++; continue;
+            var member = this.data.hasAtLeast(t.table, '', CmdCatalog.MIN_ROWS);
+            if (!member.atLeast) {
+                /* Zero readable rows and no readable rows are worth telling apart in
+                   the diagnostics, because one means the viewer is shut out of this
+                   subject and the other means the subject is too thin to be worth a
+                   card for anyone. The viewer sees neither card either way. */
+                if (member.count === 0) denied++; else tooSmall++;
+                continue;
             }
 
             var fields = this._previewFields(t.table);
