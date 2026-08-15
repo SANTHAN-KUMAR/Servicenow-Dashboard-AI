@@ -187,8 +187,17 @@ CmdPayload.prototype = {
 
         /* The drill path becomes the query. Built through CmdDrill so the empty
            slice is expressed as ISEMPTY rather than an equality against '', which
-           is what makes the "(none)" bar clickable. */
-        var query = '';
+           is what makes the "(none)" bar clickable.
+         *
+         * `baseQuery` is the slice the page starts from before any drilling: for a
+         * converted report it is that report's own saved filter. It is platform
+         * configuration written by a report author, not a URL parameter, which is
+         * the distinction that matters here -- the drill path appended after it is
+         * still sanitized by CmdDrill because that one does arrive from the URL.
+         * Everything downstream treats the combined string as the base query, so a
+         * converted report inherits drilldown, the ACL verdict and form selection
+         * without any of them needing to know it came from a report. */
+        var query = opts.baseQuery ? String(opts.baseQuery) : '';
         var used = [];
         var i;
         for (i = 0; i < path.length && i < CmdDrill.MAX_DEPTH; i++) {
@@ -349,7 +358,7 @@ CmdPayload.prototype = {
            every cheap step that followed and skipped them for no gain. */
         var tAssembly = new Date().getTime();
 
-        var lead = this._leadDims(candidates, dims, used);
+        var lead = this._leadDims(candidates, dims, used, opts.leadField);
 
         /* The second declared scan, now that the lead dimension is known. */
         this._planLeadScan(table, query, dateField, lead,
@@ -593,7 +602,7 @@ CmdPayload.prototype = {
      * fields that appear nowhere else reads as two unrelated dashboards stapled
      * together.
      */
-    _leadDims: function (candidates, dims, used) {
+    _leadDims: function (candidates, dims, used, leadField) {
         var out = { primary: null, secondary: null, ordinal: null,
                     concentrated: null, wide: null, ordinals: [] };
         if (!candidates.length) return out;
@@ -607,10 +616,26 @@ CmdPayload.prototype = {
         var byName = {}, i;
         for (i = 0; i < dims.length; i++) byName[dims[i].name] = dims[i];
 
+        /* A converted report leads on the dimension its author chose.
+         *
+         * Ranking by informativeness is right when nobody has said what the page
+         * is about. On a saved report somebody has: they grouped it by something,
+         * and that grouping is the question. Overriding it with a
+         * better-scoring field produces a page that is arguably more interesting
+         * and is answering something they did not ask, which for a side-by-side
+         * against the report they already have is precisely the wrong trade.
+         *
+         * Only the lead is forced. Which form draws it, and every other panel on
+         * the page, still comes from the measured shape. */
+        if (leadField && byName[leadField] && !this._contains(used, leadField)) {
+            out.primary = byName[leadField];
+        }
+
         for (i = 0; i < scored.length; i++) {
             var d = byName[scored[i].field];
             if (!d || this._contains(used, d.name)) continue;
             if (!out.primary) { out.primary = d; continue; }
+            if (d.name === out.primary.name) continue;
             if (!out.secondary) { out.secondary = d; }
             /* Every ordinal candidate, not just the first.
              *

@@ -47,6 +47,7 @@ SCRIPT_INCLUDES = [
     "CmdAnalysis.js",
     "CmdCatalog.js",
     "CmdPayload.js",
+    "CmdReport.js",
 ]
 
 # Order is load order, and it matters: the theme must be on the root element
@@ -113,6 +114,14 @@ def validate_script(name, src):
         (r"\bArray\.from\b", "Array.from"),
         (r"\.includes\(", "String/Array.includes"),
         (r"\bfor\s*\(\s*(?:var\s+)?[\w$]+\s+of\s", "for...of"),
+        # Rhino keeps a longer reserved-word list than modern engines, and a
+        # collision is a compile error rather than a runtime one: the whole
+        # Script Include fails to load and every caller reports it as "not
+        # defined", which points at the caller rather than at the cause.
+        # `var native = ...` cost a deploy round to find.
+        (r"(?<![\w$.])(?:native|goto|char|final|byte|synchronized|transient|"
+         r"volatile|abstract|implements|interface|package|private|protected|"
+         r"public|static|enum|export|import|super)\s*(?:=[^=]|;|\))", "Rhino reserved word"),
     ):
         # Strip comments and strings first, so prose about arrow functions in a
         # docblock does not fail the deploy.
@@ -123,6 +132,39 @@ def validate_script(name, src):
         raise InstanceError(
             f"{name}: uses ES6+ features Rhino does not support: "
             f"{', '.join(sorted(set(problems)))}"
+        )
+    return True
+
+
+def verify_compiles(inst, names):
+    """Instantiate every deployed Script Include on the instance.
+
+    A readback proves the bytes landed. It does not prove the script loads: a
+    Rhino compile error leaves the record byte-perfect and the class undefined,
+    and the first symptom is an unrelated caller reporting "X is not defined".
+    `var native = ...` shipped that way and the readback said ok.
+
+    So the deploy ends by asking the instance to construct each class. This runs
+    in the same engine that will run them in production, which is the only
+    authority worth asking.
+    """
+    js = ["var out = {};"]
+    for n in names:
+        js.append(
+            "try { new %s(); out['%s'] = 'ok'; } "
+            "catch (e) { out['%s'] = String(e).substring(0, 160); }" % (n, n, n)
+        )
+    js.append("gs.print('@@' + new JSON().encode(out));")
+
+    result = inst.run_json("\n".join(js))
+    broken = {k: v for k, v in result.items() if v != "ok"}
+    for n in names:
+        status = result.get(n, "MISSING")
+        print(f"  compile  {n:22s} {status}")
+    if broken:
+        raise InstanceError(
+            "deployed but does not load on the instance: "
+            + "; ".join(f"{k}: {v}" for k, v in broken.items())
         )
     return True
 
@@ -268,6 +310,8 @@ def main():
                  "access": "public", "sys_scope": GLOBAL_SCOPE,
                  "description": f"COMMAND dashboards. See product/script-includes/{name}.js"},
                 verify_field="script")
+
+        verify_compiles(inst, [n for n, _ in includes])
 
     if args.only in (None, "ui"):
         current = set()
