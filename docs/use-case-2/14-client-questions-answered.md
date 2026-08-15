@@ -148,6 +148,23 @@ development instance that stalls under its own background jobs:
 **The stated budget is 1.2s to first paint and 2.5s to interactive. Small and
 medium subjects meet it. Large ones do not.**
 
+There is a second, worse number that belongs here rather than in a footnote. All
+of the above is an unrestricted viewer. A viewer whose rows are ACL-filtered pays
+a permission evaluation per row, and on this instance that ranges from 0.66ms on
+`incident` to 6.87ms on `kb_knowledge`. Measured, the same catalog build:
+
+| Viewer | Catalog | Cards offered |
+|---|---|---|
+| admin | ~6.0s | 12 |
+| role-less persona | ~11.5s | 2, with 12 subjects not reached |
+
+**The viewer who most needs the entitlement scoping waits longest for it.** The
+build is now bounded, so it stops and reports how many subjects it did not reach
+rather than running for half a minute, which is what it did before this was
+measured. Bounded is not the same as fast. The fix is to cache the permission
+verdict per viewer rather than re-establish it on every page load, and that is
+not built.
+
 The cause is structural rather than a missing optimisation. A client-side fetch was
 measured not to return on this instance — a Scripted REST call from a logged-in
 browser session never comes back, and the platform's own Table API behaves the same

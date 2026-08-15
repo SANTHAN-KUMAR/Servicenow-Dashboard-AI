@@ -38,6 +38,13 @@ CmdData.SECURE_SCAN_CAP = 20000;
  * enough*40 cost 2,416ms across the build for an answer the first 120 rows had
  * already given. So the wide probe is the fallback, not the default, and an
  * indexed count decides whether it is worth running at all. */
+/* Wall-clock bound on one membership probe. Rows are not a usable bound on their
+   own here: permission-checking a row costs 0.66ms on `incident` and 6.87ms on
+   `kb_knowledge`, so the same 4,800 row over-fetch is three seconds on one table
+   and thirty-three on the other. Without this the catalog took 31.6s for a
+   filtered viewer and 4.7s for an admin, which is the wrong way round. */
+CmdData.MEMBERSHIP_MS = 500;
+
 CmdData.MEMBERSHIP_OVERFETCH = 40;
 CmdData.MEMBERSHIP_SCAN_CAP = 6000;
 
@@ -543,7 +550,7 @@ CmdData.prototype = {
      * costs one capped read rather than a full scan.
      */
     hasAtLeast: function (table, query, enough) {
-        var n = this._countUpTo(table, query, enough, enough);
+        var n = this._countUpTo(table, query, enough, enough, CmdData.MEMBERSHIP_MS);
         if (n >= enough) return { count: n, atLeast: true, overfetched: false };
 
         /* The cheap probe fell short, which has two possible causes and they need
@@ -556,20 +563,41 @@ CmdData.prototype = {
         }
 
         var wide = this._countUpTo(table, query, enough,
-            Math.min(CmdData.MEMBERSHIP_SCAN_CAP, enough * CmdData.MEMBERSHIP_OVERFETCH));
+            Math.min(CmdData.MEMBERSHIP_SCAN_CAP, enough * CmdData.MEMBERSHIP_OVERFETCH),
+            CmdData.MEMBERSHIP_MS);
         return { count: wide, atLeast: wide >= enough, overfetched: true };
     },
 
-    /** Readable rows, stopping at `enough`, from a fetch bounded by `fetch`. */
-    _countUpTo: function (table, query, enough, fetch) {
+    /**
+     * Readable rows, stopping at `enough`, from a fetch bounded by `fetch` rows
+     * and by `budgetMs` of wall clock.
+     *
+     * The time bound is not belt and braces, it is the bound that matters, and
+     * leaving it out cost a 31 second catalog. A row bound assumes rows cost
+     * about the same, and on this instance they differ by an order of magnitude:
+     * `incident` permission-checks at 0.66ms per row and `kb_knowledge` at
+     * 6.87ms. The membership over-fetch reads up to 4,800 rows, which is three
+     * seconds on one table and thirty-three on the other, for the same question.
+     *
+     * A probe that runs out of time returns what it counted, which is a floor,
+     * and a floor below the threshold correctly means "not enough found in the
+     * time available". The caller offers no card, which is the same outcome as
+     * not enough rows existing and is the right one: a subject that cannot be
+     * established as readable inside a budget cannot be offered as readable.
+     */
+    _countUpTo: function (table, query, enough, fetch, budgetMs) {
         var gr = new GlideRecordSecure(table);
         if (query) gr.addEncodedQuery(query);
         gr.setLimit(fetch);
         gr.query();
-        var n = 0;
+        var n = 0, t0 = new Date().getTime();
         while (gr.next()) {
             n++;
             if (n >= enough) break;
+            if (budgetMs && n % CmdData.CHECK_EVERY === 0 &&
+                (new Date().getTime() - t0) > budgetMs) {
+                break;
+            }
         }
         return n;
     },

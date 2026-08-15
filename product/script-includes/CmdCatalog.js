@@ -126,6 +126,26 @@ CmdCatalog.CARD_COUNT_CAP = 400;
  * should not be presented as one. */
 CmdCatalog.CARD_SCAN_MS = 160;
 
+/* Wall-clock budget for the whole catalog build, and the floor of cards it will
+   chase regardless. The floor exists for the same reason CmdPayload has one: an
+   empty entry page is not a faster entry page, it is a broken one, and the viewer
+   whose ACLs are expensive is exactly the viewer who would get zero cards from a
+   pure deadline. */
+CmdCatalog.BUDGET_MS = 6000;
+CmdCatalog.MIN_CARDS = 4;
+
+/* The ceiling the floor cannot overrule.
+ *
+ * Chasing MIN_CARDS past the budget is right when the next card is cheap and
+ * wrong when it is not, and for a viewer whose ACLs are expensive it is never
+ * cheap: those are the same tables. Measured, a role-less persona spent 31.6s
+ * reaching four cards while an admin spent 4.7s reaching twelve, which is the
+ * wrong way round and was the floor's doing. Past this the build stops with
+ * however few it has and reports what it did not reach, because a viewer with
+ * two subjects and a fast page is better served than one with four and a page
+ * that looks broken. */
+CmdCatalog.HARD_MS = 11000;
+
 /* Candidate dimensions measured per card. They share one scan, so this costs field
    reads rather than ACL evaluations, and the winner is chosen after measuring
    instead of guessed before. */
@@ -173,9 +193,41 @@ CmdCatalog.prototype = {
 
         var candidates = this._candidates(limit);
         var cards = [];
-        var considered = 0, denied = 0, tooSmall = 0;
+        var considered = 0, denied = 0, tooSmall = 0, skipped = 0;
 
         for (var i = 0; i < candidates.length; i++) {
+            /* A deadline for the whole page, not just for each card.
+             *
+             * Every individual probe here was already bounded and the page still
+             * was not, which is the same distinction that cost CmdPayload three
+             * rewrites. Bounding a card at 160ms says nothing about a build that
+             * examines thirty of them, and the cost per card is not a constant:
+             * it depends on how expensive the viewer's ACLs are to evaluate,
+             * which is the one input nothing here controls.
+             *
+             * Measured on dev390988, the same catalog build:
+             *
+             *     admin                         ~4.6s     12 cards
+             *     role-less persona            34.2s       4 cards
+             *
+             * Seven and a half times slower to offer a third as many subjects,
+             * because for a filtered viewer every probe pays a per-row ACL
+             * evaluation and most of them end in a card that is never drawn. The
+             * viewer who most needs the catalog to be honest waited longest for
+             * it.
+             *
+             * So the build stops considering new subjects once the budget is gone
+             * and says how many it did not reach. A shorter catalog is a
+             * legitimate answer; a catalog that takes half a minute is not. What
+             * is already drawn stays exact -- this drops subjects, never accuracy
+             * inside one. */
+            var spent = new Date().getTime() - t0;
+            if ((cards.length >= CmdCatalog.MIN_CARDS && spent > CmdCatalog.BUDGET_MS) ||
+                spent > CmdCatalog.HARD_MS) {
+                skipped = candidates.length - i;
+                break;
+            }
+
             var t = candidates[i];
             considered++;
 
@@ -297,7 +349,11 @@ CmdCatalog.prototype = {
                 offered: cards.length,
                 considered: considered,
                 denied: denied,
-                tooSmall: tooSmall
+                tooSmall: tooSmall,
+                /* Reported, never silent. A catalog that quietly stopped looking
+                   reads as "this is everything you have", which is the one thing
+                   it must not say when it is not true. */
+                skipped: skipped
             }
         };
     },
