@@ -529,3 +529,31 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
             color:var(--ink-3)}
 .rep-dyn{padding:1px 6px; border:1px solid var(--edge-2); border-radius:999px;
          font-size:10px; color:var(--ink-3)}
+
+/* ── print ─────────────────────────────────────────────────────────────────
+   The browser's print pipeline is also its "save as PDF", so this is the whole
+   PDF export. Forced to the light palette regardless of the on-screen theme:
+   a dark dashboard printed as-is is a page of ink, and nobody wants the version
+   of this file that arrives in an inbox to be the one that empties a cartridge. */
+@media print {
+  :root, :root[data-theme="dark"] {
+    --surf-0:#fff; --surf-1:#fff; --surf-2:#fff;
+    --ink-1:#111; --ink-2:#333; --ink-3:#555; --ink-4:#777;
+    --edge-1:#bbb; --edge-2:#ddd;
+  }
+  body{background:#fff}
+  .seg, .tabs, .cat-bar, .btn, .fchip, .win, .tip{display:none !important}
+  .app-h{border-bottom:1px solid #ddd; padding-bottom:12px}
+  /* Panels must not be split across a page break: half a chart on each side of
+     a fold is worse than a shorter page. */
+  .panel{break-inside:avoid; page-break-inside:avoid; border:1px solid #ddd;
+         box-shadow:none}
+  .grid-panels{display:block}
+  .grid-panels > *{margin:0 0 14px}
+  a{text-decoration:none; color:inherit}
+  /* The ACL verdict has to survive printing. A number on paper without the
+     statement of what it was checked against is the one thing this product
+     exists to prevent. */
+  .chip{border:1px solid #999 !important; color:#111 !important}
+  .prov{border:1px solid #999}
+}

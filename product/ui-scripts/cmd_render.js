@@ -2076,6 +2076,130 @@
    * never offered the choice. cmd_theme.js resolves and persists; this only reflects
    * and sets.
    */
+
+  /* ── export ────────────────────────────────────────────────────────────────
+   *
+   * ServiceNow ships scheduled, emailable PDF and PPT export of its own
+   * dashboards. Having none at all was the one dimension where this product was
+   * strictly worse than the platform it replaces, and it would have been the
+   * first thing asked for after a demo.
+   *
+   * Two paths, both entirely client side, because the data is already in the
+   * page: there is nothing to fetch and nothing to send anywhere. That is not a
+   * shortcut, it is the same rule the rest of the build follows -- code and fonts
+   * travel in, data does not travel out. An export that posted the payload to a
+   * service to render a file would break it.
+   *
+   *   CSV    every panel's own rows, one block per panel, with the panel's
+   *          question as its heading. Long form rather than a single wide table,
+   *          because the panels do not share a key and pretending they do would
+   *          invent relationships the data does not have.
+   *   Print  the browser's own print pipeline, which is also its "save as PDF".
+   *          A print stylesheet does the work; there is no second renderer.
+   */
+  function csvCell(v) {
+    if (v === null || v === undefined) return '';
+    var s = String(v);
+    return (/[",\n\r]/.test(s)) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  function csvFor(payload) {
+    var lines = [], i, j;
+    var title = payload.subject ? payload.subject.label : 'COMMAND';
+
+    lines.push(csvCell(title));
+    if (payload.subject) {
+      lines.push(csvCell('Table') + ',' + csvCell(payload.subject.table));
+      if (payload.subject.query) {
+        lines.push(csvCell('Filter') + ',' + csvCell(payload.subject.query));
+      }
+      lines.push(csvCell('Records') + ',' + csvCell(payload.subject.rows));
+    }
+    if (payload.acl) {
+      /* The verdict travels with the file. A number exported without it is a
+         number that has lost the one property this product adds to it. */
+      lines.push(csvCell('Permission check') + ',' + csvCell(payload.acl.mode));
+      lines.push(csvCell('Unchecked aggregate') + ',' + csvCell(payload.acl.aggregate));
+      lines.push(csvCell('Permission-checked') + ',' + csvCell(payload.acl.secure));
+    }
+    if (payload.parity) {
+      lines.push(csvCell('Parity vs native report') + ',' + csvCell(payload.parity.verdict));
+      lines.push(csvCell('Native count') + ',' + csvCell(payload.parity.nativeCount));
+    }
+    lines.push(csvCell('Exported') + ',' + csvCell(new Date().toISOString()));
+    lines.push('');
+
+    var panels = (payload.panels || []).slice();
+    if (payload.matrix) panels.push(payload.matrix);
+
+    for (i = 0; i < panels.length; i++) {
+      var p = panels[i];
+      var rows = p.rows || p.points || null;
+      if (!rows || !rows.length) continue;
+
+      lines.push(csvCell(p.question || p.fieldLabel || p.id));
+      if (p.form) lines.push(csvCell('Drawn as') + ',' + csvCell(p.form));
+
+      /* Columns are taken from the union of the rows' own keys rather than
+         assumed, because a series row and a breakdown row do not share a shape
+         and every panel here is allowed its own. */
+      var cols = [], seen = {};
+      for (j = 0; j < rows.length; j++) {
+        for (var k in rows[j]) {
+          if (!rows[j].hasOwnProperty(k) || seen[k]) continue;
+          if (typeof rows[j][k] === 'object' && rows[j][k] !== null) continue;
+          seen[k] = 1; cols.push(k);
+        }
+      }
+      lines.push(cols.map(csvCell).join(','));
+      for (j = 0; j < rows.length; j++) {
+        var out = [];
+        for (var c = 0; c < cols.length; c++) out.push(csvCell(rows[j][cols[c]]));
+        lines.push(out.join(','));
+      }
+      lines.push('');
+    }
+
+    return lines.join('\r\n');
+  }
+
+  function downloadCsv(payload) {
+    var name = ((payload.subject && payload.subject.label) || 'command')
+                 .replace(/[^\w\d]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase();
+    /* A BOM, so Excel opens UTF-8 without mangling any label that is not ASCII. */
+    var blob = new Blob(['\ufeff' + csvFor(payload)],
+                        { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function exportControl(payload) {
+    var seg = el('div', 'seg');
+    seg.setAttribute('role', 'group');
+    seg.setAttribute('aria-label', 'Export');
+
+    var csv = el('button', null, 'CSV');
+    csv.type = 'button';
+    csv.title = 'Every panel on this page as data, with the permission verdict ' +
+                'the numbers were computed under.';
+    csv.addEventListener('click', function () { downloadCsv(payload); });
+    seg.appendChild(csv);
+
+    var pr = el('button', null, 'Print');
+    pr.type = 'button';
+    pr.title = 'Opens your browser print dialog, which is also where "save as PDF" is.';
+    pr.addEventListener('click', function () { window.print(); });
+    seg.appendChild(pr);
+
+    return seg;
+  }
+
   function themeToggle() {
     var seg = el('div', 'seg');
     seg.setAttribute('role', 'group');
@@ -2187,6 +2311,7 @@
     var right = el('div', 'app-h-r');
     right.appendChild(aclChip(payload.acl));
     if (payload.window) right.appendChild(windowControl(payload));
+    right.appendChild(exportControl(payload));
     right.appendChild(themeToggle());
     var lst = el('a', 'btn', 'Open record list');
     lst.href = payload.subject.listUrl;
@@ -3261,7 +3386,12 @@
   window.CmdRender = {
     dashboard: renderDashboard,
     catalog: renderCatalog,
-    forms: FORMS
+    forms: FORMS,
+    /* Exposed so the export can be tested against real captured payloads rather
+       than trusted. Producing the text and handing it to the browser are separate
+       for the same reason: the first is testable offline and the second is three
+       lines of DOM that are not. */
+    csv: csvFor
   };
 
   /**
