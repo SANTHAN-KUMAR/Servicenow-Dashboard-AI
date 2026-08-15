@@ -423,7 +423,7 @@ CmdReport.prototype = {
             if (dim) {
                 var own = payloadBuilder._dimPanel(
                     d.table, payload.subject.query || d.query, dim,
-                    this.data.total(d.table, payload.subject.query || d.query));
+                    this.data.total(d.table, payload.subject.query || d.query), o);
                 if (own) {
                     own.id = 'report_' + d.groupField;
                     own.question = d.title;

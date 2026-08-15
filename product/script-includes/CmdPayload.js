@@ -320,7 +320,7 @@ CmdPayload.prototype = {
                 (candidates.length >= CmdPayload.MIN_PANELS ||
                  examined >= CmdPayload.MAX_ATTEMPTS_PAST_DEADLINE)) break;
             examined++;
-            var cand = this._dimPanel(table, query, dims[i], total);
+            var cand = this._dimPanel(table, query, dims[i], total, opts);
             if (cand) candidates.push(cand);
         }
         if (examined < dims.length && this._overBudget(t0)) {
@@ -1023,7 +1023,7 @@ CmdPayload.prototype = {
         };
     },
 
-    _dimPanel: function (table, query, dim, total) {
+    _dimPanel: function (table, query, dim, total, opts) {
         var prof = this.data.profile(table, dim.name, query);
 
         /* Nothing to show. Not an error and not an empty chart: just not a panel,
@@ -1077,7 +1077,7 @@ CmdPayload.prototype = {
         if (openText && prof.distinctNonEmpty > CmdMeta.TEXT_DIM_MAX_DISTINCT) return null;
         if (this._looksLikeIdentifier(dim.name)) return null;
 
-        var decision = this.form.decide({
+        var ctx = {
             field: dim.name,
             fieldLabel: dim.label,
             fieldType: dim.type,
@@ -1098,22 +1098,43 @@ CmdPayload.prototype = {
             aggregateTotal: prof.acl.aggregate,
             secureTotal: prof.acl.secure,
             capped: prof.acl.capped
-        });
+        };
+        var decision = this.form.decide(ctx);
 
         if (decision.suppressed) return null;
+
+        /* The viewer's own choice, when they made one, and the honest record of
+           what the data would have chosen.
+         *
+         * An override never widens what is drawable: it is accepted only if the
+         * form is one the alternatives list already offered for this shape, which
+         * is the same gate that decides what the control shows. A URL naming a
+         * form this data cannot carry is ignored rather than obeyed, because the
+         * alternative is a hand-crafted link that draws an empty box and blames
+         * the renderer. */
+        var alts = this.form.alternatives(decision.form, ctx);
+        var override = this._overrideFor(opts, dim.name, alts);
 
         return {
             id: 'dim_' + dim.name,
             kind: 'dimension',
-            question: this._dimQuestion(dim.label, decision.form),
+            question: this._dimQuestion(dim.label, override ? override.form : decision.form),
             field: dim.name,
             fieldLabel: dim.label,
-            form: decision.form,
+            form: override ? override.form : decision.form,
             selectedForm: decision.selected_form,
+            /* What the data chose, kept even when a viewer has overridden it, so
+               the page can always say what it would have drawn and why. Losing
+               that is losing the argument the product is built on. */
+            chosenForm: decision.form,
+            chosenReason: decision.reason,
+            overridden: !!override,
+            alternatives: alts.offered,
+            refused: alts.refused,
             demoted: decision.demoted,
-            reason: decision.reason,
+            reason: override ? override.reason : decision.reason,
             caveats: decision.caveats,
-            rows: this._rowsOut(prof.rows, decision.form),
+            rows: this._rowsOut(prof.rows, override ? override.form : decision.form),
             shape: {
                 distinct: prof.distinctNonEmpty,
                 fill: prof.fill,
@@ -1121,8 +1142,30 @@ CmdPayload.prototype = {
                 concentration: prof.concentration
             },
             ordinal: !!dim.isOrdinal,
-            span: (decision.form === 'heatmap' || decision.form === 'treemap') ? 2 : 1
+            span: ((override ? override.form : decision.form) === 'heatmap' ||
+                   (override ? override.form : decision.form) === 'treemap') ? 2 : 1
         };
+    },
+
+    /**
+     * The viewer's chosen form for one field, if they chose a legal one.
+     *
+     * `opts.forms` arrives from the URL as a field-to-form map. Validation is a
+     * membership test against the alternatives already computed for this panel,
+     * not a list of allowed names: the two cannot drift apart because they are
+     * the same list.
+     */
+    _overrideFor: function (opts, field, alts) {
+        if (!opts || !opts.forms || !alts || !alts.swappable) return null;
+        var want = opts.forms[field];
+        if (!want) return null;
+        for (var i = 0; i < alts.offered.length; i++) {
+            if (alts.offered[i].form === want) {
+                return { form: want,
+                         reason: 'You chose this view. ' + alts.offered[i].reason };
+            }
+        }
+        return null;
     },
 
     /**

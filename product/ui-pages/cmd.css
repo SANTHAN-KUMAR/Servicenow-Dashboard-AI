@@ -557,3 +557,35 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
   .chip{border:1px solid #999 !important; color:#111 !important}
   .prov{border:1px solid #999}
 }
+
+/* ── chart form control ────────────────────────────────────────────────────
+   Sits where the form tag used to, because it says the same thing and now
+   answers back. Closed it is a label; open it is the argument for the drawing
+   plus the alternatives the shape supports and the ones it does not. */
+.formsel{position:relative}
+.formsel-t{font-family:var(--mono); font-size:10px; letter-spacing:.11em;
+           text-transform:uppercase; color:var(--ink-3); background:none;
+           border:1px solid var(--edge-2); border-radius:5px; padding:4px 9px;
+           cursor:pointer}
+.formsel-t:hover{color:var(--ink-1); border-color:var(--edge-1)}
+.formsel.open .formsel-t{color:var(--ink-1); border-color:var(--edge-1)}
+.formsel-m{display:none; position:absolute; right:0; top:calc(100% + 6px);
+           z-index:40; width:320px; max-width:78vw; padding:12px;
+           background:var(--surf-1); border:1px solid var(--edge-1);
+           border-radius:9px; box-shadow:0 10px 34px rgba(0,0,0,.16);
+           max-height:60vh; overflow-y:auto}
+.formsel.open .formsel-m{display:block}
+.formsel-h{display:flex; flex-direction:column; gap:5px; padding-bottom:10px;
+           margin-bottom:8px; border-bottom:1px solid var(--edge-2)}
+.formsel-h .sm{line-height:1.5}
+.formsel-o{display:flex; flex-direction:column; gap:3px; padding:8px 9px;
+           border-radius:6px; margin:0 -3px}
+.formsel-o:hover{background:var(--surf-2)}
+.formsel-n{font-size:12.5px; color:var(--ink-1)}
+.formsel-o .sm, .formsel-x .sm{line-height:1.45; color:var(--ink-3)}
+.formsel-r{margin-top:9px; padding-top:9px; border-top:1px solid var(--edge-2);
+           display:flex; flex-direction:column; gap:7px}
+/* Refusals are shown, not hidden, and are deliberately not clickable: the point
+   is the reason, not a disabled control inviting a second attempt. */
+.formsel-x{display:flex; flex-direction:column; gap:3px; opacity:.72}
+.formsel-x .formsel-n{color:var(--ink-3); text-decoration:line-through}

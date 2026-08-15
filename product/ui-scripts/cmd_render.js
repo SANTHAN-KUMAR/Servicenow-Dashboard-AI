@@ -1959,6 +1959,143 @@
     return code === 'warn' ? 'cav warn' : 'cav';
   }
 
+
+  /**
+   * The form the URL currently asks for, per field, so a control can build the
+   * next URL without losing the choices already made on other panels.
+   */
+  function currentForms(payload) {
+    var out = {}, f = payload.forms || {};
+    for (var k in f) { if (f.hasOwnProperty(k)) out[k] = f[k]; }
+    return out;
+  }
+
+  function formsParam(map) {
+    var parts = [];
+    for (var k in map) {
+      if (map.hasOwnProperty(k) && map[k]) {
+        parts.push(encodeURIComponent(k) + ':' + encodeURIComponent(map[k]));
+      }
+    }
+    return parts.join('|');
+  }
+
+  /**
+   * The URL for this page with one panel's form changed, or cleared.
+   *
+   * Every other piece of page state -- the drill path, the window, whether this
+   * is a report or a subject -- has to survive the change, because a control that
+   * silently resets the drill you are three levels into is worse than no control.
+   */
+  function formUrl(payload, field, form) {
+    var map = currentForms(payload);
+    if (form) map[field] = form; else delete map[field];
+
+    var parts = [];
+    for (var i = 0; i < payload.path.length; i++) {
+      parts.push(encodeURIComponent(payload.path[i].field) + ':' +
+                 encodeURIComponent(payload.path[i].key));
+    }
+    var url = subjectBase(payload);
+    if (parts.length) url += '&path=' + encodeURIComponent(parts.join('|'));
+    if (payload.window && payload.window.months) url += '&months=' + payload.window.months;
+    var fp = formsParam(map);
+    if (fp) url += '&forms=' + encodeURIComponent(fp);
+    return url;
+  }
+
+  /**
+   * The chart-form control: the alternatives this data supports, and the ones it
+   * does not, with the reason for each.
+   *
+   * Deliberately not a dropdown of every form in the catalogue. The product's
+   * claim is that the data chooses the drawing, and a free chart menu is both
+   * what the platform's own report builder already offers and the fastest way to
+   * make that claim untrue. What is offered here is only what the shape genuinely
+   * supports, and the refusals are shown rather than hidden, because a viewer who
+   * asks for a pie of forty categories and is told why not has learned something
+   * about their data.
+   */
+  function formControl(panel, payload) {
+    var alts = panel.alternatives || [];
+    var refused = panel.refused || [];
+    if (!alts.length && !refused.length) return null;
+
+    var wrap = el('div', 'formsel');
+
+    var btn = el('button', 'formsel-t');
+    btn.type = 'button';
+    btn.setAttribute('aria-haspopup', 'true');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.appendChild(el('span', '', panel.overridden ? 'Chart: yours' : 'Chart'));
+    wrap.appendChild(btn);
+
+    var menu = el('div', 'formsel-m');
+    menu.setAttribute('role', 'menu');
+
+    var head = el('div', 'formsel-h');
+    head.appendChild(el('span', 'ovl', 'Drawn as ' + formLabel(panel.form)));
+    head.appendChild(el('span', 'sm', panel.overridden
+      ? ('You chose this. The data would have drawn ' + formLabel(panel.chosenForm) +
+         ': ' + panel.chosenReason)
+      : panel.reason));
+    menu.appendChild(head);
+
+    if (panel.overridden) {
+      var reset = el('a', 'formsel-o', 'Use what the data chose (' +
+                                       formLabel(panel.chosenForm) + ')');
+      reset.href = formUrl(payload, panel.field, null);
+      menu.appendChild(reset);
+    }
+
+    for (var i = 0; i < alts.length; i++) {
+      var a = el('a', 'formsel-o');
+      a.href = formUrl(payload, panel.field, alts[i].form);
+      a.appendChild(el('span', 'formsel-n', formLabel(alts[i].form)));
+      a.appendChild(el('span', 'sm', alts[i].reason));
+      menu.appendChild(a);
+    }
+
+    if (refused.length) {
+      var rh = el('div', 'formsel-r');
+      rh.appendChild(el('span', 'ovl', 'Not offered for this data'));
+      for (var j = 0; j < refused.length; j++) {
+        var r = el('div', 'formsel-x');
+        r.appendChild(el('span', 'formsel-n', formLabel(refused[j].form)));
+        r.appendChild(el('span', 'sm', refused[j].reason));
+        rh.appendChild(r);
+      }
+      menu.appendChild(rh);
+    }
+
+    wrap.appendChild(menu);
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = wrap.className.indexOf('open') > -1;
+      wrap.className = open ? 'formsel' : 'formsel open';
+      btn.setAttribute('aria-expanded', String(!open));
+    });
+
+    return wrap;
+  }
+
+  function formLabel(form) {
+    var names = {
+      ranked_bar: 'ranked bar', ranked_bar_top_n: 'ranked bar',
+      column: 'column', donut: 'donut', semi_donut: 'half donut',
+      treemap: 'treemap', pareto: 'Pareto', histogram: 'histogram',
+      funnel: 'funnel', waterfall: 'waterfall', line: 'line',
+      line_multi: 'multi-line', area: 'area', stream: 'stream',
+      small_multiples: 'small multiples', slope: 'slope', bump: 'bump',
+      heatmap: 'heatmap', calendar_heatmap: 'calendar', scatter: 'scatter',
+      box: 'box plot', gauge: 'gauge', matrix: 'matrix',
+      stacked_proportion: 'stacked', stacked_ordinal: 'stacked',
+      stat_tile: 'single value', stat_tile_delta: 'single value'
+    };
+    return names[form] || String(form).replace(/_/g, ' ');
+  }
+
   function buildPanel(panel, payload) {
     var p = el('div', 'panel cp' + (panel.span === 2 ? ' span2' : ''));
 
@@ -1971,7 +2108,9 @@
     head.appendChild(left);
 
     var meta = el('div', 'cp-m');
-    meta.appendChild(el('span', 'form-tag', panel.form.replace(/_/g, ' ')));
+    var fc = formControl(panel, payload);
+    if (fc) meta.appendChild(fc);
+    else meta.appendChild(el('span', 'form-tag', panel.form.replace(/_/g, ' ')));
     head.appendChild(meta);
 
     var body = el('div', 'cp-b');
@@ -2055,6 +2194,28 @@
     return 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table);
   }
 
+  /**
+   * The page state every link has to carry that is not the drill path.
+   *
+   * The window and the chosen chart forms are both view state, and both used to
+   * be dropped by the drill links: choosing a treemap and then drilling into it
+   * silently reverted the chart, and drilling from a three-month view silently
+   * returned you to twelve. Neither is a data bug and both read as one, because
+   * the number on screen changes for a reason the viewer did not ask for.
+   *
+   * The drill path is deliberately not in here. It is the one piece of state a
+   * drill link exists to change, so each builder supplies its own.
+   */
+  function stateTail(payload) {
+    var tail = '';
+    if (payload.window && payload.window.months) {
+      tail += '&months=' + payload.window.months;
+    }
+    var fp = formsParam(currentForms(payload));
+    if (fp) tail += '&forms=' + encodeURIComponent(fp);
+    return tail;
+  }
+
 
   function drillUrl(payload, field, key) {
     var path = payload.path.slice();
@@ -2066,7 +2227,8 @@
       parts.push(encodeURIComponent(field) + ':' + encodeURIComponent(key === null ? '' : key));
     }
     return subjectBase(payload) +
-           (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '');
+           (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '') +
+           stateTail(payload);
   }
 
 
@@ -2265,9 +2427,11 @@
       parts.push(encodeURIComponent(payload.path[i].field) + ':' +
                  encodeURIComponent(payload.path[i].key));
     }
+    var fp = formsParam(currentForms(payload));
     return subjectBase(payload) +
            (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '') +
-           '&months=' + months;
+           '&months=' + months +
+           (fp ? '&forms=' + encodeURIComponent(fp) : '');
   }
 
   function buildHeader(payload) {
@@ -2330,7 +2494,8 @@
                  encodeURIComponent(payload.path[i].key));
     }
     return subjectBase(payload) +
-           '&path=' + encodeURIComponent(parts.join('|'));
+           '&path=' + encodeURIComponent(parts.join('|')) +
+           stateTail(payload);
   }
 
   /**

@@ -71,16 +71,38 @@
      working. Coerced to a JavaScript string for the same reason `path` is. */
   var reportId = '' + (RP.getParameterValue('report') || '');
 
+  /* Chosen chart forms, as field:form pairs, so a customised view is a link.
+     No persistence and no preference record: the state is the URL, which means
+     it is shareable, bookmarkable and reversed by the back button for free, and
+     it costs nothing to store or to invalidate. Coerced to a JavaScript string
+     before splitting, for the same java.lang.String reason `path` is.
+
+     Not validated here beyond shape. A form name that this data cannot honestly
+     carry is dropped by CmdPayload against the alternatives it computed for that
+     panel, which is the same list the on-screen control offers. Validating in two
+     places would let the two disagree. */
+  var rawForms = '' + (RP.getParameterValue('forms') || '');
+  var forms = {};
+  if (rawForms) {
+    var fsegs = rawForms.split('|');
+    for (var fi = 0; fi &lt; fsegs.length; fi++) {
+      var fbits = fsegs[fi].split(':');
+      if (fbits.length &lt; 2 || !fbits[0]) continue;
+      forms[decodeURIComponent(fbits[0])] = decodeURIComponent(fbits[1]);
+    }
+  }
+
   var out;
   try {
     var builder = new CmdPayload();
     if (reportId) {
       var conv = new CmdReport(builder.data, builder.meta, builder.form);
-      out = conv.convert(builder, reportId, path, { months: months });
+      out = conv.convert(builder, reportId, path, { months: months, forms: forms });
     } else {
-      out = builder.dashboard(table, path, { months: months });
+      out = builder.dashboard(table, path, { months: months, forms: forms });
     }
     out.window = { months: months, allowed: allowed };
+    out.forms = forms;
   } catch (e) {
     out = { error: 'The dashboard could not be built: ' + e,
             subject: { table: table, label: table, rows: 0 },

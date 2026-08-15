@@ -88,6 +88,15 @@ CmdForm.T = {
     HIST_MIN_DISTINCT: 12    // a numeric field with fewer levels is categorical
 };
 
+/* Forms that read a dimension panel's grouped rows, and are therefore
+   interchangeable with each other on such a panel. Nothing outside this set may
+   be offered as an alternative to something inside it: a line needs points, a
+   heatmap needs a grid, and handing either a list of rows draws an empty box. */
+CmdForm.CATEGORICAL_FORMS = {
+    ranked_bar: 1, ranked_bar_top_n: 1, column: 1, donut: 1, semi_donut: 1,
+    treemap: 1, pareto: 1, histogram: 1, funnel: 1, waterfall: 1
+};
+
 CmdForm.prototype = {
 
     initialize: function () {},
@@ -440,6 +449,110 @@ CmdForm.prototype = {
             secureTotal: secureTotal,
             aggregateTotal: aggregateTotal
         };
+    },
+
+    /**
+     * The other forms this data would also support, and the notable ones it
+     * would not.
+     *
+     * This exists because the client asked to be able to choose the chart, and
+     * the obvious way to give them that is the wrong way. A dropdown of all
+     * twenty-seven forms is what the platform's own report builder already is,
+     * and the moment a viewer can draw anything, "the data chose this" stops
+     * being true and the product's whole argument goes with it.
+     *
+     * So the choice offered is a real one but a bounded one: the forms that are
+     * genuinely defensible for this shape, each with the reason it is offered,
+     * plus the ones a viewer might reach for that this data cannot honestly
+     * carry, each with the reason it is refused. The refusals are the more
+     * valuable half. A viewer who asks for a pie of forty categories and is told
+     * why not has learned something about their data; one who gets the pie has
+     * been given a worse chart and told nothing.
+     *
+     * Two rules keep this safe rather than decorative.
+     *
+     * Only forms that consume the same data shape as the chosen one are ever
+     * offered. A dimension panel carries grouped rows, so it can become a bar, a
+     * donut or a treemap; it cannot become a line, because there are no points
+     * to plot and the renderer would draw an empty box. The alternatives are
+     * asserted to render against real captured payloads in the test suite, which
+     * is the only reason offering them is safe at all.
+     *
+     * And the chosen form is never in its own alternatives list.
+     *
+     * @return {{offered: Array, refused: Array}}
+     */
+    alternatives: function (chosenForm, ctx) {
+        var T = CmdForm.T;
+        var c = this.normalise(ctx);
+        var offered = [], refused = [];
+
+        function offer(form, why) {
+            if (form !== chosenForm) offered.push({ form: form, reason: why });
+        }
+        function refuse(form, why) {
+            if (form !== chosenForm) refused.push({ form: form, reason: why });
+        }
+
+        /* Only categorical panels have a meaningful alternative set here. A time
+           series, a matrix and a scatter each carry a data shape nothing else in
+           the catalogue reads, so offering a swap would mean offering a chart
+           that cannot be drawn from what is on the page. */
+        if (!CmdForm.CATEGORICAL_FORMS[chosenForm]) {
+            return { offered: [], refused: [], swappable: false };
+        }
+
+        if (c.distinct < 2) return { offered: [], refused: [], swappable: false };
+
+        /* Length against a common baseline is the most accurately read encoding
+           there is, so it is always defensible and is always offered. */
+        offer('ranked_bar', 'length against a common baseline, ranked by size, ' +
+                            'which is the most precisely readable comparison');
+
+        if (c.isOrdinal && c.distinct <= T.ORDINAL_MAX) {
+            offer('column', 'a declared scale drawn in its own order rather than ' +
+                            'ranked by size');
+        } else if (c.isOrdinal) {
+            refuse('column', c.distinct + ' steps is too long a scale to read in ' +
+                             'sequence; ranked by size stays legible');
+        }
+
+        /* Part to whole needs a closed set. An open reference column has no
+           meaningful whole for a slice to be part of. */
+        if (c.isPartToWhole && c.distinct <= T.PART_WHOLE_MAX) {
+            offer('donut', 'a closed set with few enough slices for arcs to be ' +
+                           'compared');
+            offer('semi_donut', 'the same, as a half arc, which leaves room for ' +
+                                'the total in the middle');
+        } else if (c.isPartToWhole) {
+            refuse('donut', c.distinct + ' slices: arcs stop being comparable past ' +
+                            T.PART_WHOLE_MAX + ', so this would look precise and ' +
+                            'read imprecisely');
+        } else {
+            refuse('donut', 'these values are not a closed set, so there is no ' +
+                            'whole for a slice to be part of');
+        }
+
+        if (c.distinct >= T.TREEMAP_MIN) {
+            offer('treemap', 'area rather than length, which holds ' + c.distinct +
+                             ' categories in the space a bar chart would need for ' +
+                             'a dozen');
+        } else {
+            refuse('treemap', 'below ' + T.TREEMAP_MIN + ' categories, length is ' +
+                              'read more accurately than area');
+        }
+
+        if (c.concentration >= T.CONCENTRATED) {
+            offer('pareto', 'the mass is concentrated, so the cumulative line ' +
+                            'shows how few categories account for most of it');
+        }
+
+        /* The refusal worth stating on almost every categorical panel, because a
+           line chart is the reflex request. */
+        refuse('line', 'this is a breakdown by category, not a series over time, ' +
+                       'so a line would connect points with no order between them');
+
+        return { offered: offered, refused: refused, swappable: true };
     },
 
     pick: function (form, reason) {
