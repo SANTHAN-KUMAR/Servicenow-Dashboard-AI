@@ -99,10 +99,32 @@ CmdCatalog.CARD_COUNT_CAP = 400;
    grouped query, and there are a dozen cards, so this is the knob that decides
    whether the entry page is fast or informative. Four is enough to get past a
    single-valued leading field without turning the catalog into a dashboard. */
-/* Wall-clock budget for one card's scan. Twelve cards at this bound puts the entry
-   page comfortably inside its budget even when every table is expensive to
-   permission-check. */
-CmdCatalog.CARD_SCAN_MS = 320;
+/* Wall-clock budget for one card's scan, and the knob that decides what the entry
+   page costs. Twelve cards means this is multiplied by twelve.
+ *
+ * The claim that this puts the page "comfortably inside its budget" was wrong and
+ * is corrected here rather than deleted, because the number it produced is the
+ * one the client will time. Measured on dev390988, admin, a 30 candidate build:
+ *
+ *     CARD_SCAN_MS   candidates   cards   page
+ *            320         30         12    6,284ms
+ *            160         30         12    4,604ms
+ *            160         24         11    3,857ms
+ *            100         24         11    2,932ms
+ *
+ * The same twelve cards appear at 160 as at 320. What shrinks is `rows`, which is
+ * how far each card's permission-checked scan reached and is displayed as a floor,
+ * so the cards stay true and say a smaller true thing. That is the right trade for
+ * an entry page: the number on a card is an invitation to open the subject, and
+ * the exact count is one click away on the dashboard itself.
+ *
+ * It does not reach the 1.2s first-paint budget and no setting here does. The page
+ * computes everything server side in one round trip, because a client fetch was
+ * measured not to return on this instance, so first paint is the whole server
+ * build. Closing that gap needs either the UXF data broker, which is the phase one
+ * spike and is still unrun, or a cache. Tuning this constant is not that fix and
+ * should not be presented as one. */
+CmdCatalog.CARD_SCAN_MS = 160;
 
 /* Candidate dimensions measured per card. They share one scan, so this costs field
    reads rather than ACL evaluations, and the winner is chosen after measuring
@@ -192,7 +214,28 @@ CmdCatalog.prototype = {
              * open. It is bounded, so on a large table it describes a prefix rather
              * than the whole, and the card says so. A share of a labelled sample is
              * an honest statement; a share of rows the viewer cannot see is not. */
-            /* Membership first, and cheaply. hasAtLeast stops at the threshold, so
+            /* An indexed count first, because it can only ever rule a table out.
+             *
+             * A permission-checked probe cannot admit more rows than exist, so a
+             * table holding fewer than the threshold in total cannot hold the
+             * threshold for anybody, and asking securely is asking a question
+             * whose answer is already known. The unchecked count is an indexed
+             * aggregate at a few milliseconds; the secure probe it replaces ran to
+             * 516ms on this instance.
+             *
+             * Measured over a 30 candidate catalog build, admin: eighteen of the
+             * thirty were rejected for having too few rows, and each had been
+             * paying for a secure probe to establish it. This is the one place an
+             * unchecked count is load-bearing, and it is safe precisely because it
+             * is only ever used to say no. Every table that passes still earns its
+             * card through the permission-checked probe below, and no number
+             * derived from this count reaches the viewer. */
+            if (this.data.fastCount(t.table, '') < CmdCatalog.MIN_ROWS) {
+                tooSmall++;
+                continue;
+            }
+
+            /* Membership, permission-checked. hasAtLeast stops at the threshold, so
                it is bounded by rows rather than by time and a table with expensive
                ACLs cannot disappear from the catalog just for being slow. Two
                subjects vanished that way before this split. */

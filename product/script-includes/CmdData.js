@@ -27,11 +27,17 @@ var CmdData = Class.create();
    must be labelled as one. Never present a capped count as exact. */
 CmdData.SECURE_SCAN_CAP = 20000;
 
-/* Membership probes (hasAtLeast) over-fetch, because GlideRecordSecure discards
-   ACL-denied rows *after* setLimit has already bounded the fetch. A viewer who
-   reads one row in five would otherwise never reach any threshold. The
-   multiplier is what that viewer's card costs; the cap is what a viewer with no
-   access costs. */
+/* Membership probes (hasAtLeast) over-fetch when, and only when, the cheap probe
+   falls short of the threshold on a table that holds enough rows in total.
+ *
+ * GlideRecordSecure discards ACL-denied rows after setLimit has already bounded
+ * the fetch, so a viewer who reads one row in five never reaches any threshold
+ * from a tight limit. Over-fetching unconditionally fixes that viewer and taxes
+ * every other one: measured on a 30 candidate catalog build as admin, where
+ * nothing is denied and the tight probe always succeeds, a flat setLimit of
+ * enough*40 cost 2,416ms across the build for an answer the first 120 rows had
+ * already given. So the wide probe is the fallback, not the default, and an
+ * indexed count decides whether it is worth running at all. */
 CmdData.MEMBERSHIP_OVERFETCH = 40;
 CmdData.MEMBERSHIP_SCAN_CAP = 6000;
 
@@ -537,16 +543,35 @@ CmdData.prototype = {
      * costs one capped read rather than a full scan.
      */
     hasAtLeast: function (table, query, enough) {
+        var n = this._countUpTo(table, query, enough, enough);
+        if (n >= enough) return { count: n, atLeast: true, overfetched: false };
+
+        /* The cheap probe fell short, which has two possible causes and they need
+           telling apart. Either the rows are not there, or they are there and this
+           viewer may not read the ones the database happened to return first.
+           Only the second is worth paying more for, and an indexed count says
+           which it is. */
+        if (this.fastCount(table, query) < enough) {
+            return { count: n, atLeast: false, overfetched: false };
+        }
+
+        var wide = this._countUpTo(table, query, enough,
+            Math.min(CmdData.MEMBERSHIP_SCAN_CAP, enough * CmdData.MEMBERSHIP_OVERFETCH));
+        return { count: wide, atLeast: wide >= enough, overfetched: true };
+    },
+
+    /** Readable rows, stopping at `enough`, from a fetch bounded by `fetch`. */
+    _countUpTo: function (table, query, enough, fetch) {
         var gr = new GlideRecordSecure(table);
         if (query) gr.addEncodedQuery(query);
-        gr.setLimit(Math.min(CmdData.MEMBERSHIP_SCAN_CAP, enough * CmdData.MEMBERSHIP_OVERFETCH));
+        gr.setLimit(fetch);
         gr.query();
         var n = 0;
         while (gr.next()) {
             n++;
             if (n >= enough) break;
         }
-        return { count: n, atLeast: n >= enough };
+        return n;
     },
 
     /* ══════════════════════════════════════════════════════════════════════
