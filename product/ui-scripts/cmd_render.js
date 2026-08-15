@@ -2038,6 +2038,24 @@
     return p;
   }
 
+  /**
+   * The URL of the page we are on, minus its path and window.
+   *
+   * A converted report is the same surface reached a different way, so every
+   * link that rebuilds this page has to carry whichever of the two identifies
+   * it. Six call sites built `?table=` directly, which meant drilling into a
+   * report, changing its window or clicking its breadcrumb all silently landed
+   * on the bare table instead: same rows, but the report's own filter gone and
+   * its title replaced. One function so there is one place to be wrong.
+   */
+  function subjectBase(payload) {
+    if (payload.report && payload.report.sysId) {
+      return 'cmd_dashboard.do?report=' + encodeURIComponent(payload.report.sysId);
+    }
+    return 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table);
+  }
+
+
   function drillUrl(payload, field, key) {
     var path = payload.path.slice();
     var parts = [];
@@ -2047,7 +2065,7 @@
     if (field !== null && field !== undefined) {
       parts.push(encodeURIComponent(field) + ':' + encodeURIComponent(key === null ? '' : key));
     }
-    return 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table) +
+    return subjectBase(payload) +
            (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '');
   }
 
@@ -2123,7 +2141,7 @@
       parts.push(encodeURIComponent(payload.path[i].field) + ':' +
                  encodeURIComponent(payload.path[i].key));
     }
-    return 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table) +
+    return subjectBase(payload) +
            (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '') +
            '&months=' + months;
   }
@@ -2134,7 +2152,7 @@
     var left = el('div');
     var crumb = el('div', 'crumb');
     var root = el('a', '', payload.subject.label);
-    root.href = 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table);
+    root.href = subjectBase(payload);
     crumb.appendChild(root);
     for (var i = 0; i < payload.path.length; i++) {
       crumb.appendChild(el('span', 'sep', '›'));
@@ -2148,10 +2166,19 @@
       }
     }
     left.appendChild(crumb);
-    left.appendChild(el('h1', 'd2', payload.subject.label + ' analysis'));
+    /* A converted report keeps its own name. Appending "analysis" to it produces
+       "Problems By State analysis", which reads as a different artefact than the
+       one the viewer clicked. */
+    left.appendChild(el('h1', 'd2', payload.report
+      ? payload.subject.label
+      : payload.subject.label + ' analysis'));
 
     var sub = el('div', 'sub');
     sub.appendChild(el('span', '', recs(payload.subject.rows)));
+    if (payload.report && payload.subject.sublabel) {
+      sub.appendChild(el('span', 'dot', '·'));
+      sub.appendChild(el('span', '', 'on ' + payload.subject.sublabel));
+    }
     sub.appendChild(el('span', 'dot', '·'));
     sub.appendChild(el('span', '', 'built in ' + payload.timingMs + 'ms'));
     left.appendChild(sub);
@@ -2164,8 +2191,8 @@
     var lst = el('a', 'btn', 'Open record list');
     lst.href = payload.subject.listUrl;
     right.appendChild(lst);
-    var back = el('a', 'btn', 'All subjects');
-    back.href = 'cmd_catalog.do';
+    var back = el('a', 'btn', payload.report ? 'All reports' : 'All subjects');
+    back.href = payload.report ? 'cmd_catalog.do?view=reports' : 'cmd_catalog.do';
     right.appendChild(back);
     h.appendChild(right);
     return h;
@@ -2177,7 +2204,7 @@
       parts.push(encodeURIComponent(payload.path[i].field) + ':' +
                  encodeURIComponent(payload.path[i].key));
     }
-    return 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table) +
+    return subjectBase(payload) +
            '&path=' + encodeURIComponent(parts.join('|'));
   }
 
@@ -2537,7 +2564,7 @@
     }
 
     var all = el('a', 'fb-clear', 'Clear all');
-    all.href = 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table);
+    all.href = subjectBase(payload);
     bar.appendChild(all);
     return bar;
   }
@@ -2549,7 +2576,7 @@
       parts.push(encodeURIComponent(payload.path[i].field) + ':' +
                  encodeURIComponent(payload.path[i].key));
     }
-    return 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table) +
+    return subjectBase(payload) +
            (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '');
   }
 
@@ -2746,6 +2773,80 @@
 
   // ── entry ────────────────────────────────────────────────────────────────
 
+
+  /**
+   * What this page is a redrawing of, what it counted, and why it looks
+   * different from the report it came from.
+   *
+   * Three separate statements, kept separate on purpose. "Same data" and "better
+   * chart" are different claims with different evidence, and merging them into
+   * one reassuring sentence is how a demo survives the room and fails the audit.
+   *
+   * The parity line is the one that matters. MATCH means the report's own filter
+   * was counted twice, by two different methods, and agreed: nothing sampled,
+   * capped, re-scoped or dropped. RESTRICTED means the viewer is being shown
+   * fewer rows than the native report shows them, and says how many and why.
+   */
+  function provenanceStrip(payload) {
+    if (!payload.report) return null;
+    var r = payload.report, p = payload.parity;
+
+    var box = el('div', 'panel pad prov');
+    var head = el('div', 'prov-h');
+    head.appendChild(el('span', 'ovl', 'Converted from a saved report'));
+    if (r.owner) head.appendChild(el('span', 'sm', 'owner ' + r.owner));
+    box.appendChild(head);
+
+    var rows = el('div', 'prov-rows');
+
+    if (p) {
+      var pr = el('div', 'prov-row');
+      var chip = el('span', 'chip ' + (p.verdict === 'MATCH' ? 'ok'
+                                     : p.verdict === 'RESTRICTED' ? 'warn' : ''));
+      chip.appendChild(el('span', 'dot'));
+      chip.appendChild(el('span', '', p.verdict === 'MATCH' ? 'Counts match'
+                                   : p.verdict === 'RESTRICTED' ? 'Scoped to you'
+                                   : p.verdict === 'BOUNDED' ? 'Lower bound' : 'Unverified'));
+      pr.appendChild(chip);
+      pr.appendChild(el('span', 'sm', p.statement));
+      rows.appendChild(pr);
+    }
+
+    var c = r.comparison;
+    if (c) {
+      var fr = el('div', 'prov-row');
+      if (c.comparable) {
+        var f = el('span', 'prov-forms');
+        f.appendChild(el('code', '', c.nativeForm));
+        f.appendChild(el('span', 'sep', '\u2192'));
+        f.appendChild(el('code', 'now', c.ours));
+        fr.appendChild(f);
+        fr.appendChild(el('span', 'sm', c.differs
+          ? 'Chosen from the measured shape of ' + (c.fieldLabel || c.field) + ': ' + c.reason
+          : 'The same form the report already used, reached from the data rather than copied.'));
+      } else {
+        fr.appendChild(el('span', 'sm', c.why));
+      }
+      rows.appendChild(fr);
+    }
+
+    if (r.edits && r.edits.length) {
+      var er = el('div', 'prov-row');
+      er.appendChild(el('span', 'sm', 'Filter used verbatim, less ' + r.edits.length +
+        ' layout ' + (r.edits.length === 1 ? 'clause' : 'clauses') + ' that select no rows: ' +
+        r.edits.join('; ') + '.'));
+      rows.appendChild(er);
+    }
+
+    box.appendChild(rows);
+
+    var orig = el('a', 'btn', 'Open the original report');
+    orig.href = 'sys_report_template.do?jvar_report_id=' + encodeURIComponent(r.sysId);
+    orig.target = '_blank';
+    box.appendChild(orig);
+    return box;
+  }
+
   function renderDashboard(payload, mount) {
     mount.innerHTML = '';
     mount.appendChild(gradients());
@@ -2767,6 +2868,12 @@
        is the fastest way to have someone act on the wrong number. */
     var fb = filterBar(payload);
     if (fb) mount.appendChild(fb);
+
+    /* The provenance strip, on converted reports only. It is the engagement's two
+       central claims put where the client can check them rather than take them:
+       the count came out the same, and the form was chosen from the data. */
+    var prov = provenanceStrip(payload);
+    if (prov) mount.appendChild(prov);
 
     /* The headline numbers, before any chart. A leader reads these and stops; the
        charts exist to answer the question these provoke. */
@@ -2798,7 +2905,151 @@
     highlightLayer(mount, payload);
   }
 
+  /**
+   * The two entry points, as tabs.
+   *
+   * Subjects is "what can I analyse", reports is "the report I already use".
+   * Both are entitlement-scoped and both say by how much, because a catalog that
+   * silently shows a different number of things to different people is the same
+   * class of problem as a count that does.
+   */
+  function catalogTabs(payload) {
+    var t = el('div', 'tabs');
+    var subs = el('a', 'tab' + (payload.view === 'reports' ? '' : ' now'), 'Subjects');
+    subs.href = 'cmd_catalog.do';
+    t.appendChild(subs);
+    var reps = el('a', 'tab' + (payload.view === 'reports' ? ' now' : ''), 'Saved reports');
+    reps.href = 'cmd_catalog.do?view=reports';
+    t.appendChild(reps);
+    return t;
+  }
+
+
+  /**
+   * The saved reports this viewer may open, grouped by the table they read.
+   *
+   * Read through GlideRecordSecure on the server, so this list is already the
+   * viewer's own library rather than the instance's. Grouping by table rather
+   * than by owner or by chart type is deliberate: a leader looking for a report
+   * knows what it is about long before they remember who built it.
+   */
+  function renderReports(payload, mount) {
+    mount.innerHTML = '';
+
+    var st = payload.stats || {};
+    var h = el('div', 'app-h');
+    var left = el('div');
+    left.appendChild(el('div', 'crumb', 'Analytics'));
+    left.appendChild(el('h1', 'd2', 'Saved reports'));
+    var sub = el('div', 'sub');
+    sub.appendChild(el('span', '', st.visible + ' you can open'));
+    sub.appendChild(el('span', 'dot', '\u00b7'));
+    sub.appendChild(el('span', '', st.onInstance + ' on this instance'));
+    if (st.truncated) {
+      sub.appendChild(el('span', 'dot', '\u00b7'));
+      sub.appendChild(el('span', '', 'showing the first ' + st.visible));
+    }
+    left.appendChild(sub);
+    h.appendChild(left);
+    var right = el('div', 'app-h-r');
+    right.appendChild(themeToggle());
+    h.appendChild(right);
+    mount.appendChild(h);
+    mount.appendChild(catalogTabs(payload));
+
+    var list = payload.reports || [];
+    if (!list.length) {
+      mount.appendChild(el('div', 'note',
+        'You have no saved reports on a table this instance still carries.'));
+      return;
+    }
+
+    var bar = el('div', 'cat-bar');
+    var fieldWrap = el('div', 'field');
+    var input = document.createElement('input');
+    input.type = 'search';
+    input.placeholder = 'Search reports, tables or owners';
+    input.setAttribute('aria-label', 'Search reports');
+    fieldWrap.appendChild(input);
+    bar.appendChild(fieldWrap);
+    var counter = el('div', 'sm');
+    bar.appendChild(counter);
+    mount.appendChild(bar);
+
+    var wrap = el('div', 'rep-groups');
+    mount.appendChild(wrap);
+
+    function draw(term) {
+      wrap.innerHTML = '';
+      var t = (term || '').toLowerCase();
+      var groups = {}, order = [], shown = 0, i;
+
+      for (i = 0; i < list.length; i++) {
+        var r = list[i];
+        if (t) {
+          var hay = (r.title + ' ' + r.table + ' ' + r.tableLabel + ' ' +
+                     (r.owner || '') + ' ' + (r.groupField || '')).toLowerCase();
+          if (hay.indexOf(t) === -1) continue;
+        }
+        if (!groups[r.table]) { groups[r.table] = []; order.push(r.table); }
+        groups[r.table].push(r);
+        shown++;
+      }
+
+      counter.textContent = shown + (shown === 1 ? ' report' : ' reports') +
+                            ' in ' + order.length +
+                            (order.length === 1 ? ' subject' : ' subjects');
+
+      if (!shown) {
+        wrap.appendChild(el('div', 'note', 'Nothing matches that.'));
+        return;
+      }
+
+      for (i = 0; i < order.length; i++) {
+        var tbl = order[i], rs = groups[tbl];
+        var sec = el('div', 'rep-group');
+        var gh = el('div', 'rep-group-h');
+        gh.appendChild(el('span', 'ovl', rs[0].tableLabel || tbl));
+        gh.appendChild(el('span', 'sm', rs.length + ''));
+        sec.appendChild(gh);
+
+        var ul = el('div', 'rep-list');
+        for (var j = 0; j < rs.length; j++) {
+          var rep = rs[j];
+          var a = el('a', 'rep');
+          a.href = rep.url;
+          var title = el('span', 'rep-t', rep.title);
+          a.appendChild(title);
+          var meta = el('span', 'rep-m');
+          meta.appendChild(el('code', '', rep.nativeType || 'report'));
+          if (rep.groupField) meta.appendChild(el('span', '', 'by ' + rep.groupField));
+          if (rep.dynamic) {
+            var d = el('span', 'rep-dyn', 'relative to you');
+            d.title = 'This report filters on the person viewing it, so it shows ' +
+                      'your rows rather than everyone\u2019s.';
+            meta.appendChild(d);
+          }
+          a.appendChild(meta);
+          ul.appendChild(a);
+        }
+        sec.appendChild(ul);
+        wrap.appendChild(sec);
+      }
+    }
+
+    var timer = null;
+    input.addEventListener('input', function () {
+      if (timer) clearTimeout(timer);
+      var v = input.value;
+      timer = setTimeout(function () { draw(v); }, 90);
+    });
+
+    draw('');
+  }
+
   function renderCatalog(payload, mount) {
+    if (payload.view === 'reports') return renderReports(payload, mount);
+
     mount.innerHTML = '';
 
     var h = el('div', 'app-h');
@@ -2807,6 +3058,11 @@
     left.appendChild(el('h1', 'd2', 'Dashboards'));
     var sub = el('div', 'sub');
     sub.appendChild(el('span', '', payload.stats.offered + ' subjects you can open'));
+    if (payload.reportsOnInstance) {
+      sub.appendChild(el('span', 'dot', '\u00b7'));
+      sub.appendChild(el('span', '', payload.reportsOnInstance +
+                                     ' saved reports on this instance'));
+    }
     sub.appendChild(el('span', 'dot', '\u00b7'));
     sub.appendChild(el('span', '', 'as ' + payload.stats.user));
     left.appendChild(sub);
@@ -2815,6 +3071,7 @@
     right.appendChild(themeToggle());
     h.appendChild(right);
     mount.appendChild(h);
+    mount.appendChild(catalogTabs(payload));
 
     if (!payload.cards || !payload.cards.length) {
       mount.appendChild(el('div', 'note',

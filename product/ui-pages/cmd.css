@@ -481,3 +481,51 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
   box-shadow:0 1px 2px rgba(16,22,32,.10)}
 :root[data-cmd-theme="dark"] #cmd-wrap .seg a[aria-selected="true"]{
   box-shadow:0 1px 2px rgba(0,0,0,.5)}
+
+/* ── converted report provenance ───────────────────────────────────────────
+   Sits between the filter bar and the numbers, because it qualifies every
+   number below it. Deliberately quiet: it is evidence, not a banner. */
+.prov{margin:0 0 18px; display:flex; flex-direction:column; gap:12px;
+      align-items:flex-start}
+.prov-h{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap}
+.prov-rows{display:flex; flex-direction:column; gap:9px; width:100%}
+.prov-row{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
+.prov-row .sm{color:var(--ink-2); line-height:1.55; flex:1 1 340px; min-width:0}
+.prov-forms{display:inline-flex; align-items:center; gap:8px; flex:0 0 auto}
+.prov-forms code{font-family:var(--mono); font-size:11px; letter-spacing:.04em;
+                 padding:3px 7px; border:1px solid var(--edge-2); border-radius:5px;
+                 color:var(--ink-3); background:var(--surf-2)}
+.prov-forms code.now{color:var(--ink-1); border-color:var(--edge-1)}
+.prov-forms .sep{color:var(--ink-4)}
+
+/* ── catalog tabs ──────────────────────────────────────────────────────────
+   Two entry points, one surface. Underline rather than a pill because the tab
+   row sits directly under a display heading and a second filled shape there
+   competes with it. */
+.tabs{display:flex; gap:2px; margin:0 0 22px; border-bottom:1px solid var(--edge-2)}
+.tab{padding:9px 14px; font-size:12.5px; color:var(--ink-3);
+     border-bottom:2px solid transparent; margin-bottom:-1px}
+.tab:hover{color:var(--ink-1)}
+.tab.now{color:var(--ink-1); font-weight:600; border-bottom-color:var(--accent)}
+
+/* ── saved report list ─────────────────────────────────────────────────────
+   A list, not cards. Cards are for subjects, where a preview chart earns the
+   area; a report is a name and a destination, and several hundred of them read
+   far faster as dense rows grouped by what they are about. */
+.rep-groups{display:flex; flex-direction:column; gap:26px}
+.rep-group-h{display:flex; align-items:baseline; gap:10px; margin-bottom:9px;
+             padding-bottom:7px; border-bottom:1px solid var(--edge-2)}
+.rep-list{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+          gap:1px; background:var(--edge-2); border:1px solid var(--edge-2);
+          border-radius:8px; overflow:hidden}
+.rep{display:flex; flex-direction:column; gap:5px; padding:12px 14px;
+     background:var(--surf-1); min-width:0}
+.rep:hover{background:var(--surf-2)}
+.rep-t{font-size:13px; color:var(--ink-1); line-height:1.4;
+       overflow-wrap:anywhere}
+.rep-m{display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+       font-size:11px; color:var(--ink-3)}
+.rep-m code{font-family:var(--mono); font-size:10px; letter-spacing:.05em;
+            color:var(--ink-3)}
+.rep-dyn{padding:1px 6px; border:1px solid var(--edge-2); border-radius:999px;
+         font-size:10px; color:var(--ink-3)}

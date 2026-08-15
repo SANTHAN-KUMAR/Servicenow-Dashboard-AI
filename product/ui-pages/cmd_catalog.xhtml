@@ -15,13 +15,36 @@
 -->
 
 <g:evaluate var="jvar_b64" jelly="true">
+  /* Two views on one surface: the subjects this viewer may analyse, and the
+     saved reports they already have. They are separate lists because they answer
+     separate questions -- "what can I look at" against "where did the report I
+     use every Monday go" -- and folding them together buries the second in the
+     first. `view` chooses; subjects remain the default. */
+  var view = '' + (RP.getParameterValue('view') || 'subjects');
+  if (view !== 'reports') view = 'subjects';
+
   var out;
   try {
-    var cat = new CmdCatalog();
-    out = cat.build(30);
+    if (view === 'reports') {
+      var rep = new CmdReport();
+      out = rep.list({ limit: 300 });
+      out.view = 'reports';
+    } else {
+      var cat = new CmdCatalog();
+      out = cat.build(30);
+      out.view = 'subjects';
+      /* The count of convertible reports, so the subjects view can offer the
+         other one with a real number on it rather than a bare link. */
+      try {
+        var ag = new GlideAggregate('sys_report');
+        ag.addAggregate('COUNT');
+        ag.query();
+        if (ag.next()) out.reportsOnInstance = parseInt(ag.getAggregate('COUNT'), 10);
+      } catch (e2) { out.reportsOnInstance = 0; }
+    }
   } catch (e) {
     out = { error: 'The catalog could not be built: ' + e,
-            areas: [], cards: [],
+            view: view, areas: [], cards: [], reports: [],
             stats: { user: gs.getUserDisplayName(), userName: gs.getUserName(),
                      offered: 0, considered: 0, denied: 0, tooSmall: 0 } };
   }

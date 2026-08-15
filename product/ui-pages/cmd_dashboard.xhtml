@@ -63,10 +63,23 @@
   for (var w = 0; w &lt; allowed.length; w++) if (allowed[w] === months) ok = true;
   if (!ok) months = 12;
 
+  /* A saved report, rather than a bare table, when one is named.
+
+     Same page, same renderer, same drill mechanics. The report supplies the
+     table and the base filter and the page is otherwise identical, which is the
+     point: a converted report is not a separate surface to build or to keep
+     working. Coerced to a JavaScript string for the same reason `path` is. */
+  var reportId = '' + (RP.getParameterValue('report') || '');
+
   var out;
   try {
     var builder = new CmdPayload();
-    out = builder.dashboard(table, path, { months: months });
+    if (reportId) {
+      var conv = new CmdReport(builder.data, builder.meta, builder.form);
+      out = conv.convert(builder, reportId, path, { months: months });
+    } else {
+      out = builder.dashboard(table, path, { months: months });
+    }
     out.window = { months: months, allowed: allowed };
   } catch (e) {
     out = { error: 'The dashboard could not be built: ' + e,
