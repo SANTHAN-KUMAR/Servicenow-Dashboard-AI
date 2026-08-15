@@ -72,6 +72,12 @@ CmdPayload.MIN_TOP_SHARE = 0.04;
    per try. */
 CmdPayload.FUNNEL_TRIES = 6;
 
+/* How many ordinal dimensions the box-plot builder may try before giving up, and
+   therefore how many the lead scan must plan for. One constant so the plan and
+   the builder cannot disagree; when they did, each unanticipated try became its
+   own full rescan of the table. */
+CmdPayload.SPREAD_TRIES = 6;
+
 /* Candidate dimensions examined to fill those panels. Higher gives better panels
    and costs more; each rejected candidate still costs its profile. */
 CmdPayload.MAX_CANDIDATES = 14;
@@ -348,7 +354,7 @@ CmdPayload.prototype = {
         /* The second declared scan, now that the lead dimension is known. */
         this._planLeadScan(table, query, dateField, lead,
                            this.analysis.rankMeasures(table, query, CmdData.GROUP_MS),
-                           opts);
+                           opts, used);
 
         payload.panels = payload.panels.concat(
             this._analysisGrid(table, query, dateField, lead, opts, tAssembly,
@@ -451,8 +457,22 @@ CmdPayload.prototype = {
         }
 
         /* Every candidate breakdown. These produce the profiles, and the profiles
-           are what decide the page's lead dimension. */
-        for (i = 0; i < usable.length; i++) plan.push(sp.group(usable[i].name));
+           are what decide the page's lead dimension.
+         *
+         * Only when the row scan is the cheaper way to get them, which is when the
+         * verdict is not trusted. A grouped count is the one thing the database
+         * does better than any scan: on a trusted table the same eight breakdowns
+         * are eight indexed GlideAggregate queries at roughly 12ms each, against
+         * eight accumulators riding a 4,266 row pass. Planning them here regardless
+         * of the verdict meant the common case, an unfiltered viewer, paid scan
+         * prices for an answer an index already had.
+         *
+         * Correctness is unaffected either way: the fast path is only reachable
+         * when aclVerdict has proved this viewer may read every row of this query,
+         * which is the same proof tieredGroupBy relies on. */
+        if (!v.trusted) {
+            for (i = 0; i < usable.length; i++) plan.push(sp.group(usable[i].name));
+        }
 
         /* The trend, the week cycle and the calendar all read the same column. */
         if (dateField) {
@@ -493,7 +513,23 @@ CmdPayload.prototype = {
      * this whole mechanism exists to remove. Two declared, bounded scans is the
      * honest shape of the problem.
      */
-    _planLeadScan: function (table, query, dateField, lead, measures, opts) {
+    /**
+     * Ordinal dimensions not already spent on the drill path, best first.
+     *
+     * Extracted so the scan plan and the panel builders walk the identical list.
+     * When they disagreed, every field the builders tried and the plan had not
+     * anticipated opened its own full rescan of the table, which is the exact cost
+     * the two-scan design exists to prevent.
+     */
+    _ordinalDims: function (table, used) {
+        var out = [], all = this.meta.dimensions(table);
+        for (var i = 0; i < all.length; i++) {
+            if (all[i].isOrdinal && !this._contains(used, all[i].name)) out.push(all[i]);
+        }
+        return out;
+    },
+
+    _planLeadScan: function (table, query, dateField, lead, measures, opts, used) {
         if (!lead || !lead.primary) return;
         if (this.data.aclVerdict(table, query).denied) return;
 
@@ -515,6 +551,24 @@ CmdPayload.prototype = {
             plan.push(sp.measure(measures[i].name, lead.primary.name));
             if (lead.ordinals.length) {
                 plan.push(sp.measure(measures[i].name, lead.ordinals[0].name));
+            }
+        }
+
+        /* The box-plot builder asks for the leading measure split by each ordinal
+           dimension in turn, taking the first that shows a real difference in
+           spread, and most of them decline. Every one of those tries is a
+           reduction, and until they were planned here each was an unplanned full
+           rescan of the table.
+         *
+         * Measured on `change_request`, admin, before this: nine `measure`
+         * reductions over the same 1,505 rows, eight of them unplanned, costing
+         * 4.5s of a 7.9s page. The tries are capped and the cap is shared with the
+         * builder through SPREAD_TRIES, so the plan and the builder cannot drift
+         * apart again -- that drift is what made the cost invisible. */
+        if (measures.length) {
+            var ordinals = this._ordinalDims(table, used || []);
+            for (i = 0; i < ordinals.length && i < CmdPayload.SPREAD_TRIES; i++) {
+                plan.push(sp.measure(measures[0].name, ordinals[i].name));
             }
         }
         if (measures.length >= 2) {
@@ -685,12 +739,7 @@ CmdPayload.prototype = {
          * Asking every ordinal field is affordable because the gate is cheap and
          * strict: it is one memoised profile and a monotonic-decline test, and
          * almost every field fails it immediately. */
-        var ordinalFields = [], allDims = this.meta.dimensions(table), od;
-        for (od = 0; od < allDims.length; od++) {
-            if (allDims[od].isOrdinal && !this._contains(used, allDims[od].name)) {
-                ordinalFields.push(allDims[od]);
-            }
-        }
+        var ordinalFields = this._ordinalDims(table, used);
         if (ordinalFields.length) {
             builders.push({ name: 'funnel', fn: function () {
                 /* First ordinal field whose declared order actually sheds volume.
@@ -723,7 +772,8 @@ CmdPayload.prototype = {
                  * lead dimension meant the panel was measured against the field
                  * least likely to separate, refused, and the one that would have
                  * worked was never asked. */
-                var tries = ordinalFields.concat([lead.primary]), q;
+                var tries = ordinalFields.slice(0, CmdPayload.SPREAD_TRIES)
+                                        .concat([lead.primary]), q;
                 for (q = 0; q < tries.length; q++) {
                     var b = self.analysis.spreadByGroup(table, query,
                         measures[0], tries[q], budget);

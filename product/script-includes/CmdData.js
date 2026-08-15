@@ -236,7 +236,7 @@ CmdData.prototype = {
      */
     aclVerdict: function (table, query) {
         var key = table + '|' + (query || '');
-        if (this._verdict[key]) return this._verdict[key];
+        if (this._verdict[key] !== undefined) return this._verdict[key];
 
         var v;
 
@@ -367,7 +367,7 @@ CmdData.prototype = {
      */
     secureCountBoxed: function (table, query, budgetMs) {
         var ck = table + '|' + (query || '') + '|boxed';
-        if (this._counts[ck]) return this._counts[ck];
+        if (this._counts[ck] !== undefined) return this._counts[ck];
 
         /* How many rows a complete proof would have to admit. Known up front and
            cheaply, because the unchecked count is an indexed aggregate. */
@@ -499,7 +499,7 @@ CmdData.prototype = {
     secureCount: function (table, query, cap) {
         cap = cap || CmdData.SECURE_SCAN_CAP;
         var ck = table + '|' + (query || '') + '|' + cap;
-        if (this._counts[ck]) return this._counts[ck];
+        if (this._counts[ck] !== undefined) return this._counts[ck];
         var gr = new GlideRecordSecure(table);
         if (query) gr.addEncodedQuery(query);
         gr.setLimit(cap + 1);
@@ -612,7 +612,7 @@ CmdData.prototype = {
      */
     secureGroupBy: function (table, field, query, budgetMs) {
         var ck = 'sgb|' + table + '|' + field + '|' + (query || '');
-        if (this._counts[ck]) return this._counts[ck];
+        if (this._counts[ck] !== undefined) return this._counts[ck];
 
         budgetMs = budgetMs || CmdData.GROUP_MS;
         var counts = {}, labels = {}, scanned = 0, capped = false, timedOut = false;
@@ -669,7 +669,7 @@ CmdData.prototype = {
      */
     secureMultiGroupBy: function (table, fields, query, budgetMs) {
         var ck = 'mgb|' + table + '|' + fields.join(',') + '|' + (query || '');
-        if (this._counts[ck]) return this._counts[ck];
+        if (this._counts[ck] !== undefined) return this._counts[ck];
 
         budgetMs = budgetMs || CmdData.GROUP_MS;
         var t0 = new Date().getTime();
@@ -876,7 +876,7 @@ CmdData.prototype = {
 
     profile: function (table, field, query) {
         var pk = table + '|' + field + '|' + (query || '');
-        if (this._profiles[pk]) return this._profiles[pk];
+        if (this._profiles[pk] !== undefined) return this._profiles[pk];
         var g = this.tieredGroupBy(table, field, query);
         var rows = g.rows;
         var total = 0, i;
@@ -1012,7 +1012,7 @@ CmdData.prototype = {
            reductions, and re-scanning a table to recompute an answer already in hand
            is the exact fault that made the first build take sixty seconds. */
         var ck = 'red|' + table + '|' + (query || '') + '|' + this._specKey(specs);
-        if (this._counts[ck]) return this._counts[ck];
+        if (this._counts[ck] !== undefined) return this._counts[ck];
 
         /* The request-level scan allowance.
          *
@@ -1821,7 +1821,7 @@ CmdData.prototype = {
 
         var ck = 'ps|' + table + '|' + dateField + '|' + grain + '|' + buckets +
                  '|' + (query || '');
-        if (this._counts[ck]) return this._counts[ck];
+        if (this._counts[ck] !== undefined) return this._counts[ck];
 
         /* This used to call fastCount() per bucket, and that was a correctness bug
          * in the most visible place on the product.
@@ -1910,7 +1910,7 @@ CmdData.prototype = {
      */
     dateSpread: function (table, field, query) {
         var ck = 'spread|' + table + '|' + field + '|' + (query || '');
-        if (this._counts[ck]) return this._counts[ck];
+        if (this._counts[ck] !== undefined) return this._counts[ck];
 
         var q = field + 'ISNOTEMPTY';
         if (query) q = query + '^' + q;
@@ -2080,7 +2080,7 @@ CmdData.prototype = {
      */
     periodDelta: function (table, dateField, grain, query) {
         var ck = 'pd|' + table + '|' + dateField + '|' + grain + '|' + (query || '');
-        if (this._counts[ck]) return this._counts[ck];
+        if (this._counts[ck] !== undefined) return this._counts[ck];
 
         var now = new GlideDateTime();
         var cur = this._bucketBounds(now, grain, 0);

@@ -1202,7 +1202,7 @@ CmdAnalysis.prototype = {
     rankMeasures: function (table, query, budgetMs) {
         var ck = table + '|' + (query || '');
         if (!this._measures) this._measures = {};
-        if (this._measures[ck]) return this._measures[ck];
+        if (this._measures[ck] !== undefined) return this._measures[ck];
 
         var ms = this.meta.measures(table), i;
         var names = [];
