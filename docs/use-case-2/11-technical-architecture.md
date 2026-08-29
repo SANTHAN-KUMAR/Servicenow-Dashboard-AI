@@ -109,6 +109,65 @@ over measured statistics, so it can be regression-tested and argued with. Exampl
 above ~12 distinct values bars become a treemap; a top value under 4% of total means
 nothing worth ranking; under 30 records draws with a visible caveat.
 
+### 3.1 Data flow, request to pixel
+
+The layer diagram above is what the code is organised into. This is what
+actually happens, in order, for one page load and one click afterward — added
+2026-08-29 against a client ask for a data-flow diagram, not just a component
+list.
+
+```mermaid
+sequenceDiagram
+    participant B as Browser
+    participant P as UI Page (Jelly, g:evaluate)
+    participant M as CmdMeta
+    participant D as CmdData
+    participant F as CmdForm
+    participant A as CmdAnalysis
+    participant Y as CmdPayload / CmdCatalog / CmdReport / CmdDrill
+    participant T as ServiceNow tables
+
+    B->>P: GET cmd_dashboard.do?table=incident&path=...
+    Note over P: Rhino runs server-side, once, per request.<br/>No client fetch happens after this.
+    P->>Y: dashboard(table, path, opts)
+    Y->>M: describe(table), dimensions(table)
+    M->>T: sys_dictionary, sys_choice (schema only)
+    Y->>D: total(table, query) / aclVerdict(table, query)
+    D->>T: GlideAggregate (fast, unchecked)
+    D->>T: GlideRecordSecure (one scan, permission-checked)
+    Note over D: One scan feeds every panel on the page —<br/>not one scan per chart.
+    Y->>F: decide(shape) for each candidate field
+    F-->>Y: form + reason, or refusal + reason
+    Y->>A: annotate(series) — trend direction, method, anomalies
+    Y->>Y: CmdDrill.gate() per candidate — fill rate, cardinality,<br/>row count, against the viewer's own rows only
+    Y-->>P: one payload object (panels, ACL verdict, drill options)
+    P->>P: JSON.stringify, then base64-encode
+    P-->>B: one HTML response, payload embedded in a data attribute
+    B->>B: cmd_render.js decodes the payload and draws SVG
+    Note over B: No second request. No loading spinner.<br/>The page you see is the whole response.
+
+    B->>B: click a bar → cross-highlight (client-side only, no request)
+    B->>P: click "Filter the whole page" → GET ...&path=field:key
+    Note over P,T: Same sequence repeats, ACL re-checked from<br/>zero for the new, narrower query.
+```
+
+Three things this diagram makes explicit that the layer list doesn't:
+
+- **There is exactly one round trip per view**, including a drill step. A
+  click either changes nothing on the server (cross-highlight) or triggers a
+  full, fresh page load (a real drill) — there is no partial/AJAX update
+  in between, because on-demand fetch was measured not to work on this
+  surface (§4.2).
+- **The permission check is not a gate at the front door — it runs inside
+  the one scan** that also builds every chart, which is why it can't be
+  skipped or cached per-session without a real caching layer (§6.3, §7.3).
+- **Nothing is written anywhere.** Every arrow into `T` (ServiceNow tables)
+  is a read. The only state that survives a page load is what's encoded in
+  the URL the browser now has — the drill path, the window, any chart-form
+  override — which is also why a drilled-down link is shareable: it carries
+  everything needed to rebuild the identical view for whoever opens it next,
+  permission-checked fresh for them.
+
 ---
 
 ## 4. How it runs inside ServiceNow

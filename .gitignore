@@ -6,3 +6,4 @@ built.html
 # Instance credentials. Never committed.
 product/deploy/credentials.json
 product/deploy/.token
+backup/

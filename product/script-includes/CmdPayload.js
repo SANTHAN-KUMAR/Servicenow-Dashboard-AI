@@ -331,6 +331,67 @@ CmdPayload.prototype = {
         }
         var dimPanels = this._diversify(candidates, CmdPayload.MAX_PANELS);
 
+        /* ── the focus field ──
+         *
+         * "Where you can go next" and a dimension panel's own "Drill into X" link
+         * used to encode the click as a real drill step with no key, which
+         * CmdDrill.stepQuery reads as ISEMPTY -- the click filtered the whole page
+         * down to the sliver of records where that field is blank, which is the
+         * opposite of what the label promised and is what the client flagged as a
+         * bug in the demo. Neither link ever had a value to filter by; both only
+         * ever meant "show me this field's breakdown so I can click a real bar
+         * next." That is not a filter, it is a request to see a panel, so it is
+         * granted here rather than smuggled through the query.
+         *
+         * _diversify already dropped this field once, for variety -- most often
+         * because its form duplicated one already on the page, which is exactly
+         * what the "would have repeated a form already on this page" note says.
+         * Overriding that is the point: the viewer asked for this one by name, so
+         * it is forced back in ahead of the fields that merely survived on rank,
+         * evicting the lowest-scored survivor if the panel count is already full. */
+        var focusField = opts.focus ? String(opts.focus) : '';
+        if (focusField && !this._contains(used, focusField)) {
+            var already = false;
+            for (i = 0; i < dimPanels.length; i++) {
+                if (dimPanels[i].field === focusField) { already = true; break; }
+            }
+            if (!already) {
+                var focusPanel = null;
+                for (i = 0; i < candidates.length; i++) {
+                    if (candidates[i].field === focusField) { focusPanel = candidates[i]; break; }
+                }
+                if (!focusPanel) {
+                    var focusDim = null;
+                    for (i = 0; i < dims.length; i++) {
+                        if (dims[i].name === focusField) { focusDim = dims[i]; break; }
+                    }
+                    /* A field the meta layer does not recognise as a dimension of
+                       this table is not built into a panel. It arrived on a URL
+                       parameter and is otherwise unvalidated, same reasoning as
+                       CmdDrill.sanitizePath. */
+                    if (focusDim) focusPanel = this._dimPanel(table, query, focusDim, total, opts);
+                }
+                if (focusPanel) {
+                    if (dimPanels.length >= CmdPayload.MAX_PANELS) dimPanels.pop();
+                    dimPanels.unshift(focusPanel);
+                } else if (focusDim) {
+                    /* CmdDrill offers this field for filtering on a lower bar
+                       than _dimPanel needs to draw an honest chart of it -- a
+                       field can be 33% populated, which is enough to filter by,
+                       and still have its own blank bucket as the largest single
+                       value, which _dimPanel refuses to chart. Silently doing
+                       nothing here is the same dead-end click the drill gates
+                       exist to rule out everywhere else, so the same reason is
+                       given rather than a click that appears to do nothing. */
+                    var focusGate = this.drill.gate(table, focusDim, query);
+                    payload.notes.push(
+                        focusDim.label + ' could not be drawn as a chart here: ' +
+                        (focusGate.reason || 'not enough of a shape to show') + '.');
+                }
+            }
+        }
+        payload.focusField = focusField || null;
+
         /* ── the analysis grid ──
          *
          * Everything above answers "how does one field break down". This is the part

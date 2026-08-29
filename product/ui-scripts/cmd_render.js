@@ -652,8 +652,26 @@
     return t;
   }
 
-  /** The fallback, and also the accessibility view every chart needs anyway. */
-  function drawTable(panel) {
+  /**
+   * The fallback, and also the accessibility view every chart needs anyway.
+   *
+   * `payload` is optional so the two no-context callers (a bare fallback render
+   * with no page around it) keep working; where it is supplied and the panel is
+   * a drillable dimension, each real row is wired the same way the matrix table's
+   * rows already are -- data-drill-field/key, picked up by the mount's delegated
+   * click handler, which cross-highlights and then offers the real, ACL-checked
+   * "Filter the whole page" drill with the row's actual key. That is the fix for
+   * the footer "Drill into X" link this table view used to sit under: that link
+   * built its href with no key at all, which the server reads as an empty-string
+   * filter -- ISEMPTY -- so "Drill into category" silently became "show me the
+   * sliver of records where category was never set," which is what the client
+   * caught in the demo. A table row has a real key already sitting right next to
+   * it, so it never needed a guess.
+   *
+   * The folded "Other" row is excluded on purpose: it stands for many values, and
+   * a click on it cannot become one honest filter.
+   */
+  function drawTable(panel, payload) {
     var rows = withOther(panel);
     var total = sum(rows);
     var wrap = el('div', 'tbl-wrap');
@@ -665,9 +683,17 @@
     hr.appendChild(el('th', 'n', 'Share'));
     thead.appendChild(hr);
     t.appendChild(thead);
+    var canDrill = payload && panel.kind === 'dimension' && panel.field &&
+                   !payload.drill.atMax;
     var tb = el('tbody');
     for (var i = 0; i < rows.length; i++) {
       var tr = el('tr');
+      if (canDrill && !rows[i].isOther) {
+        tr.setAttribute('data-drill-field', panel.field);
+        tr.setAttribute('data-drill-key', rows[i].key);
+        tr.setAttribute('tabindex', '0');
+        tr.className = 'hit';
+      }
       tr.appendChild(el('td', 'l', label(rows[i])));
       tr.appendChild(el('td', 'n', fmt(rows[i].count)));
       tr.appendChild(el('td', 'n', total ? pct(rows[i].count / total) : '0%'));
@@ -2097,11 +2123,21 @@
   }
 
   function buildPanel(panel, payload) {
-    var p = el('div', 'panel cp' + (panel.span === 2 ? ' span2' : ''));
+    /* Marks the panel that is on the page because the viewer asked for it by
+       name, via "Where you can go next" or a dimension panel's own footer link
+       (see focusUrl). Without this a click there just silently reordered the
+       panels, and a viewer who was told "here is where you can go next" had no
+       way to tell whether anything had actually happened. */
+    var isFocus = payload.focusField && panel.field === payload.focusField;
+    var p = el('div', 'panel cp' + (panel.span === 2 ? ' span2' : '') +
+                       (isFocus ? ' focus' : ''));
 
     var head = el('div', 'cp-h');
     var left = el('div');
     left.appendChild(el('div', 'cp-t', panel.question));
+    if (isFocus) {
+      left.appendChild(el('div', 'cp-focus-tag', 'You asked to see this'));
+    }
     /* The reason the form was chosen is shown, not hidden. It is the product's
        actual argument and it is what makes the output reviewable. */
     left.appendChild(el('div', 'cp-s', panel.reason));
@@ -2123,13 +2159,13 @@
       chartNode = el('div');
       chartNode.appendChild(el('div', 'cav', 'No renderer for "' + panel.form +
         '" yet, so the data is shown as a table.'));
-      chartNode.appendChild(drawTable(panel));
+      chartNode.appendChild(drawTable(panel, payload));
     }
     body.appendChild(chartNode);
 
     /* The toggle is built after the chart, because it owns swapping the body
        between the two views and needs the node it is swapping out. */
-    var toggle = viewToggle(panel, body, chartNode);
+    var toggle = viewToggle(panel, body, chartNode, payload);
     if (toggle) meta.insertBefore(toggle, meta.firstChild);
 
     p.appendChild(head);
@@ -2163,12 +2199,16 @@
       p.appendChild(cv);
     }
 
+    /* There used to be a "Drill into <field>" link here, built with the same
+       no-key href as the "Where you can go next" panel and carrying the same
+       bug: it filtered the page to the empty slice of this field instead of
+       going anywhere useful, because the field it names is the one this panel
+       already shows -- there was never a value for it to filter by. Real drill
+       is a click on a bar, or, now, a row in this panel's own table view (see
+       drawTable), both wired to the actual key. This footer keeps only the
+       affordance that always meant something concrete. */
     if (panel.kind === 'dimension' && !payload.drill.atMax) {
       var foot = el('div', 'cp-f');
-      var a = el('a', 'drill-link', 'Drill into ' + panel.fieldLabel.toLowerCase());
-      a.href = drillUrl(payload, panel.field, null);
-      a.setAttribute('data-field', panel.field);
-      foot.appendChild(a);
       var lst = el('a', 'drill-link muted', 'Open records');
       lst.href = payload.subject.listUrl;
       foot.appendChild(lst);
@@ -2228,6 +2268,31 @@
     }
     return subjectBase(payload) +
            (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '') +
+           stateTail(payload);
+  }
+
+  /**
+   * The link for "show me this field's breakdown," with no value chosen yet.
+   *
+   * This used to be built with drillUrl(payload, field, null), which encodes as
+   * an empty key -- a real drill step meaning ISEMPTY, on a field the viewer
+   * never filtered on. The click looked like "go look at Category" and actually
+   * filtered the whole page down to the sliver of records where Category is
+   * blank, most often zero of them. That is the bug the client saw in the demo.
+   *
+   * The current path travels unchanged: this is not a drill step, so nothing is
+   * added to it. `field` is what changes, and the server decides what a
+   * breakdown of it actually looks like.
+   */
+  function focusUrl(payload, field) {
+    var path = payload.path.slice();
+    var parts = [];
+    for (var i = 0; i < path.length; i++) {
+      parts.push(encodeURIComponent(path[i].field) + ':' + encodeURIComponent(path[i].key));
+    }
+    return subjectBase(payload) +
+           (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '') +
+           '&focus=' + encodeURIComponent(field) +
            stateTail(payload);
   }
 
@@ -2543,7 +2608,7 @@
     for (var i = 0; i < opts.length; i++) {
       var o = opts[i];
       var row = el(o.offer ? 'a' : 'div', 'drill-row' + (o.offer ? '' : ' off'));
-      if (o.offer) row.href = drillUrl(payload, o.field, null);
+      if (o.offer) row.href = focusUrl(payload, o.field);
 
       var l = el('div', 'drill-l');
       l.appendChild(el('span', 'drill-n', o.label));
@@ -2877,7 +2942,7 @@
    * fallback the dataviz rules require, and it is also the thing an analyst asks
    * for within about a minute of seeing any chart: the numbers.
    */
-  function viewToggle(panel, body, chartNode) {
+  function viewToggle(panel, body, chartNode, payload) {
     if (!hasTabularForm(panel)) return null;
 
     var seg = el('div', 'seg sm');
@@ -2888,7 +2953,7 @@
     function show(which) {
       body.innerHTML = '';
       if (which === 'table') {
-        if (!tableNode) tableNode = tabulate(panel);
+        if (!tableNode) tableNode = tabulate(panel, payload);
         body.appendChild(tableNode);
       } else {
         body.appendChild(chartNode);
@@ -2924,7 +2989,7 @@
    * exist for every panel and a per-form implementation is a per-form omission
    * waiting to happen.
    */
-  function tabulate(panel) {
+  function tabulate(panel, payload) {
     var wrap = el('div', 'tbl-wrap');
     var t = el('table', 'tbl');
     var head = el('tr'), tb = el('tbody');
@@ -3039,7 +3104,7 @@
       }
 
     } else if (panel.points === undefined && panel.rows) {   /* grouped rows */
-      return drawTable(panel);
+      return drawTable(panel, payload);
 
     } else {
       return el('div', 'cav', 'No tabular view for this panel.');

@@ -81,6 +81,15 @@
      carry is dropped by CmdPayload against the alternatives it computed for that
      panel, which is the same list the on-screen control offers. Validating in two
      places would let the two disagree. */
+  /* Which dimension's breakdown to force onto the page with no filter applied.
+     Set by the "Where you can go next" and "Drill into X" links, which only
+     ever meant "show me this field," never "filter to a value" -- see the
+     comment in CmdPayload.dashboard next to opts.focus for why that used to be
+     conflated with a real drill step. Coerced to a JavaScript string for the
+     same java.lang.String reason `path` is; validated against the table's own
+     dimensions downstream, not here. */
+  var focus = '' + (RP.getParameterValue('focus') || '');
+
   var rawForms = '' + (RP.getParameterValue('forms') || '');
   var forms = {};
   if (rawForms) {
@@ -97,9 +106,9 @@
     var builder = new CmdPayload();
     if (reportId) {
       var conv = new CmdReport(builder.data, builder.meta, builder.form);
-      out = conv.convert(builder, reportId, path, { months: months, forms: forms });
+      out = conv.convert(builder, reportId, path, { months: months, forms: forms, focus: focus });
     } else {
-      out = builder.dashboard(table, path, { months: months, forms: forms });
+      out = builder.dashboard(table, path, { months: months, forms: forms, focus: focus });
     }
     out.window = { months: months, allowed: allowed };
     out.forms = forms;

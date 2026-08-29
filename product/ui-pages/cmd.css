@@ -120,6 +120,9 @@
   text-transform:uppercase; color:var(--ink-3); border:1px solid var(--edge);
   border-radius:4px; padding:3px 6px; white-space:nowrap}
 .cp-b{margin-top:16px; flex:1; min-height:0}
+.cp.focus{box-shadow:0 0 0 1.5px var(--c1) inset}
+.cp-focus-tag{font-family:var(--mono); font-size:9px; letter-spacing:.11em;
+  text-transform:uppercase; color:var(--c1); margin-top:6px}
 .cp-f{margin-top:14px; padding-top:12px; border-top:1px solid var(--edge);
   display:flex; gap:16px; flex-wrap:wrap; align-items:center}
 .drill-link{font-size:12px; font-weight:500; color:var(--c1);
