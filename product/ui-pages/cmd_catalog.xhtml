@@ -23,11 +23,22 @@
   var view = '' + (RP.getParameterValue('view') || 'subjects');
   if (view !== 'reports') view = 'subjects';
 
+  /* Which window of the reports list to show, and what to search for.
+     Both are coerced to JavaScript strings before use for the same
+     java.lang.String reason the dashboard page coerces `path` -- a Java string
+     binds `.split`/`.length` to Java's own methods and silently misbehaves.
+     `offset` is validated as a number here and clamped again in CmdReport.list;
+     `q` reaches a CONTAINS query, never a raw encoded query, so there is no
+     clause separator to smuggle through it. */
+  var offset = parseInt(RP.getParameterValue('offset'), 10);
+  if (!(offset > 0)) offset = 0;
+  var q = '' + (RP.getParameterValue('q') || '');
+
   var out;
   try {
     if (view === 'reports') {
       var rep = new CmdReport();
-      out = rep.list({ limit: 300 });
+      out = rep.list({ limit: 60, offset: offset, q: q });
       out.view = 'reports';
     } else {
       var cat = new CmdCatalog();

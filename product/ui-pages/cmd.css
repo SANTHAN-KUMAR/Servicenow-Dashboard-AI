@@ -283,6 +283,10 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
 
 /* ── catalog controls ── */
 .cat-bar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:20px 0 6px}
+.pager{display:flex; align-items:center; justify-content:space-between; gap:12px;
+  flex-wrap:wrap; margin:14px 0; padding:10px 12px; border:1px solid var(--edge);
+  border-radius:8px; background:var(--surface-2)}
+.pager .btn.ghost{opacity:.4; pointer-events:none}
 .field{display:flex; align-items:center; gap:8px; border:1px solid var(--edge-2);
   border-radius:8px; padding:7px 11px; background:var(--surface); min-width:230px}
 .field input{border:0; outline:0; background:transparent; color:var(--ink-1);

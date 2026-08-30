@@ -222,9 +222,28 @@ CmdReport.prototype = {
         var limit = opts.limit || CmdReport.MAX_LIST;
         var t0 = new Date().getTime();
 
+        /* Where in the library this page starts, and what it is filtered to.
+         *
+         * Without these the tab showed the first MAX_LIST rows and nothing else
+         * could ever be reached. That was survivable at this instance's 682
+         * reports and is not at the scale the client actually described: on an
+         * instance with 100,000+ reports, 300 of them are visible and 99,700 are
+         * unreachable, ordered by table then title, with no control that changes
+         * which 300. The count was always reported honestly -- `onInstance` and
+         * `truncated` never lied about the library being bigger than the page --
+         * but honesty about an unreachable remainder is not access to it.
+         *
+         * `offset` is clamped to a whole number of pages so a hand-edited URL
+         * cannot ask for a negative window, and `q` is a plain substring match on
+         * the two fields a person actually searches by. */
+        var offset = parseInt(opts.offset, 10);
+        if (!(offset > 0)) offset = 0;
+        var q = opts.q ? String(opts.q) : '';
+
         var out = { reports: [], byTable: {}, stats: {
             visible: 0, converted: 0, unsupported: 0, truncated: false,
-            onInstance: 0, ms: 0
+            onInstance: 0, matching: 0, offset: offset, limit: limit,
+            q: q, hasPrev: offset > 0, hasNext: false, ms: 0
         }};
 
         /* Capacity, not entitlement. See the note above. */
@@ -233,16 +252,40 @@ CmdReport.prototype = {
         ag.query();
         if (ag.next()) out.stats.onInstance = parseInt(ag.getAggregate('COUNT'), 10);
 
+        /* How many rows this search matches, so the page can say "31 to 60 of
+           4,012" rather than only "there are more". Unchecked like `onInstance`
+           and for the same reason -- it is a statement about the library, and the
+           per-row entitlement is applied by the secure cursor below. */
+        var mg = new GlideAggregate('sys_report');
+        if (opts.table) mg.addQuery('table', opts.table);
+        mg.addNotNullQuery('table');
+        if (q) {
+            mg.addQuery('title', 'CONTAINS', q).addOrCondition('table', 'CONTAINS', q);
+        }
+        mg.addAggregate('COUNT');
+        mg.query();
+        if (mg.next()) out.stats.matching = parseInt(mg.getAggregate('COUNT'), 10);
+
         var gr = new GlideRecordSecure('sys_report');
         if (opts.table) gr.addQuery('table', opts.table);
         gr.addNotNullQuery('table');
+        if (q) {
+            gr.addQuery('title', 'CONTAINS', q).addOrCondition('table', 'CONTAINS', q);
+        }
         gr.orderBy('table');
         gr.orderBy('title');
-        gr.setLimit(limit + 1);
+        /* chooseWindow rather than setLimit: the window has to start at `offset`,
+           and the extra row past the end is what tells the page whether a Next
+           control should exist without counting the whole remainder again. */
+        gr.chooseWindow(offset, offset + limit + 1);
         gr.query();
 
         while (gr.next()) {
-            if (out.reports.length >= limit) { out.stats.truncated = true; break; }
+            if (out.reports.length >= limit) {
+                out.stats.truncated = true;
+                out.stats.hasNext = true;
+                break;
+            }
             out.stats.visible++;
 
             var d = this.describe(gr);

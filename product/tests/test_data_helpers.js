@@ -209,12 +209,53 @@ eq('a constant column has no correlation',
    correlationOf([{ x: 1, y: 5 }, { x: 2, y: 5 }, { x: 3, y: 5 }]), null);
 eq('too few points to say', correlationOf([{ x: 1, y: 1 }, { x: 2, y: 2 }]), null);
 
+/* The regression this exists for: a fixed CHECK_EVERY of 10 rows was sold as
+   bounding the worst-case overshoot to "under a second". Measured live on
+   dev390988, 2026-08-30, `task` costs about 1,070ms per permission-checked row for
+   a role-less persona, so ten rows is over ten seconds before the first clock
+   check -- a 2,500ms budget was enforced 10,716ms later, more than four times
+   late. The fix has to adapt the stride to the measured cost rather than assume
+   one number covers every table, and it has to do that from the numbers a scan
+   already has (spent time and rows so far), not from any advance knowledge of
+   which table is expensive. */
+console.log('checkStride');
+var checkStride = sandbox.CmdData.checkStride;
+var CE = sandbox.CmdData.CHECK_EVERY;
+
+/* incident: cheap, ~0.2ms/row. A 2,500ms budget split into CHECK_TARGET slices
+   is a wide-open stride -- capped at CHECK_EVERY so a getTime() call is never
+   skipped for hundreds of rows just because the table is fast. */
+eq('a cheap table is capped at CHECK_EVERY, not left uncapped',
+   checkStride(20, 100, 2500), CE);
+
+/* task: ~1,070ms/row, the actual measured cost. Ten rows at that rate is over
+   10 seconds -- checkStride must bring the stride down to 1 well before that,
+   so every single row is checked once cost is this severe. */
+eq('a table this expensive is checked every row', checkStride(10700, 10, 2500), 1);
+
+/* A table at 25ms/row: a 2,500ms budget over CHECK_TARGET (20) slices is a 125ms
+   slice, so the stride lands at 5 -- expensive enough to tighten well below
+   CHECK_EVERY, cheap enough not to need checking every single row. */
+ok('a moderately expensive table sits between the two extremes',
+   checkStride(2500, 100, 2500) > 1 && checkStride(2500, 100, 2500) < CE,
+   'stride=' + checkStride(2500, 100, 2500));
+
+/* No rows yet, or no time elapsed: nothing to estimate a rate from, so check
+   again immediately rather than divide by zero or trust a noisy estimate. */
+eq('no rows yet means check again next row', checkStride(5, 0, 2500), 1);
+eq('no time elapsed means check again next row', checkStride(0, 50, 2500), 1);
+eq('an unset budget means check again next row', checkStride(50, 50, 0), 1);
+
 /* The regression these exist for: the projection used to divide elapsed-since-row-
    zero by rows-so-far, which charges every row for the query setup that happened
    once. On incident that read 0.64ms/row against a true 0.21ms/row and abandoned a
    proof that fits its budget three times over -- and because the overestimate races
    setup cost, identical page loads disagreed, showing 4,266 records or 50.
-   The numbers below are the ones measured on dev390988. */
+   The numbers below are the ones measured on dev390988.
+   projectProof is no longer called from the scan loop (see CmdData.js, the
+   secureCountBoxed comment on why an aggregate-derived target cannot bound a
+   secure cursor's remaining yield), but the arithmetic and the two historical
+   bugs it fixed are still worth a regression test in their own right. */
 console.log('projectProof');
 var projectProof = sandbox.CmdData.projectProof;
 var MARGIN = sandbox.CmdData.PREDICT_MARGIN;

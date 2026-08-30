@@ -185,6 +185,21 @@ CmdPayload.prototype = {
            _pathOut's breadcrumbs, use the sanitized path, never the raw one. */
         path = this.drill.sanitizePath(table, path);
 
+        /* Depth is capped here too, not only in the query-building loop below.
+         * Found live: a URL carrying 5 valid, unpoisoned segments passed
+         * sanitizePath untouched (every field name real, no '^' in any key), so
+         * the loop below correctly built its query from only the first
+         * CmdDrill.MAX_DEPTH of them -- but `_pathOut` was still handed all 5,
+         * and built a 5-entry breadcrumb, each with its own cumulative query
+         * string, none of which matched what the page had actually fetched. A
+         * viewer following a bookmarked or hand-edited 5-level link would see a
+         * breadcrumb four and five levels deep, each claiming to filter further,
+         * over a page that stopped listening after three. Capping the array once,
+         * here, makes "sanitized path" mean what the comment above already claims
+         * it means for every caller below, instead of relying on each of them to
+         * re-apply the same bound. */
+        if (path.length > CmdDrill.MAX_DEPTH) path = path.slice(0, CmdDrill.MAX_DEPTH);
+
         /* The drill path becomes the query. Built through CmdDrill so the empty
            slice is expressed as ISEMPTY rather than an equality against '', which
            is what makes the "(none)" bar clickable.

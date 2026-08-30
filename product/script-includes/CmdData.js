@@ -27,6 +27,23 @@ var CmdData = Class.create();
    must be labelled as one. Never present a capped count as exact. */
 CmdData.SECURE_SCAN_CAP = 20000;
 
+/* How many raw rows secureCountBoxed asks the database for in one window.
+ *
+ * This is the unit the wall clock can actually interrupt between. A single
+ * GlideRecordSecure cursor evaluates and skips denied rows internally and does
+ * not return control to script code until it admits one or exhausts the table --
+ * measured on `task` at a 1-in-10 admit rate, that first return took 8,083ms by
+ * itself. Splitting the scan into windows this wide means the worst a single
+ * query call can cost is this many rows of the most expensive ACL on the table,
+ * not the whole remaining table, and the loop around it gets a chance to check
+ * the clock after every window regardless of how sparse admission is.
+ *
+ * Smaller bounds worst-case latency more tightly but pays more query overhead per
+ * window; this is a starting point tuned against dev390988's measured per-row
+ * costs (0.2ms on incident to ~10ms on task's denied rows), not a proof that it
+ * is optimal on a table this engagement hasn't measured yet. */
+CmdData.PROOF_CHUNK_ROWS = 250;
+
 /* Membership probes (hasAtLeast) over-fetch when, and only when, the cheap probe
    falls short of the threshold on a table that holds enough rows in total.
  *
@@ -57,15 +74,47 @@ CmdData.MAX_GROUPS = 200;
    consulted during it. Time, not rows, because the cost per row varies by two
    orders of magnitude across the tables on this instance. */
 CmdData.PROOF_MS = 2500;
-/* How often the clock is consulted inside a bounded scan.
+/* The most rows a bounded scan will ever cross without consulting the clock.
  *
  * This was 250 and that made every time-box ineffective on exactly the tables that
  * needed one. A row on kb_knowledge costs 40 to 86ms to permission-check, so 250
  * rows is 10 to 20 seconds before the budget is even looked at: the box was set to
- * 1.2s and the scan ran for 9. Ten rows bounds the overshoot to under a second in
- * the worst case, and a getTime() call every ten rows is immeasurable next to an ACL
- * evaluation that costs milliseconds. */
+ * 1.2s and the scan ran for 9.
+ *
+ * Ten was the fix, on the reasoning that ten rows "bounds the overshoot to under a
+ * second in the worst case". Measured 2026-08-30, that reasoning was wrong, because
+ * it assumed a worst case that the instance beats: a `task` proof budgeted at
+ * 2,500ms ran for 10,716ms and admitted 10 rows before its first clock check --
+ * roughly a second per row, so the very first check landed four times past the
+ * budget it was supposed to enforce. A fixed stride cannot bound overshoot when
+ * per-row cost varies by three orders of magnitude across tables; only the stride
+ * itself can adapt. This is now the ceiling, not the interval. See checkStride. */
 CmdData.CHECK_EVERY = 10;
+
+/* How many times a bounded scan aims to consult the clock within its budget. */
+CmdData.CHECK_TARGET = 20;
+
+/**
+ * How many rows to cross before looking at the clock again.
+ *
+ * Cheap rows get the full CHECK_EVERY stride, because a getTime() per row over a
+ * 20,000-row scan of a table costing 0.2ms/row is measurable overhead for nothing.
+ * Expensive rows collapse the stride to 1, because on those the overshoot -- not
+ * the getTime() -- is what costs seconds. The aim is to check about CHECK_TARGET
+ * times per budget, which bounds the overshoot to roughly one row plus a twentieth
+ * of the budget, whatever the table costs.
+ *
+ * Pure, so the arithmetic is testable without an instance.
+ */
+CmdData.checkStride = function (spentMs, rows, budgetMs) {
+    if (!rows || spentMs <= 0) return 1;
+    var perRow = spentMs / rows;
+    var slice = (budgetMs || 0) / CmdData.CHECK_TARGET;
+    if (slice <= 0) return 1;
+    var stride = Math.floor(slice / perRow);
+    if (!(stride >= 1)) return 1;
+    return stride > CmdData.CHECK_EVERY ? CmdData.CHECK_EVERY : stride;
+};
 
 /* Rows to discard before timing anything, and rows to time once discarding is done.
  *
@@ -101,6 +150,15 @@ CmdData.PREDICT_MARGIN = 1.3;
 
 /**
  * What a full permission proof will have cost by the time it finishes.
+ *
+ * NO LONGER USED to abandon a proof, as of 2026-08-30 -- secureCountBoxed calls
+ * nothing here any more, and the comment at its scan loop explains why the whole
+ * approach was unsound for a restricted viewer. This and PREDICT_AFTER /
+ * PREDICT_WARM / PREDICT_MARGIN are retained only because their regression tests
+ * record the arithmetic and the two historical bugs in it; nothing in the
+ * request path reads them. Do not reintroduce a predictive abort on top of this
+ * without first reading that comment: the input it needs (how many rows a secure
+ * cursor still has to yield) is not knowable from the cursor.
  *
  * Pure arithmetic, kept out of the scan loop so it can be tested without an
  * instance -- the bug this replaced was in exactly this calculation, and it was
@@ -383,7 +441,9 @@ CmdData.prototype = {
         if (this._counts[ck] !== undefined) return this._counts[ck];
 
         /* How many rows a complete proof would have to admit. Known up front and
-           cheaply, because the unchecked count is an indexed aggregate. */
+           cheaply, because the unchecked count is an indexed aggregate. Also what
+           bounds the chunk loop below -- there is no need to ask the database for
+           a window past the last row that could possibly match. */
         var target = this.fastCount(table, query);
 
         /* Subject to the request allowance like any other scan.
@@ -399,57 +459,72 @@ CmdData.prototype = {
         budgetMs = Math.min(budgetMs, Math.max(CmdData.MIN_COUNT_MS, allowance));
 
         var t0 = new Date().getTime();
-        var gr = new GlideRecordSecure(table);
-        if (query) gr.addEncodedQuery(query);
-        gr.setLimit(CmdData.SECURE_SCAN_CAP + 1);
-        gr.query();
+        var n = 0, capped = false, timedOut = false;
+        /* Kept at 0 so the verdict's own reason string stops claiming a
+           prediction it no longer makes -- aclVerdict branches on
+           `proof.predictedMs > 0` and now correctly falls through to plainly
+           reporting how long it ran and where it stopped. */
+        var predicted = 0;
 
-        var n = 0, capped = false, timedOut = false, predicted = 0;
-        var warmT = 0, warmN = 0;
-        while (gr.next()) {
+        /* The scan runs in windows of PROOF_CHUNK_ROWS *raw* rows rather than as
+         * one open-ended cursor, and the clock is checked between windows rather
+         * than between admitted rows. The difference matters, and it is not the
+         * same fix as the adaptive stride above it -- that one bounds the cost
+         * *per admitted row*, and it does nothing at all when admission is rare.
+         *
+         * Measured live on dev390988, 2026-08-30, role-less persona on `task`,
+         * where only 815 of 8,184 rows are readable (one in ten): the *first*
+         * `gr.next()` call took 8,083ms by itself, because GlideRecordSecure
+         * evaluates and rejects denied rows internally before it ever returns
+         * control to script code, and it does not return until it finds one to
+         * admit or runs out of rows. A stride of 1 -- checking every single
+         * admission -- still overshot the 2,500ms budget by more than 3x, because
+         * there was nothing to check between: no admission happened for the first
+         * 8 seconds, so no check ran either. This is not tunable from the JS side
+         * of a single unbounded cursor; the atomic unit of work needed to be made
+         * smaller.
+         *
+         * chooseWindow(start, start + chunk) bounds what one query call has to
+         * evaluate to *chunk* raw rows, matching or not, before returning -- the
+         * same primitive CmdReport.list already uses for its own pagination. The
+         * worst case per chunk is now `chunk` rows of the *most expensive* ACL on
+         * the table, not the whole remaining table, and the clock is genuinely
+         * checked between chunks, which a single cursor could never offer no
+         * matter how the JS-level loop around it was written. */
+        for (var start = 0; start < target; start += CmdData.PROOF_CHUNK_ROWS) {
             if (n >= CmdData.SECURE_SCAN_CAP) { capped = true; break; }
-            n++;
 
-            if (n % CmdData.CHECK_EVERY === 0) {
-                var now = new Date().getTime();
-                var spent = now - t0;
-                if (spent > budgetMs) { timedOut = true; break; }
-
-                /* Start the measured window once setup is behind us. */
-                if (!warmN && n >= CmdData.PREDICT_AFTER) { warmT = now; warmN = n; }
-
-                /* Don't start what you cannot finish.
-                 *
-                 * The proof either completes, and the table is trusted, or it does
-                 * not, and the answer is "cannot tell" -- a partial proof is worth
-                 * exactly nothing, because a scan that stopped early cannot show
-                 * that the rows it never reached were readable.
-                 *
-                 * So once enough rows have gone by to estimate the per-row cost,
-                 * extrapolate to the full count. If finishing is not possible within
-                 * the budget, stop immediately rather than spending the whole budget
-                 * to arrive at the same "cannot tell". Measured on task and
-                 * kb_knowledge, whose ACLs cost 2.9ms and 5.0ms per row against
-                 * incident's 0.2ms, this turns 2.5 wasted seconds into about 0.15
-                 * and reaches an identical verdict.
-                 *
-                 * It can only ever cause an earlier BOUNDED, never a wrong VERIFIED,
-                 * so the soundness of the claim is untouched -- but see PREDICT_WARM
-                 * for why an unsound-in-the-other-direction estimate still did real
-                 * damage, by making the verdict differ between identical requests.
-                 *
-                 * The rate comes from the window since warmN, so fixed setup cost is
-                 * excluded rather than amortised across the rows that follow it. */
-                if (warmN && n - warmN >= CmdData.PREDICT_WARM && target > n) {
-                    predicted = CmdData.projectProof(
-                        spent, now - warmT, n - warmN, target - n);
-                    if (predicted > budgetMs * CmdData.PREDICT_MARGIN) {
-                        timedOut = true;
-                        break;
-                    }
-                }
+            var gr = new GlideRecordSecure(table);
+            if (query) gr.addEncodedQuery(query);
+            gr.orderBy('sys_id');
+            gr.chooseWindow(start, Math.min(start + CmdData.PROOF_CHUNK_ROWS, target));
+            gr.query();
+            while (gr.next()) {
+                if (n >= CmdData.SECURE_SCAN_CAP) { capped = true; break; }
+                n++;
             }
+
+            var spent = new Date().getTime() - t0;
+            if (spent > budgetMs) { timedOut = true; break; }
         }
+
+        /* The predictive abort that used to live here has been removed entirely --
+         * see product/tests/test_data_helpers.js and the git history on this file
+         * for the arithmetic and why it was unsound for a restricted viewer. It
+         * extrapolated the measured per-row rate over `target - n`, but `target`
+         * is the *unchecked* aggregate count, which is only the right number of
+         * rows still to come if the viewer may read all of them. For a restricted
+         * viewer the cursor yields only the permitted rows, so the estimate
+         * overstated the work left by the whole filter ratio -- on `incident`,
+         * 5.2x -- and abandoned a proof that took 2,092ms against a 2,500ms
+         * budget, reporting BOUNDED at 150 of a true 815. No threshold tuned that
+         * away, because the projection error tracked the filter ratio rather than
+         * the true cost: the badly-predicted table looked *more* hopeless than a
+         * genuinely hopeless one. And it could not be repaired, because from the
+         * secure cursor alone the remaining yield is unknowable -- the only sound
+         * lower bound on the work left is zero, so no projection can ever prove
+         * the scan will not finish. The wall clock is the only bound now, and
+         * with it chunked into windows, it is one that can actually fire. */
 
         /* Charged against the request allowance like any other scan. It reads rows
            and pays the per-row ACL cost, so leaving it out of the accounting would
@@ -590,13 +665,14 @@ CmdData.prototype = {
         if (query) gr.addEncodedQuery(query);
         gr.setLimit(fetch);
         gr.query();
-        var n = 0, t0 = new Date().getTime();
+        var n = 0, stride = 1, t0 = new Date().getTime();
         while (gr.next()) {
             n++;
             if (n >= enough) break;
-            if (budgetMs && n % CmdData.CHECK_EVERY === 0 &&
-                (new Date().getTime() - t0) > budgetMs) {
-                break;
+            if (budgetMs && n % stride === 0) {
+                var spentU = new Date().getTime() - t0;
+                if (spentU > budgetMs) break;
+                stride = CmdData.checkStride(spentU, n, budgetMs);
             }
         }
         return n;
@@ -634,7 +710,24 @@ CmdData.prototype = {
         ga.groupBy(field);
         ga.query();
         while (ga.next()) {
-            var raw = ga.getValue(field);
+            /* Not ga.getValue(field). Measured live on asmt_metric_result.is_default:
+               a boolean column with 294 rows genuinely NULL and 1,034 genuinely '0'
+               groups correctly into two buckets at the database level, but
+               GlideAggregate's field-name accessor reports both as the string
+               'false' -- getValue AND getDisplayValue, on every group, not just the
+               empty one. Confirmed with the Table API too: it serialises the NULL
+               rows as "false" as well, so this is not a client-side formatting
+               choice, it is how the platform represents a grouped boolean. The
+               element accessor is the one path that still tells the two apart --
+               proven against the same rows: gr.getElement('is_default').getValue()
+               returns null for the NULL group and '0' for the other, matched
+               against the true count from an explicit addQuery(field, false), which
+               only ever counts the real 1,034.
+               The consequence otherwise: every boolean breakdown on the whole
+               product draws two slices and labels both of them with the same word,
+               because _label's own `raw === null` guard never fires -- raw was
+               never really null by the time it got there. */
+            var raw = ga.getElement(field).getValue();
             all.push({
                 key: this._canonKey(table, field, raw),
                 label: this._label(ga, field, raw),
@@ -669,6 +762,7 @@ CmdData.prototype = {
 
         budgetMs = budgetMs || CmdData.GROUP_MS;
         var counts = {}, labels = {}, scanned = 0, capped = false, timedOut = false;
+        var stride = 1;
         var t0 = new Date().getTime();
 
         var gr = new GlideRecordSecure(table);
@@ -690,8 +784,11 @@ CmdData.prototype = {
             if (labels[k] === undefined) {
                 labels[k] = k === '' ? '' : (gr.getDisplayValue(field) || k);
             }
-            if (scanned % CmdData.CHECK_EVERY === 0 &&
-                (new Date().getTime() - t0) > budgetMs) { timedOut = true; break; }
+            if (scanned % stride === 0) {
+                var spentG = new Date().getTime() - t0;
+                if (spentG > budgetMs) { timedOut = true; break; }
+                stride = CmdData.checkStride(spentG, scanned, budgetMs);
+            }
         }
 
         var rows = [];
@@ -729,7 +826,7 @@ CmdData.prototype = {
         var counts = {}, labels = {}, i;
         for (i = 0; i < fields.length; i++) { counts[fields[i]] = {}; labels[fields[i]] = {}; }
 
-        var scanned = 0, capped = false, timedOut = false;
+        var scanned = 0, capped = false, timedOut = false, stride = 1;
         var gr = new GlideRecordSecure(table);
         if (query) gr.addEncodedQuery(query);
         gr.setLimit(CmdData.SECURE_SCAN_CAP + 1);
@@ -746,8 +843,11 @@ CmdData.prototype = {
                     labels[f][k] = k === '' ? '' : (gr.getDisplayValue(f) || k);
                 }
             }
-            if (scanned % CmdData.CHECK_EVERY === 0 &&
-                (new Date().getTime() - t0) > budgetMs) { timedOut = true; break; }
+            if (scanned % stride === 0) {
+                var spentM = new Date().getTime() - t0;
+                if (spentM > budgetMs) { timedOut = true; break; }
+                stride = CmdData.checkStride(spentM, scanned, budgetMs);
+            }
         }
 
         var byField = {};
@@ -1146,7 +1246,7 @@ CmdData.prototype = {
          * cursor is opened, which is why the decision is made once, here, from the
          * verdict rather than from a caller's flag. */
         var trusted = this._trustedFor(table, query);
-        var scanned = 0, capped = false, timedOut = false;
+        var scanned = 0, capped = false, timedOut = false, stride = 1;
         var gr = trusted ? new GlideRecord(table) : new GlideRecordSecure(table);
         if (query) gr.addEncodedQuery(query);
         gr.setLimit(CmdData.SECURE_SCAN_CAP + 1);
@@ -1183,8 +1283,11 @@ CmdData.prototype = {
 
             for (i = 0; i < accs.length; i++) accs[i].row(row, labelCache);
 
-            if (scanned % CmdData.CHECK_EVERY === 0 &&
-                (new Date().getTime() - t0) > budgetMs) { timedOut = true; break; }
+            if (scanned % stride === 0) {
+                var spentP = new Date().getTime() - t0;
+                if (spentP > budgetMs) { timedOut = true; break; }
+                stride = CmdData.checkStride(spentP, scanned, budgetMs);
+            }
         }
 
         var results = {};

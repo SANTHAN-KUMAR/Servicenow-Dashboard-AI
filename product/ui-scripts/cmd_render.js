@@ -3258,6 +3258,21 @@
        marks rather than a few thousand listeners. */
     tooltipLayer(mount);
     highlightLayer(mount, payload);
+
+    /* A field forced onto the page by "Where you can go next" is real, useful,
+       and can land many panels below the fold -- the analysis grid and every
+       other dimension panel are concatenated ahead of it (CmdPayload.dashboard),
+       so on a page with a dozen panels a viewer who clicked "available" and
+       didn't scroll would see nothing different from the page they left and
+       reasonably conclude the click did nothing. The "You asked to see this" tag
+       (buildPanel) is the honest marker; this is what gets it in front of them
+       without them having to go hunting for it. */
+    if (payload.focusField) {
+      var focusEl = mount.querySelector('.cp.focus');
+      if (focusEl && focusEl.scrollIntoView) {
+        focusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
   }
 
   /**
@@ -3292,18 +3307,34 @@
     mount.innerHTML = '';
 
     var st = payload.stats || {};
+    var limit = st.limit || 60;
+    var offset = st.offset || 0;
+    var matching = st.matching || 0;
+
+    /* One page of the library, not the whole of it. Before this the tab drew the
+       first 300 rows and nothing reached the rest, which is invisible at this
+       instance's 682 reports and total at the 100,000+ the client described. */
+    function reportsUrl(q, off) {
+      var u = 'cmd_catalog.do?view=reports';
+      if (q) u += '&q=' + encodeURIComponent(q);
+      if (off > 0) u += '&offset=' + off;
+      return u;
+    }
+
     var h = el('div', 'app-h');
     var left = el('div');
     left.appendChild(el('div', 'crumb', 'Analytics'));
     left.appendChild(el('h1', 'd2', 'Saved reports'));
     var sub = el('div', 'sub');
-    sub.appendChild(el('span', '', st.visible + ' you can open'));
+    if (st.visible) {
+      sub.appendChild(el('span', '', (offset + 1) + '\u2013' + (offset + st.visible) +
+                                     ' of ' + matching +
+                                     (st.q ? ' matching' : ' you can open')));
+    } else {
+      sub.appendChild(el('span', '', st.q ? 'nothing matches' : 'none you can open'));
+    }
     sub.appendChild(el('span', 'dot', '\u00b7'));
     sub.appendChild(el('span', '', st.onInstance + ' on this instance'));
-    if (st.truncated) {
-      sub.appendChild(el('span', 'dot', '\u00b7'));
-      sub.appendChild(el('span', '', 'showing the first ' + st.visible));
-    }
     left.appendChild(sub);
     h.appendChild(left);
     var right = el('div', 'app-h-r');
@@ -3312,94 +3343,108 @@
     mount.appendChild(h);
     mount.appendChild(catalogTabs(payload));
 
-    var list = payload.reports || [];
-    if (!list.length) {
-      mount.appendChild(el('div', 'note',
-        'You have no saved reports on a table this instance still carries.'));
-      return;
-    }
-
+    /* The search box searches the whole library on the server, not the rows that
+       happen to be on this page. It used to filter the loaded array in the
+       browser, which was honest when the page held everything and becomes a lie
+       the moment the list is paged: typing a title that exists on page 40 would
+       report "Nothing matches that." */
     var bar = el('div', 'cat-bar');
     var fieldWrap = el('div', 'field');
     var input = document.createElement('input');
     input.type = 'search';
-    input.placeholder = 'Search reports, tables or owners';
-    input.setAttribute('aria-label', 'Search reports');
+    input.value = st.q || '';
+    input.placeholder = 'Search all ' + st.onInstance + ' reports by title or table';
+    input.setAttribute('aria-label', 'Search all saved reports');
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.keyCode === 13) {
+        window.location.href = reportsUrl(input.value, 0);
+      }
+    });
     fieldWrap.appendChild(input);
     bar.appendChild(fieldWrap);
-    var counter = el('div', 'sm');
-    bar.appendChild(counter);
+
+    var go = el('button', 'btn sm', 'Search');
+    go.type = 'button';
+    go.addEventListener('click', function () {
+      window.location.href = reportsUrl(input.value, 0);
+    });
+    bar.appendChild(go);
+
+    if (st.q) {
+      var clear = el('a', 'btn sm ghost', 'Clear');
+      clear.href = reportsUrl('', 0);
+      bar.appendChild(clear);
+    }
     mount.appendChild(bar);
+
+    var list = payload.reports || [];
+    if (!list.length) {
+      mount.appendChild(el('div', 'note', st.q
+        ? 'No saved report matches “' + st.q + '”.'
+        : 'You have no saved reports on a table this instance still carries.'));
+      return;
+    }
+
+    /* Prev/Next, rendered both above and below the list, because a page of sixty
+       grouped reports is longer than a screen and a control only at the top is a
+       scroll back up on every step. */
+    function pager() {
+      var p = el('div', 'pager');
+      var prev = el(offset > 0 ? 'a' : 'span', 'btn sm' + (offset > 0 ? '' : ' ghost'));
+      prev.textContent = '← Previous';
+      if (offset > 0) prev.href = reportsUrl(st.q, Math.max(0, offset - limit));
+      p.appendChild(prev);
+      p.appendChild(el('span', 'sm', 'Showing ' + (offset + 1) + '–' +
+                                     (offset + st.visible) + ' of ' + matching));
+      var next = el(st.hasNext ? 'a' : 'span', 'btn sm' + (st.hasNext ? '' : ' ghost'));
+      next.textContent = 'Next →';
+      if (st.hasNext) next.href = reportsUrl(st.q, offset + limit);
+      p.appendChild(next);
+      return p;
+    }
+    if (matching > limit) mount.appendChild(pager());
 
     var wrap = el('div', 'rep-groups');
     mount.appendChild(wrap);
 
-    function draw(term) {
-      wrap.innerHTML = '';
-      var t = (term || '').toLowerCase();
-      var groups = {}, order = [], shown = 0, i;
-
-      for (i = 0; i < list.length; i++) {
-        var r = list[i];
-        if (t) {
-          var hay = (r.title + ' ' + r.table + ' ' + r.tableLabel + ' ' +
-                     (r.owner || '') + ' ' + (r.groupField || '')).toLowerCase();
-          if (hay.indexOf(t) === -1) continue;
-        }
-        if (!groups[r.table]) { groups[r.table] = []; order.push(r.table); }
-        groups[r.table].push(r);
-        shown++;
-      }
-
-      counter.textContent = shown + (shown === 1 ? ' report' : ' reports') +
-                            ' in ' + order.length +
-                            (order.length === 1 ? ' subject' : ' subjects');
-
-      if (!shown) {
-        wrap.appendChild(el('div', 'note', 'Nothing matches that.'));
-        return;
-      }
-
-      for (i = 0; i < order.length; i++) {
-        var tbl = order[i], rs = groups[tbl];
-        var sec = el('div', 'rep-group');
-        var gh = el('div', 'rep-group-h');
-        gh.appendChild(el('span', 'ovl', rs[0].tableLabel || tbl));
-        gh.appendChild(el('span', 'sm', rs.length + ''));
-        sec.appendChild(gh);
-
-        var ul = el('div', 'rep-list');
-        for (var j = 0; j < rs.length; j++) {
-          var rep = rs[j];
-          var a = el('a', 'rep');
-          a.href = rep.url;
-          var title = el('span', 'rep-t', rep.title);
-          a.appendChild(title);
-          var meta = el('span', 'rep-m');
-          meta.appendChild(el('code', '', rep.nativeType || 'report'));
-          if (rep.groupField) meta.appendChild(el('span', '', 'by ' + rep.groupField));
-          if (rep.dynamic) {
-            var d = el('span', 'rep-dyn', 'relative to you');
-            d.title = 'This report filters on the person viewing it, so it shows ' +
-                      'your rows rather than everyone\u2019s.';
-            meta.appendChild(d);
-          }
-          a.appendChild(meta);
-          ul.appendChild(a);
-        }
-        sec.appendChild(ul);
-        wrap.appendChild(sec);
-      }
+    var groups = {}, order = [], i;
+    for (i = 0; i < list.length; i++) {
+      var r = list[i];
+      if (!groups[r.table]) { groups[r.table] = []; order.push(r.table); }
+      groups[r.table].push(r);
     }
 
-    var timer = null;
-    input.addEventListener('input', function () {
-      if (timer) clearTimeout(timer);
-      var v = input.value;
-      timer = setTimeout(function () { draw(v); }, 90);
-    });
+    for (i = 0; i < order.length; i++) {
+      var tbl = order[i], rs = groups[tbl];
+      var sec = el('div', 'rep-group');
+      var gh = el('div', 'rep-group-h');
+      gh.appendChild(el('span', 'ovl', rs[0].tableLabel || tbl));
+      gh.appendChild(el('span', 'sm', rs.length + ''));
+      sec.appendChild(gh);
 
-    draw('');
+      var ul = el('div', 'rep-list');
+      for (var j = 0; j < rs.length; j++) {
+        var rep = rs[j];
+        var a = el('a', 'rep');
+        a.href = rep.url;
+        a.appendChild(el('span', 'rep-t', rep.title));
+        var meta = el('span', 'rep-m');
+        meta.appendChild(el('code', '', rep.nativeType || 'report'));
+        if (rep.groupField) meta.appendChild(el('span', '', 'by ' + rep.groupField));
+        if (rep.dynamic) {
+          var d = el('span', 'rep-dyn', 'relative to you');
+          d.title = 'This report filters on the person viewing it, so it shows ' +
+                    'your rows rather than everyone\u2019s.';
+          meta.appendChild(d);
+        }
+        a.appendChild(meta);
+        ul.appendChild(a);
+      }
+      sec.appendChild(ul);
+      wrap.appendChild(sec);
+    }
+
+    if (matching > limit) mount.appendChild(pager());
   }
 
   function renderCatalog(payload, mount) {

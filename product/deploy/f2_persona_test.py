@@ -119,10 +119,29 @@ while (ag.next()) {
     });
 }
 
-/* 2-4. impersonated: raw cross-check plus the actual product code */
+/* 2-4. impersonated: raw cross-check plus the actual product code.
+ *
+ * NOT gs.impersonate(). Found live, 2026-08-30, re-running this exact script:
+ * gs.impersonate() in a background script does not apply row-level ACLs --
+ * this table's ACLs are role-based and gs.impersonate() never stops the
+ * caller's admin session from seeing past them, so every prior run of this
+ * script that used it reported "nothing was filtered" regardless of the real
+ * answer. CLAUDE.md documented this exact failure mode on 2026-08-15 for a
+ * different table; this script was never updated to match and reproduced it
+ * verbatim. GlideImpersonate is the corrected mechanism -- confirmed against
+ * `problem` returning DENIED (0 of 544) here, matching the historical figure
+ * exactly.
+ *
+ * Run this through a disposable, throw-away authenticated session, never the
+ * one used for anything else. 05-live-verification-playbook.md documents
+ * GlideImpersonate in a background script as capable of hijacking the
+ * calling session outright -- unimpersonate() did not fully restore it in
+ * testing here either, and a session stuck as a role-less test persona can't
+ * run another background script to fix itself. */
 var before = gs.getUserID();
-gs.impersonate(USER_NAME);
+var gi = new GlideImpersonate();
 try {
+    gi.impersonate(user.sysId);
     var agg = new GlideAggregate(TABLE);
     agg.addAggregate('COUNT');
     agg.query();
@@ -138,9 +157,13 @@ try {
     out.productMode = payload.acl && payload.acl.mode;
     out.productAggregate = payload.acl && payload.acl.aggregate;
     out.productSecure = payload.acl && payload.acl.secure;
-    out.productTotal = payload.total;
+    /* Not payload.total -- that field doesn't exist on the current payload
+       shape and always read back as null, failing this script's own last
+       check regardless of whether the product was actually right. The number
+       a viewer sees on screen is payload.subject.rows. */
+    out.productTotal = payload.subject && payload.subject.rows;
 } finally {
-    gs.impersonate(before);
+    gi.unimpersonate();
 }
 
 out.impersonatedAs = USER_NAME;
