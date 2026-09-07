@@ -213,13 +213,43 @@ CmdData.GROUP_MS = 1200;
  * box plot is a stated number rather than an accident. */
 CmdData.REDUCE_MS = 3000;
 
-/* Cumulative scan time one request may spend, across every reduction it runs.
+/* Cumulative scan time one request may spend, across every scan it runs.
  *
  * The ceiling that actually bounds a page. Per-scan budgets bound a scan; only
  * this bounds the page, because the number of scans is decided by the data and
  * not by the code. When it is exhausted, further reductions do not run and the
- * page reports fewer panels rather than taking longer. */
-CmdData.SCAN_ALLOWANCE_MS = 5000;
+ * page reports fewer panels rather than taking longer.
+ *
+ * It has to cover two different kinds of work, and that is why 5,000 was wrong.
+ * The ACL proof is mandatory -- nothing reaches a viewer without a verdict -- and
+ * it is charged here too, deliberately, so that a late proof cannot escape the
+ * accounting. The reductions behind the analysis panels are discretionary. At
+ * 5,000 the proof's share left too little for the reductions, and the shortfall
+ * was small enough to be decided by which engine the page happened to run on:
+ * measured on `incident`, 4,266 rows, one request each --
+ *
+ *     global   proof 1,158  reduce 2,377 + 537 + 1,015   = 5,087   11 panels
+ *     scoped   proof 1,319  reduce 3,106 + 597 + starved = 5,022    9 panels
+ *
+ * Both exhausted the allowance; global simply fitted its fourth scan in first.
+ * Secure iteration is 12-21% slower inside a scoped application, which is enough
+ * to change *what the page draws* -- the panels lost are the rich ones, scatter,
+ * box, waterfall, line_multi, small_multiples. A deliverable whose whole point is
+ * visual richness cannot have its chart set decided by an engine difference.
+ *
+ * So the allowance is sized for what it actually has to buy: one proof plus the
+ * reductions, on the slower engine, with headroom. The worst case this admits is
+ * arithmetic and stated -- SCAN_ALLOWANCE_MS, whatever the data does -- rather
+ * than data-dependent.
+ *
+ * This is a ceiling raise, not a fix. Two real duplications remain and both are
+ * worth closing before this number is touched again: the proof scans every row to
+ * count them and the first reduction then scans the same rows again to read them,
+ * and the page makes separate reduction passes over one row set where a single
+ * pass carrying every spec would do (measured: a second pass for a single
+ * accumulator cost 537ms of mostly cursor overhead). Closing either buys back
+ * more than this raise costs. */
+CmdData.SCAN_ALLOWANCE_MS = 6500;
 
 /* The smallest slice a permission-checked count may have, even with the request
    allowance exhausted. A count of zero would be read as "there are no records"
