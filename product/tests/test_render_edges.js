@@ -532,6 +532,65 @@ declared.forEach(function (form) {
     ok(form + '  (' + cases.length + ' cases)', bad.length === 0, bad.join('\n        '));
 });
 
+
+/* ── the drill that lands on nothing ──────────────────────────────────────
+ *
+ * Every panel refuses to draw when there is nothing to draw, so a filtered
+ * subject with no rows produces no panels at all. Without a page-level
+ * statement that is a column of empty boxes, and the client asked for exactly
+ * this: if there is no data, say there is no data.
+ */
+(function emptySlice() {
+    function payloadWith(path, panels) {
+        return {
+            version: 1, generated: '2026-09-08 00:00:00',
+            viewer: { name: 'abel.tuter', display: 'Abel Tuter' },
+            subject: { table: 'incident', label: 'Incident', rows: 0 },
+            acl: { mode: 'VERIFIED', aggregate: 0, secure: 0, delta: 0 },
+            panels: panels || [], notes: [], path: path,
+            drill: { atMax: false, options: [] },
+            window: { months: 12, allowed: [3, 6, 12] }, forms: {}
+        };
+    }
+    var one = [{ field: 'category', fieldLabel: 'Category', key: 'hardware',
+                 label: 'Hardware', query: 'category=hardware' }];
+    var two = one.concat([{ field: 'priority', fieldLabel: 'Priority', key: '1',
+                            label: '1 - Critical',
+                            query: 'category=hardware^priority=1' }]);
+
+    function renderOf(p) {
+        var r = sandboxFor(p);
+        r.api.dashboard(p, r.mount);
+        return shim.textOf(r.mount);
+    }
+
+    var txt = renderOf(payloadWith(one));
+    ok('empty slice: an emptied drill says so in words',
+       txt.indexOf('No data available for this selection') !== -1, txt.slice(0, 200));
+    ok('empty slice: it names the filter that emptied it',
+       txt.indexOf('Category') !== -1 && txt.indexOf('Hardware') !== -1);
+    ok('empty slice: it offers a way out',
+       txt.indexOf('Clear all filters') !== -1);
+    ok('empty slice: one level deep offers no "back one level", which would be the same link',
+       txt.indexOf('Back one level') === -1);
+
+    ok('empty slice: two levels deep offers stepping back one',
+       renderOf(payloadWith(two)).indexOf('Back one level') !== -1);
+
+    /* A subject that is simply empty is a different statement and must not
+       borrow this one. */
+    ok('empty slice: an unfiltered empty subject does not claim a selection emptied it',
+       renderOf(payloadWith([])).indexOf('No data available for this selection') === -1);
+
+    var withPanels = payloadWith(one, [{
+        id: 'd_category', kind: 'dimension', form: 'donut', field: 'category',
+        fieldLabel: 'Category', question: 'How does it split?',
+        rows: { series: [{ key: 'a', label: 'A', count: 3, share: 1 }], total: 3 }
+    }]);
+    ok('empty slice: a filtered slice that still has panels shows them, not the notice',
+       renderOf(withPanels).indexOf('No data available for this selection') === -1);
+})();
+
 console.log('\n' + totalCases + ' cases across ' + declared.length + ' forms');
 console.log(pass + ' passed, ' + fail + ' failed\n');
 process.exit(fail ? 1 : 0);

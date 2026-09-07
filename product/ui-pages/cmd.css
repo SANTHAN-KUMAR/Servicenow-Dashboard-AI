@@ -637,3 +637,10 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
    is the reason, not a disabled control inviting a second attempt. */
 .formsel-x{display:flex; flex-direction:column; gap:3px; opacity:.72}
 .formsel-x .formsel-n{color:var(--ink-3); text-decoration:line-through}
+
+/* The empty-slice notice: a drill that landed on nothing. Sized like a panel so
+   it sits where the panels would have been, rather than reading as an error
+   banner attached to the page. */
+.empty-slice { max-width: 640px; }
+.empty-slice .h3 { margin-bottom: 6px; }
+.empty-acts { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }

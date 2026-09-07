@@ -216,7 +216,7 @@ CmdPayload.prototype = {
         var used = [];
         var i;
         for (i = 0; i < path.length && i < CmdDrill.MAX_DEPTH; i++) {
-            query = this.drill.stepQuery(query, path[i].field, path[i].key);
+            query = this.drill.stepQuery(query, path[i].field, path[i].key, table);
             used.push(path[i].field);
         }
 
@@ -1400,17 +1400,50 @@ CmdPayload.prototype = {
         return (new Date().getTime() - t0) > CmdPayload.BUDGET_MS;
     },
 
+    /**
+     * How one drill step reads in the filter bar.
+     *
+     * A range step's key is a wire format (`~d~2025-10-01~2025-11-01`) and showing
+     * it raw would put punctuation where a viewer expects a period name. A range
+     * covering exactly one calendar month is named as that month, because that is
+     * what was clicked on a monthly axis; anything else is stated as its two
+     * endpoints, which is honest about the half-open interval rather than
+     * pretending to a tidier description of it.
+     */
+    _stepLabel: function (table, field, key) {
+        var r = this.drill.parseRange(table, field, key);
+        if (!r) return (key === '' || key === null || key === undefined)
+            ? '(empty)' : String(key);
+
+        if (r.kind === 'd') {
+            var a = r.lo.substring(0, 10).split('-');
+            var b = r.hi.substring(0, 10).split('-');
+            var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            var oneMonth = (a[2] === '01' && b[2] === '01' &&
+                ((a[0] === b[0] && (parseInt(b[1], 10) - parseInt(a[1], 10)) === 1) ||
+                 (parseInt(b[0], 10) - parseInt(a[0], 10) === 1 &&
+                  a[1] === '12' && b[1] === '01')));
+            if (oneMonth) {
+                return months[parseInt(a[1], 10) - 1] + ' ' + a[0];
+            }
+            return r.lo.substring(0, 10) + ' to ' + r.hi.substring(0, 10);
+        }
+        return r.lo + ' to ' + r.hi;
+    },
+
     _pathOut: function (table, path) {
         var out = [];
         var q = '';
         for (var i = 0; i < path.length; i++) {
-            q = this.drill.stepQuery(q, path[i].field, path[i].key);
+            q = this.drill.stepQuery(q, path[i].field, path[i].key, table);
             var f = this.meta.field(table, path[i].field);
             out.push({
                 field: path[i].field,
                 fieldLabel: f ? f.label : path[i].field,
                 key: path[i].key,
-                label: path[i].label || (path[i].key === '' ? '(empty)' : path[i].key),
+                label: path[i].label ||
+                       this._stepLabel(table, path[i].field, path[i].key),
                 query: q
             });
         }

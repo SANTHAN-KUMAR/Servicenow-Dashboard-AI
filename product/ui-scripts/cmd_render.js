@@ -263,6 +263,7 @@
         opacity: pts[m].partial ? 0.6 : 1 });
       tip(mk, [pts[m].label, recs(pts[m].count),
                pts[m].partial ? 'this period is still open' : 'complete period']);
+      periodDrillable(mk, panel.field, pts[m].period, panel.grain, pts[m].count);
       s.appendChild(mk);
     }
 
@@ -611,6 +612,15 @@
         width: Math.max(1, slot - 1), height: bh, rx: 2, fill: v('--c1') });
       tip(hb, [num(lo + k * width) + ' to ' + num(lo + (k + 1) * width),
                recs(buckets[k])]);
+      /* A bar is an interval, so its drill is a range rather than a value. The
+         last bar closes at the top of the data: every other bin is half-open so
+         a value on a boundary is counted once, but the maximum has to land
+         somewhere, and it belongs in the bar that is drawn containing it. */
+      if (buckets[k] > 0 && panel.field) {
+        rangeDrillable(hb, panel.field, lo + k * width,
+                       k === bins - 1 ? hi + Math.abs(hi) * 1e-9 + 1e-9
+                                      : lo + (k + 1) * width);
+      }
       s.appendChild(hb);
     }
     s.appendChild(text(padL, h - 10, compact(lo), 'tk', 'start'));
@@ -774,12 +784,96 @@
     return node;
   }
 
-  /** Marks a mark as a drill target, so a click filters rather than navigates. */
+  /** Marks a mark as a drill target, so a click filters the page by its value. */
   function drillable(node, field, key) {
     if (field === null || field === undefined) return node;
     node.setAttribute('data-drill-field', field);
     node.setAttribute('data-drill-key', key === null || key === undefined ? '' : key);
     node.setAttribute('class', (node.getAttribute('class') || '') + ' hit');
+    return node;
+  }
+
+  /**
+   * A mark that stands for two values at once -- a heatmap or matrix cell, which
+   * is a row value and a column value together. Clicking it filters by both,
+   * because filtering by only one of them would not be the cell that was clicked.
+   */
+  /**
+   * A mark that stands for an interval rather than a value: a histogram bar, a
+   * point on a time axis, a day on a calendar.
+   *
+   * The key is the wire format CmdDrill.parseRange accepts, half-open [lo, hi).
+   * Half-open is what keeps the drills adding up: neighbouring bins share an
+   * endpoint, and a closed range would count a boundary row in both of them, so
+   * the parts would sum to more than the whole they were drawn from.
+   */
+  function rangeDrillable(node, field, lo, hi) {
+    return drillable(node, field, '~r~' + numKey(lo) + '~' + numKey(hi));
+  }
+
+  function dateDrillable(node, field, from, to) {
+    return drillable(node, field, '~d~' + from + '~' + to);
+  }
+
+  /**
+   * The half-open interval a period key stands for, or null.
+   *
+   * The keys are the server's, and their shapes are not interchangeable: day and
+   * week are both 'YYYY-MM-DD' and differ only in how far they run, month and
+   * quarter are both 'YYYY-MM'. Anything that does not match exactly returns null
+   * and the mark is simply left un-drillable, because a period we cannot bound is
+   * one we would be guessing the meaning of.
+   *
+   * All arithmetic is UTC, because the bounds are compared against stored
+   * timestamps and the viewer's timezone has no part in what a month contains.
+   */
+  function periodRange(key, grain) {
+    if (!key) return null;
+    var pad = function (n) { return n < 10 ? '0' + n : String(n); };
+    var iso = function (dt) {
+      return dt.getUTCFullYear() + '-' + pad(dt.getUTCMonth() + 1) + '-' +
+             pad(dt.getUTCDate()) + ' 00:00:00';
+    };
+
+    if (grain === 'day' || grain === 'week') {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return null;
+      var d0 = new Date(Date.UTC(+key.substr(0, 4), +key.substr(5, 2) - 1,
+                                 +key.substr(8, 2)));
+      var d1 = new Date(d0.getTime());
+      d1.setUTCDate(d1.getUTCDate() + (grain === 'week' ? 7 : 1));
+      return { from: iso(d0), to: iso(d1) };
+    }
+
+    if (!/^\d{4}-\d{2}$/.test(key)) return null;
+    var m0 = new Date(Date.UTC(+key.substr(0, 4), +key.substr(5, 2) - 1, 1));
+    var m1 = new Date(m0.getTime());
+    m1.setUTCMonth(m1.getUTCMonth() + (grain === 'quarter' ? 3 : 1));
+    return { from: iso(m0), to: iso(m1) };
+  }
+
+  /** Wires a mark standing for one period on a date field, when it can be bounded. */
+  function periodDrillable(node, field, periodKey, grain, count) {
+    if (!field || !periodKey || count === 0) return node;
+    var r = periodRange(periodKey, grain);
+    if (!r) return node;
+    return dateDrillable(node, field, r.from, r.to);
+  }
+
+  /* Fixed notation, because the server matches endpoints against a plain decimal
+     pattern and refuses anything else -- and a large or tiny bound would
+     otherwise arrive as exponent notation and be rejected as malformed. */
+  function numKey(n) {
+    var s = (Math.round(n * 1e6) / 1e6).toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+    return s === '-0' ? '0' : s;
+  }
+
+  function drillable2(node, field, key, field2, key2) {
+    drillable(node, field, key);
+    if (field2 !== null && field2 !== undefined) {
+      node.setAttribute('data-drill-field-2', field2);
+      node.setAttribute('data-drill-key-2',
+                        key2 === null || key2 === undefined ? '' : key2);
+    }
     return node;
   }
 
@@ -1271,6 +1365,16 @@
              panel.colFieldLabel + ': ' + colLabels[c],
              recs(val),
              pct(panel.grand ? val / panel.grand : 0) + ' of the total']);
+
+        /* A cell is two values at once, so a click filters by both. Only on a
+           cross of two real fields: a cycle grid's axes are day-of-week and hour
+           derived from a timestamp, not columns that can be filtered on. An empty
+           cell is left inert, because drilling into it could only ever arrive at
+           the empty page it already tells you about. */
+        if (!isCycle && val > 0 && panel.rowKeys && panel.colKeys) {
+          drillable2(cell, panel.rowField, panel.rowKeys[r],
+                           panel.colField, panel.colKeys[c]);
+        }
         s.appendChild(cell);
         /* A number in the cell only where the cell is big enough and the grid
            small enough that the numbers do not become the texture. */
@@ -1337,6 +1441,7 @@
           fill: val === 0 ? v('--q0') : seqStep(t)
         });
         tip(rect, [iso, recs(val)]);
+        periodDrillable(rect, panel.dateField, iso, 'day', val);
         s.appendChild(rect);
 
         if (dd === 0) {
@@ -1422,6 +1527,15 @@
       tip(rect, [num(bins[i].from) + ' to ' + num(bins[i].to),
                  recs(bins[i].count),
                  pct(panel.n ? bins[i].count / panel.n : 0) + ' of the total']);
+      /* The top bin closes on its upper bound rather than above it, so the
+         largest value drills into the bar it was drawn in. Every other bin stays
+         half-open so a boundary value is counted once across the set. */
+      if (bins[i].count > 0 && panel.field) {
+        rangeDrillable(rect, panel.field, bins[i].from,
+                       i === bins.length - 1
+                         ? bins[i].to + Math.abs(bins[i].to) * 1e-9 + 1e-9
+                         : bins[i].to);
+      }
       p.s.appendChild(rect);
     }
 
@@ -1588,6 +1702,14 @@
         tip(dot, [(multi ? (pts[i].gl || '(not set)') : 'Record'),
                   panel.xFieldLabel + ': ' + num(pts[i].x),
                   panel.yFieldLabel + ': ' + num(pts[i].y)]);
+        /* A point is one record, and there is no filter that means "this record",
+           so the drill is by the group it belongs to -- which is what the tooltip
+           already names, so the click lands where the pointer said it would. Only
+           on a grouped plot, and only under the same threshold as the tooltips:
+           past it the marks overlap and a click could not be aimed anyway. */
+        if (multi && panel.groupField) {
+          drillable(dot, panel.groupField, pts[i].g || '');
+        }
       }
       p.s.appendChild(dot);
     }
@@ -2258,13 +2380,30 @@
 
 
   function drillUrl(payload, field, key) {
+    if (field === null || field === undefined) return drillUrlSteps(payload, []);
+    return drillUrlSteps(payload, [{ field: field, key: key }]);
+  }
+
+  /**
+   * The same link, for one step or several appended at once.
+   *
+   * A cell in a heatmap or a matrix means two values simultaneously -- this row
+   * value AND this column value -- and the honest filter for it is both. Adding
+   * them as two ordinary path segments keeps every drill a list of field/value
+   * pairs, so the server's existing per-segment validation covers a cell click
+   * exactly as it covers a bar click, with nothing new to parse or trust.
+   */
+  function drillUrlSteps(payload, steps) {
     var path = payload.path.slice();
-    var parts = [];
-    for (var i = 0; i < path.length; i++) {
+    var parts = [], i;
+    for (i = 0; i < path.length; i++) {
       parts.push(encodeURIComponent(path[i].field) + ':' + encodeURIComponent(path[i].key));
     }
-    if (field !== null && field !== undefined) {
-      parts.push(encodeURIComponent(field) + ':' + encodeURIComponent(key === null ? '' : key));
+    for (i = 0; i < steps.length; i++) {
+      if (steps[i].field === null || steps[i].field === undefined) continue;
+      parts.push(encodeURIComponent(steps[i].field) + ':' +
+                 encodeURIComponent(steps[i].key === null || steps[i].key === undefined
+                                    ? '' : steps[i].key));
     }
     return subjectBase(payload) +
            (parts.length ? '&path=' + encodeURIComponent(parts.join('|')) : '') +
@@ -2792,16 +2931,26 @@
    * avoid a page load would give up the one correctness property the whole product
    * is built on.
    *
-   * So a click does two things instead. It cross-highlights immediately, in the
-   * page, with no request: every mark keyed to the same value stays lit and the
-   * rest recede, which is the read-a-slice-across-panels affordance people
-   * actually use it for. And it offers the real filter as an explicit action,
-   * which is a drill: the server rebuilds the payload for that slice, ACL-checked,
-   * and the result is shareable and reversible because it lives in the URL.
+   * So the two affordances are split across two gestures rather than stacked into
+   * one, and this is the second version of that split.
+   *
+   * The first version made a click cross-highlight and then offered the filter as
+   * a button. It was wrong, and the client review found it immediately: they
+   * clicked a treemap cell, saw the highlight, got no filter, and read the product
+   * as not having drilldown at all. A click on a value in every tool they compare
+   * us to filters by that value, and an affordance that has to be explained has
+   * already lost.
+   *
+   * So a click filters. The server rebuilds the payload for that slice,
+   * ACL-checked, and the result is shareable and reversible because it lives in
+   * the URL. Cross-highlighting moves to hover and focus, where it costs nothing
+   * and needs no explanation: point at a value and every mark keyed to it across
+   * the page stays lit while the rest recede. Hover is not available on touch, and
+   * that is the right thing to lose -- the drill still works there, and it is the
+   * one of the two that carries the meaning.
    */
   function highlightLayer(mount, payload) {
     var active = null;
-    var bar = null;
 
     function marks() {
       return mount.querySelectorAll('[data-drill-field]');
@@ -2822,61 +2971,72 @@
         }
         all[i].setAttribute('class', cls);
       }
-      chip();
     }
 
-    function chip() {
-      if (bar) { bar.parentNode.removeChild(bar); bar = null; }
-      if (!active) return;
-
-      bar = el('div', 'sel-bar');
-      var label = el('span', 'sel-l');
-      label.textContent = active.fieldLabel + ': ' + active.label;
-      bar.appendChild(label);
-
-      var go = el('a', 'btn sm');
-      go.textContent = 'Filter the whole page';
-      go.href = drillUrl(payload, active.field, active.key);
-      go.title = 'Rebuilds every panel for this slice on the server, ' +
-                 'permission-checked, with the filter in the URL so it can be ' +
-                 'shared and stepped back out of.';
-      bar.appendChild(go);
-
-      var clear = el('button', 'btn sm ghost', 'Clear selection');
-      clear.type = 'button';
-      clear.addEventListener('click', function () { active = null; paint(); });
-      bar.appendChild(clear);
-
-      var note = el('span', 'sel-n',
-        'Highlighted across this page. Other panels keep their own totals until ' +
-        'you filter.');
-      bar.appendChild(note);
-
-      mount.insertBefore(bar, mount.firstChild.nextSibling);
-    }
-
-    function labelOf(node) {
-      var raw = node.getAttribute('data-tip');
-      return raw ? raw.split('\n')[0] : node.getAttribute('data-drill-key');
-    }
-
-    mount.addEventListener('click', function (e) {
-      var node = e.target;
+    /* The nearest ancestor that is a drill target, or null. Marks are often a
+       group of shapes and the event lands on whichever one the pointer was over. */
+    function markAt(node) {
       while (node && node !== mount) {
-        if (node.getAttribute && node.getAttribute('data-drill-field')) break;
+        if (node.getAttribute && node.getAttribute('data-drill-field')) return node;
         node = node.parentNode;
       }
-      if (!node || node === mount) return;
+      return null;
+    }
 
-      var field = node.getAttribute('data-drill-field');
-      var key = node.getAttribute('data-drill-key');
-      if (active && active.field === field && active.key === key) {
-        active = null;
-      } else {
-        active = { field: field, key: key, label: labelOf(node),
-                   fieldLabel: fieldLabelOf(payload, field) };
-      }
+    /* A mark carries either one step or, for a cell that means two values at once
+       -- a heatmap or matrix cell is a row value and a column value -- a second
+       field and key. Two steps rather than a compound key keeps the drill path a
+       list of plain field/value pairs, so nothing new has to be parsed, escaped or
+       trusted on the way back in. */
+    function stepsOf(node) {
+      var steps = [{ field: node.getAttribute('data-drill-field'),
+                     key: node.getAttribute('data-drill-key') || '' }];
+      var f2 = node.getAttribute('data-drill-field-2');
+      if (f2) steps.push({ field: f2, key: node.getAttribute('data-drill-key-2') || '' });
+      return steps;
+    }
+
+    function go(node) {
+      var steps = stepsOf(node);
+      window.location.href = drillUrlSteps(payload, steps);
+    }
+
+    function lightFrom(node) {
+      active = node
+        ? { field: node.getAttribute('data-drill-field'),
+            key: node.getAttribute('data-drill-key') || '' }
+        : null;
       paint();
+    }
+
+    mount.addEventListener('mouseover', function (e) {
+      var node = markAt(e.target);
+      if (node) lightFrom(node);
+    });
+    mount.addEventListener('mouseout', function (e) {
+      if (!markAt(e.relatedTarget)) lightFrom(null);
+    });
+    mount.addEventListener('focusin', function (e) {
+      var node = markAt(e.target);
+      if (node) lightFrom(node);
+    });
+    mount.addEventListener('focusout', function () { lightFrom(null); });
+
+    mount.addEventListener('click', function (e) {
+      var node = markAt(e.target);
+      if (!node) return;
+      /* A mark inside a real link or button is that control's, not a drill. */
+      if (e.defaultPrevented) return;
+      go(node);
+    });
+
+    /* Marks are focusable, so the keyboard has to reach the same action. */
+    mount.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ' && e.keyCode !== 13 && e.keyCode !== 32) return;
+      var node = markAt(e.target);
+      if (!node) return;
+      e.preventDefault();
+      go(node);
     });
   }
 
@@ -3240,6 +3400,42 @@
       for (var n = 0; n < payload.notes.length; n++) {
         mount.appendChild(el('div', 'note', payload.notes[n]));
       }
+    }
+
+    /* A drill that lands on nothing.
+     *
+     * Every panel refuses to draw itself when there is nothing to draw, so
+     * without this the page answers a click with a column of empty boxes and
+     * leaves the viewer to work out whether that means "no records here" or
+     * "something broke". It means the first, and it should say so once, in
+     * words, with the way back attached -- a dead end you can see the edge of is
+     * navigation; one you cannot is a fault.
+     *
+     * Only when a filter is what emptied it. An unfiltered subject with no rows
+     * at all is a different statement and the panels' own empty states make it. */
+    if (!payload.panels.length && !payload.matrix &&
+        payload.path && payload.path.length) {
+      var last = payload.path[payload.path.length - 1];
+      var none = el('div', 'panel pad empty-slice');
+      none.appendChild(el('div', 'h3', 'No data available for this selection'));
+      none.appendChild(el('p', 'sm',
+        'No ' + (payload.subject.label || 'record') + ' records match ' +
+        last.fieldLabel + ' = ' + last.label +
+        (payload.path.length > 1 ? ', together with the filters above it.' : '.') +
+        ' The filter is still applied, so you can step back out of it or drop ' +
+        'one part of it.'));
+
+      var acts = el('div', 'empty-acts');
+      if (payload.path.length > 1) {
+        var up = el('a', 'btn', 'Back one level');
+        up.href = drillUrlUpTo(payload, payload.path.length - 2);
+        acts.appendChild(up);
+      }
+      var all = el('a', 'btn ghost', 'Clear all filters');
+      all.href = subjectBase(payload) + stateTail(payload);
+      acts.appendChild(all);
+      none.appendChild(acts);
+      mount.appendChild(none);
     }
 
     var grid = el('div', 'grid-panels');

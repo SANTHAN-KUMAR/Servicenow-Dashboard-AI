@@ -196,11 +196,70 @@ CmdDrill.prototype = {
      * the "(none)" bar unclickable, which is the bar a viewer most wants to click
      * when they are trying to find out why a field is unpopulated.
      */
-    stepQuery: function (query, field, key) {
-        var clause = (key === '' || key === null || key === undefined)
-            ? field + 'ISEMPTY'
-            : field + '=' + key;
+    /**
+     * One drill step, as an encoded-query clause.
+     *
+     * Most steps are a value on a dimension. Two kinds are not, and they are the
+     * ones the client meant by "click anything": a bar in a histogram stands for a
+     * numeric interval, and a point on a time series stands for a period. Neither
+     * is expressible as `field=value`, so a step may also carry a half-open range,
+     * written `~r~lo~hi` for numbers and `~d~from~to` for dates.
+     *
+     * Half-open on purpose. Ranges that share an endpoint are what a histogram and
+     * a month axis both produce, and a closed range would count the boundary row
+     * in two neighbouring buckets -- so the totals of the drills would exceed the
+     * total of the chart they came from, which is the kind of arithmetic a viewer
+     * checks.
+     *
+     * `table` is optional only so existing callers keep working; without it a
+     * range is refused rather than guessed at, because the field's type is what
+     * decides whether a range means anything and it cannot be read without it.
+     */
+    stepQuery: function (query, field, key, table) {
+        var clause;
+        var r = table ? this.parseRange(table, field, key) : null;
+        if (r) {
+            clause = field + '>=' + r.lo + '^' + field + '<' + r.hi;
+        } else if (key === '' || key === null || key === undefined) {
+            clause = field + 'ISEMPTY';
+        } else {
+            clause = field + '=' + key;
+        }
         return query ? query + '^' + clause : clause;
+    },
+
+    /**
+     * A range key, parsed and proved safe, or null.
+     *
+     * Null for anything that is not exactly the expected shape, so an unrecognised
+     * key falls through and is treated as a literal value -- a category that
+     * happens to begin with a tilde still filters as itself.
+     *
+     * The strictness here is load-bearing. This is the only place in the product
+     * where a drill key becomes something other than the right-hand side of an
+     * `=`, and the clause it builds contains `^`. A key that reached it unchecked
+     * could therefore inject a clause, which is the exact failure sanitizePath
+     * exists to prevent -- so both endpoints are matched against a full-string
+     * numeric or timestamp pattern, and the field's own declared type has to agree
+     * that a range is meaningful for it.
+     */
+    parseRange: function (table, field, key) {
+        if (key === null || key === undefined) return null;
+        var m = /^~([rd])~([^~]*)~([^~]*)$/.exec(String(key));
+        if (!m) return null;
+
+        var kind = m[1], lo = m[2], hi = m[3];
+        var f = this.meta.field(table, field);
+        if (!f) return null;
+        if (kind === 'r' && !(f.isNumber || f.isDuration)) return null;
+        if (kind === 'd' && !f.isDate) return null;
+
+        var ok = (kind === 'r')
+            ? /^-?[0-9]+(\.[0-9]+)?$/
+            : /^[0-9]{4}-[0-9]{2}-[0-9]{2}( [0-9]{2}:[0-9]{2}:[0-9]{2})?$/;
+        if (!ok.test(lo) || !ok.test(hi)) return null;
+
+        return { kind: kind, lo: lo, hi: hi };
     },
 
     /**
@@ -247,9 +306,20 @@ CmdDrill.prototype = {
 
         for (i = 0; i < path.length; i++) {
             var seg = path[i];
-            if (!seg || !valid[seg.field]) break;
+            if (!seg) break;
+
+            /* A range step is admitted on its own terms. Its field is a date or a
+               number, which is deliberately not a dimension -- you cannot group by
+               `opened_at` -- so the dimension test would reject every histogram bin
+               and every point on a time series. parseRange is at least as strict:
+               it checks the field exists, that its declared type makes a range
+               meaningful, and that both endpoints are literal numbers or
+               timestamps. */
+            var ranged = this.parseRange(table, seg.field, seg.key);
+            if (!ranged && !valid[seg.field]) break;
+
             var key = seg.key;
-            if (key !== '' && key !== null && key !== undefined &&
+            if (!ranged && key !== '' && key !== null && key !== undefined &&
                 String(key).indexOf('^') !== -1) break;
             out.push(seg);
         }
