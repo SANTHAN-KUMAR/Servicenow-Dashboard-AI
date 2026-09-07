@@ -3355,9 +3355,15 @@
     input.value = st.q || '';
     input.placeholder = 'Search all ' + st.onInstance + ' reports by title or table';
     input.setAttribute('aria-label', 'Search all saved reports');
+    /* These two navigate via window.location directly rather than a link click,
+       so wireSkeletonNav's click delegation never sees them -- paint here too,
+       or searching is the one action in the app that skips straight to a blank
+       wait while every other navigation gets the skeleton. */
     input.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.keyCode === 13) {
-        window.location.href = reportsUrl(input.value, 0);
+        var url = reportsUrl(input.value, 0);
+        paintSkeleton(mount, url);
+        window.location.href = url;
       }
     });
     fieldWrap.appendChild(input);
@@ -3366,7 +3372,9 @@
     var go = el('button', 'btn sm', 'Search');
     go.type = 'button';
     go.addEventListener('click', function () {
-      window.location.href = reportsUrl(input.value, 0);
+      var url = reportsUrl(input.value, 0);
+      paintSkeleton(mount, url);
+      window.location.href = url;
     });
     bar.appendChild(go);
 
@@ -3702,6 +3710,111 @@
     return JSON.parse(json);
   }
 
+  /**
+   * The report design outcome skeleton.
+   *
+   * Shaped like the page it is standing in for, not a spinner: a dashboard
+   * skeleton carries a header, a KPI row and a chart grid because that is what
+   * every dashboard has, and a catalog skeleton carries a header and either a
+   * card grid or a report-list shape depending on which catalog view the click
+   * was actually headed for. It is deliberately approximate -- the real page's
+   * exact panel count is only known once the server has already built it,
+   * which is the one thing this exists to be shown during.
+   */
+  function paintSkeleton(mount, targetHref) {
+    mount.innerHTML = '';
+    var wrap = el('div', 'skel');
+
+    var toCatalog = targetHref.indexOf('cmd_catalog.do') !== -1;
+    var toReports = toCatalog && /[?&]view=reports\b/.test(targetHref);
+
+    function block(cls) { return el('div', 'skel-block ' + cls); }
+
+    var head = el('div', 'app-h');
+    var left = el('div');
+    left.appendChild(block('skel-h1'));
+    left.appendChild(block('skel-h2'));
+    left.appendChild(block('skel-h3'));
+    head.appendChild(left);
+    wrap.appendChild(head);
+
+    if (toReports) {
+      var bar = el('div', 'cat-bar');
+      bar.appendChild(block('skel-block')).style.cssText = 'height:38px;width:100%';
+      wrap.appendChild(bar);
+      var groups = el('div', 'rep-groups');
+      for (var g = 0; g < 3; g++) {
+        var sec = el('div', 'rep-group panel pad');
+        sec.appendChild(block('skel-title'));
+        for (var r = 0; r < 3; r++) {
+          var row = block('skel-block');
+          row.style.cssText = 'height:34px; margin-top:8px';
+          sec.appendChild(row);
+        }
+        groups.appendChild(sec);
+      }
+      wrap.appendChild(groups);
+    } else if (toCatalog) {
+      var cards = el('div', 'skel-cards');
+      for (var c = 0; c < 6; c++) cards.appendChild(block('skel-card panel'));
+      wrap.appendChild(cards);
+    } else {
+      var kpis = el('div', 'skel-kpis');
+      for (var k = 0; k < 3; k++) kpis.appendChild(block('skel-kpi panel'));
+      wrap.appendChild(kpis);
+
+      var grid = el('div', 'grid-panels');
+      for (var p = 0; p < 4; p++) {
+        var panel = el('div', 'panel skel-panel-h' + (p === 0 ? ' span2' : ''));
+        panel.appendChild(block('skel-title'));
+        panel.appendChild(block('skel-sub'));
+        var body = block('skel-panel');
+        body.style.marginTop = '14px';
+        panel.appendChild(body);
+        grid.appendChild(panel);
+      }
+      wrap.appendChild(grid);
+    }
+
+    mount.appendChild(wrap);
+  }
+
+  /**
+   * Intercepts a click on any link to another COMMAND page and paints the
+   * skeleton on the page being left, in the instant before navigating away.
+   *
+   * This is not a loading state layered over a fetch -- there is no fetch to
+   * layer it over (see paintSkeleton's own comment for why). It is a plain
+   * synchronous DOM write that happens to run immediately before
+   * `window.location` changes, which is the only "during" this architecture
+   * has: everything else the viewer waits for happens on the server, before
+   * the browser has a page to paint into at all.
+   *
+   * Delegated at the document so it survives whatever the current view
+   * rendered, needs no cleanup (the browser discards it at navigation), and
+   * costs one listener per page load rather than one per link.
+   */
+  function wireSkeletonNav(mount) {
+    document.addEventListener('click', function (e) {
+      if (e.defaultPrevented || e.button !== 0 ||
+          e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      var a = e.target;
+      while (a && a !== document && a.tagName !== 'A') a = a.parentNode;
+      if (!a || a === document) return;
+      if (a.target === '_blank' || a.hasAttribute('download')) return;
+      if (a.hostname && a.hostname !== window.location.hostname) return;
+
+      var path = a.pathname || '';
+      if (path.indexOf('cmd_dashboard.do') === -1 &&
+          path.indexOf('cmd_catalog.do') === -1) return;
+
+      e.preventDefault();
+      paintSkeleton(mount, a.href);
+      window.location.href = a.href;
+    });
+  }
+
   function boot() {
     var mount = document.getElementById('cmd-root');
     if (!mount) return;
@@ -3731,6 +3844,8 @@
       mount.appendChild(box);
       if (window.console) window.console.error(err);
     }
+
+    wireSkeletonNav(mount);
   }
 
   if (document.readyState === 'loading') {

@@ -88,6 +88,11 @@ class Instance:
         self._pw = c["password"]
         self.verbose = verbose
         self.token = None
+        # Which application writes land in. None means the session default, which
+        # is global. Set through use_scope(), never by assignment, because the
+        # scope lives in a user preference on the instance and not here.
+        self.scope = None
+        self.scope_id = None
 
         self._jar = http.cookiejar.CookieJar()
         self._op = urllib.request.build_opener(
@@ -205,16 +210,85 @@ class Instance:
 
     # ── the part that matters ───────────────────────────────────────────────
 
-    def upsert_verified(self, table, key_field, key_value, payload, verify_field):
+    APP_PICKER = "/api/now/ui/concoursepicker/application"
+
+    def use_scope(self, scope):
+        """Point this session's application context at a scoped application.
+
+        A Table API write lands in the session's *current* application, not in
+        whatever `sys_scope` the payload names. Passing sys_scope and trusting it
+        produces records that sit in global while every readback of `sys_scope`
+        looks wrong only if you happen to check -- the write answers 200 either
+        way. Measured on dev390988: an insert carrying sys_scope=<app> was created
+        with api_name `global.CmdProbe`.
+
+        This uses the same endpoint the application picker in the UI uses, and
+        then reads the session's application back and refuses to continue unless
+        it is the one asked for.
+
+        Writing the `apps.current_app` user preference instead does eventually
+        work, but only for sessions established after it lands, and the gap is
+        real: a global deploy run immediately after a scoped one failed with
+        "ACL Exception Update Failed due to security constraints" on a global
+        record -- which is what a still-scoped session writing outside its scope
+        looks like, and is indistinguishable from a genuine permissions problem.
+        The picker endpoint changes the live session, so there is no gap to lose
+        a deploy in and nothing to retry.
+
+        Returns the app's sys_id ('global' for no scope). Raises if the scope does
+        not exist or if the switch cannot be proved, because deploying "into" a
+        scope that is silently global is the failure this method exists to
+        prevent.
+        """
+        # "global" is not a row in sys_app. It is the absence of an application
+        # context, and it has to be settable: the preference persists on the
+        # instance, so a scoped deploy would otherwise leave the next global
+        # deploy pointed at the app, and a newly created artefact would land in
+        # the wrong scope while the readback key still said global.
+        if scope in (None, "global"):
+            app = {"sys_id": "global", "name": "Global", "scope": "global"}
+        else:
+            app = self.get_one("sys_app", f"scope={scope}",
+                               ["sys_id", "name", "scope"])
+            if not app:
+                raise InstanceError(
+                    f"no scoped application with scope {scope!r} on {self.host}. "
+                    f"Create it before deploying into it.")
+
+        self._call("PUT", self.APP_PICKER, {"app_id": app["sys_id"]})
+
+        current = (self._call("GET", self.APP_PICKER).get("result") or {}).get("current")
+        if current != app["sys_id"]:
+            raise InstanceError(
+                f"asked the instance to switch to {scope} and it reports "
+                f"{current!r}. Refusing to continue, because every write from "
+                f"here would land in the wrong application.")
+
+        self.scope = None if app["sys_id"] == "global" else scope
+        self.scope_id = None if app["sys_id"] == "global" else app["sys_id"]
+        if self.verbose:
+            print(f"  application scope set to {scope} ({app['name']})")
+        return app["sys_id"]
+
+    def upsert_verified(self, table, key_field, key_value, payload, verify_field,
+                        match_query=None):
         """Insert or update, then prove it landed.
 
         Reads the record back and compares `verify_field` byte for byte against
         what was sent. A Table API write answers 200 regardless of what it
         actually stored, so the status code proves nothing and is not consulted.
 
+        `match_query` narrows which existing record counts as "this one". Keying
+        on the name alone is wrong the moment the same artefact exists in two
+        scopes: a scoped deploy of `CmdData` would find the global record first
+        and overwrite it, taking the fallback down with it.
+
         Returns (sys_id, action, verified) where action is 'created' or 'updated'.
         """
-        existing = self.get_one(table, f"{key_field}={key_value}", ["sys_id"])
+        query = f"{key_field}={key_value}"
+        if match_query:
+            query += "^" + match_query
+        existing = self.get_one(table, query, ["sys_id"])
 
         if existing:
             sys_id = existing["sys_id"]
@@ -267,8 +341,17 @@ class Instance:
 
     # ── server-side execution ───────────────────────────────────────────────
 
-    def run_script(self, js, scope="global"):
+    def run_script(self, js, scope=None):
         """Execute server-side script through Scripts - Background.
+
+        `scope` defaults to whatever use_scope() selected, so a scoped deploy
+        verifies its classes in the engine that will actually run them. Two things
+        differ inside a scope and both fail loudly rather than subtly:
+        `gs.print` is fenced ("Function print is not allowed in scope"), so output
+        must go through `gs.info`; and an `es_latest` app has the native `JSON`
+        object, so the legacy `new JSON().encode()` is not a function there.
+        Callers should emit with `gs.info` and `JSON.stringify`, which work in
+        both engines.
 
         This is what makes the server chain testable against real data before any
         UI exists. The endpoint is an HTML form, not an API, so the response has
@@ -280,6 +363,9 @@ class Instance:
         """
         if not self.token:
             raise InstanceError("Not authenticated. Call login() first.")
+
+        if scope is None:
+            scope = self.scope_id or "global"
 
         body = urllib.parse.urlencode({
             "script": js,
@@ -332,19 +418,24 @@ class Instance:
         lines = [re.sub(r"^\s*\*\*\*\s*Script:\s?", "", ln) for ln in out.splitlines()]
         return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
 
-    def run_json(self, js):
+    def run_json(self, js, scope=None):
         """Run a script whose last statement prints one JSON line, and parse it.
 
         The convention is that the script prints exactly one line starting with
         `@@` so that anything else the platform decides to emit, and platform
         logging is chatty, cannot be mistaken for the result.
         """
-        out = self.run_script(js)
+        out = self.run_script(js, scope=scope)
         for line in out.splitlines():
             line = line.strip()
-            if line.startswith("@@"):
+            # A scoped background script prefixes its output with the scope name
+            # ("x_2185255_command: @@{...}"), so the marker is found anywhere in
+            # the line rather than only at the start. Everything after the first
+            # @@ is the payload; the prefix is the platform's, not ours.
+            at = line.find("@@")
+            if at >= 0:
                 try:
-                    return json.loads(line[2:])
+                    return json.loads(line[at + 2:])
                 except json.JSONDecodeError as e:
                     raise InstanceError(f"result line was not JSON: {e}\n{line[:400]}")
         raise InstanceError(f"no @@ result line in output:\n{out[:1200]}")

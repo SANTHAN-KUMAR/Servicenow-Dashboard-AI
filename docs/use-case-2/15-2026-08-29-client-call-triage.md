@@ -17,8 +17,8 @@ This continues `14-client-questions-answered.md`'s method: measure on
 | 4 | "Drill down for 2 levels is OK" | Not a request for more — the client is saying 2 levels would satisfy them | **Already exceeded** — 3 levels are built (`CmdDrill.MAX_DEPTH`) |
 | 5 | "Architecture design and data flow diagram" | A real, missing deliverable — prose architecture exists, a diagram of the request lifecycle does not | **Built below**, added to `11-technical-architecture.md` §3.1 |
 | 6a | "Where converted reports are stored, or dynamic retrieval at time of access" | A real question with a one-line answer | **Answered in §4** — nothing is stored, ever |
-| 6b | "Collection of pattern, if it is free or cost" | Almost certainly a different thing from #2 — see §5 | **Needs clarification from the client** |
-| 7 | "Concurrent users, access and performance" | A real, unmeasured gap | **Open — needs a load test, scoped in §6** |
+| 6b | "Collection of pattern, if it is free or cost" | Clarified 2026-08-31: "Report design outcome skeleton" — a loading skeleton screen | **Built and deployed**, free (plain CSS/JS, no asset) — see §5 |
+| 7 | "Concurrent users, access and performance" | A real gap, now measured | **Measured 2026-08-30 — see §6, real numbers, no errors, but confirms no caching exists** |
 | 8 | "Feature and layout design, happy, fine-tuning" | Not an ask. Positive feedback on what's shipped | **No action** |
 
 ---
@@ -124,24 +124,53 @@ ServiceNow's own report builder, save it, reopen it in COMMAND, and the
 change is there immediately — there is no second copy anywhere to fall out of
 sync.
 
-## 5. "Collection of pattern, free or cost" — needs the client to say more
+## 5. "Collection of pattern, free or cost" — resolved 2026-08-31: a loading skeleton
 
-This does not obviously match #2 (the chart-form control, which is free —
-ECharts is Apache 2.0, no licence to buy). Two other readings seem more
-likely and point at different work:
+**Client clarification, verbatim: "Report design outcome skeleton."** Neither
+of the two readings below was right — this is a UI/UX term of art: a
+*skeleton screen*, the grey placeholder blocks shown while a view is loading,
+shaped like the content that's coming (Power BI, Tableau and most polished BI
+tools all show one while a visual renders). "Design outcome" is the report's
+finished visual shape; "skeleton" is the wireframe stand-in for it while the
+real one builds. In hindsight, consistent with item #2's own framing
+("collection of *patterns*" — a UI pattern, not a fabric/texture pattern).
 
-- **Colour-blind-safe pattern fills** (hatching/texture in addition to colour,
-  so two categories are distinguishable without relying on colour vision) —
-  a real accessibility technique, not currently built anywhere in
-  `cmd_render.js`. If this is what's meant, it's new work, and it is free —
-  it's a rendering technique, not a licensed asset.
-- **An icon or pattern *asset library*** (a purchased or third-party set of
-  symbols/textures for the brand kit) — if the client means a specific named
-  product or library they've seen elsewhere, that's a licensing question this
-  document can't answer without knowing which one.
+**Checked before building anything: was this even architecturally possible
+here?** This surface computes the whole page server-side and embeds the
+result in one response (`cmd_dashboard.xhtml`'s `g:evaluate`) — there is no
+partial render and no safe client-side fetch to layer a loading state over (an
+XHR from a logged-in session on this instance was measured earlier in this
+engagement never to return). So the classic pattern — paint a skeleton, fetch
+data, swap it in — does not work here at all. What does: the entire wait a
+viewer feels (2 to 7+ seconds on the tables measured in
+`16-2026-08-30-boolean-bug-and-final-audit.md`) happens *before* the browser
+receives a single byte of the next page, which means the only place left to
+paint anything is the page being **left**, in the instant before navigating
+away. No network call, so nothing that could hang the way the XHR route did.
 
-**Recommended next step: ask the client directly which of these they mean**,
-ideally by having them point at an example. Building the wrong one wastes the
+**Built and deployed.** Every link inside the app that goes to another
+COMMAND page — catalog cards, saved-report links, drilldown, chart-form
+override, pagination, search — is now intercepted by one delegated click
+handler; a skeleton shaped like the destination (header + KPI row + chart
+grid for a dashboard; header + card grid for the catalog; header + grouped
+list for the reports tab) is painted into the current page instantly, then
+the browser is handed off to the real navigation as normal. The two
+navigations that don't go through a link click (Enter-to-search, the Search
+button) are wired the same way directly, so the experience is consistent
+everywhere rather than only on `<a>` clicks. Links that leave COMMAND
+entirely (`_list.do`, the platform's own report-template page) are correctly
+left alone — our skeleton would misrepresent a page that isn't ours.
+
+**Free**, confirmed directly rather than assumed: plain CSS (a gradient sweep
+`@keyframes` animation) and vanilla DOM manipulation, no library, no asset,
+nothing to license. It also inherits the existing `prefers-reduced-motion`
+rule for free, since that rule already disables every animation under
+`#cmd-wrap`.
+
+Verified live on dev390988: the skeleton markup and both new functions
+(`paintSkeleton`, `wireSkeletonNav`) are present in the deployed asset, all
+four page/view combinations still render with no error, and all 533 offline
+tests pass unchanged.
 same afternoon either way.
 
 ## 6. Concurrent users and performance — open, and worse than it looks
@@ -169,6 +198,30 @@ instance's own background-job stalls (already known to happen,
 unmeasured today — say that plainly if asked before the test exists, rather
 than estimating.
 
+**Measured 2026-08-30** (`backup/2026-08-30-boolean-and-drill-audit/round5_concurrency.py`),
+against `dev390988`, real HTTP page loads, admin session:
+
+| Page | 1 viewer | 4 concurrent | 8 concurrent | 16 concurrent | Errors |
+|---|---|---|---|---|---|
+| `cmd_dashboard.do?table=incident` | 10.48s | wall 16.15s, p95 16.15s | wall 27.99s, p95 27.99s | wall 40.59s, p95 40.58s | 0 at every level |
+| `cmd_catalog.do` | 6.72s | wall 11.87s, p95 11.87s | wall 19.56s, p95 19.55s | not run | 0 at every level |
+
+Zero errors and zero cross-viewer data leakage at any concurrency level
+tested — the permission-checked scan held under load. But latency degrades
+roughly 3-4x from 1 to 8-16 concurrent viewers, which is the expected
+consequence of a fact already on record: **there is no caching anywhere in
+this product** (confirmed by inspecting every script include — no
+`gs.cacheable`, no module-level cache). N viewers opening the same subject
+in the same window is N independent full scans, not one scan served N
+times. This is a real, now-quantified reason to prioritize a short-lived
+per-subject cache before a 100k+-report, many-concurrent-viewer rollout —
+not before, since the qualitative behavior (correct, no leakage) matters
+more than the speed at this stage, but it is next once item 1 is decided.
+Caveat carried over from the note above: `dev390988` is a shared dev
+instance with its own background-job noise, so the absolute seconds will
+not reproduce on production-class hardware — the multiplying pattern will,
+until caching exists.
+
 ---
 
 ## The TODO, in the order to attack it
@@ -177,11 +230,34 @@ than estimating.
 |---|---|---|---|
 | 1 | Confirm with the client: should a bare subject dashboard default to `active=true` when the table has that field? | **Decision needed from client** | — |
 | 2 | If yes to #1: add the default-active clause in `CmdPayload.dashboard`, keep `active` drillable as normal | Small build | #1 |
-| 3 | Ask the client which "pattern" they mean (§5) — pattern fills, or a named asset library | **Decision needed from client** | — |
-| 4 | Build whichever #3 turns out to be | Build, unscoped until #3 answered | #3 |
-| 5 | Concurrent-user load test against dev390988 | Build + measure | none, can start now |
+| ~~3~~ | ~~Ask the client which "pattern" they mean~~ | ~~Decision needed~~ | **Done** — clarified 2026-08-31, built same day (§5) |
+| ~~5~~ | ~~Concurrent-user load test against dev390988~~ | ~~Build + measure~~ | **Done** — measured 2026-08-30, see §6 |
 | 6 | Update `14-client-questions-answered.md` §2 to point at the now-shipped form-override control | Docs | none |
-| 7 | Tell the client #2 (pattern/form choice), #3 (governance compliance) and #4 (2-level drill) are already satisfied, so effort isn't spent re-solving them | Communication | none |
+| ~~7~~ | ~~Tell the client #2, #3, #4, #6b are already satisfied~~ | ~~Communication~~ | **Done** — folded into the 2026-08-30 client-facing PDF (below) |
+| 8 | Get item 1's decision, then build the caching layer §6 recommends before any 100k+/many-concurrent-viewer rollout | Decision + build | #1, then #5 |
 
-Items 1 and 3 block real work and cost nothing to resolve — they're the two
+Item 1 blocks real work and costs nothing to resolve — it's the one
 to put in front of the client before the next session, not after.
+
+**2026-08-30: a client-facing PDF answering all eight items, plus a fifth
+independent round of live stress/rogue testing, was sent to the client.**
+Source: `backup/2026-08-30-boolean-and-drill-audit/client_report.html`,
+rendered to `docs/use-case-2/COMMAND-client-report-2026-08-30.pdf` (4 pages,
+under the 6-page cap). It covers items 1-8 in client language with the
+concurrency numbers above and a fresh live proof of the region/role/ACL
+question (two real non-admin test accounts, five tables, plus a three-layer
+entitlement check — report-open, direct-subject, and catalog-card exclusion
+— all confirmed independently for a fully-denied table). The round's own
+rogue testing (drill-path injection, malformed search input, bogus IDs,
+concurrency) found zero new product defects; the offline suite stayed at
+533/533. The two failures the round did surface were both in the *test
+script*, not the product — a wrong argument order calling `fastGroupBy`,
+and `aclVerdict()`'s return object not carrying a `mode` field (it's on
+`data.total()` instead) — both are worth remembering next time a script is
+written against this engine, not signs of anything wrong live. The round
+also reconfirmed and sharpened the existing `GlideImpersonate` warning: even
+within one script execution, `gs.getUserName()` still reports the
+impersonated user *after* `unimpersonate()` runs, and the corruption
+persists on the underlying session for every later call — every persona
+check must use its own disposable, throwaway login, never share a session
+across an impersonation call and whatever runs after it.

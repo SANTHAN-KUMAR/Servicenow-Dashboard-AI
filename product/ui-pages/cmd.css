@@ -111,6 +111,47 @@
 .grid-panels{display:grid; gap:14px; grid-template-columns:repeat(2,minmax(0,1fr))}
 .grid-panels .span2{grid-column:span 2}
 
+/* ── skeleton ──────────────────────────────────────────────────────────────
+   The client's own words: "report design outcome skeleton". There is nothing
+   this can swap into once real content arrives -- the payload is embedded in
+   the initial HTML server-side (see cmd_dashboard.xhtml's g:evaluate), so by
+   the time this page's own JS runs, the data is already sitting in the DOM.
+   The entire wait a viewer feels is server build time that happens before the
+   browser receives a single byte of the response -- measured elsewhere in this
+   engagement at 2 to 7+ seconds depending on table and persona -- and no
+   partial response or safe client fetch exists to paint into during it (an
+   XHR from a logged-in session on this instance was measured never to
+   return). So this paints on the PAGE BEING LEFT, the instant a link to
+   another COMMAND page is clicked, shaped like the page that is coming --
+   header, KPI row, chart grid for a dashboard; header and a card grid for the
+   catalog -- then hands off to the browser's own navigation. No network call,
+   no swap-in, nothing that could hang: it is a still frame painted from
+   knowledge already on the page, held for exactly as long as the real
+   response takes, then replaced by it. */
+.skel-block{border-radius:8px; background:var(--surface-3);
+  position:relative; overflow:hidden}
+.skel-block::after{content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg, transparent, var(--edge-lit), transparent);
+  animation:skel-sweep 1.6s ease-in-out infinite}
+@keyframes skel-sweep{
+  from{transform:translateX(-100%)} to{transform:translateX(100%)}
+}
+.skel-h1{height:13px; width:120px; margin-bottom:14px}
+.skel-h2{height:30px; width:60%; max-width:340px; margin-bottom:6px}
+.skel-h3{height:13px; width:40%; max-width:220px}
+.skel-kpis{display:flex; gap:14px; margin:24px 0}
+.skel-kpi{flex:1; height:96px}
+.skel-panel{height:280px}
+.skel-title{height:14px; width:45%; margin-bottom:8px}
+.skel-sub{height:10px; width:70%}
+.skel-panel-h{padding:15px}
+.skel-cards{display:grid; gap:14px; grid-template-columns:repeat(3,minmax(0,1fr))}
+.skel-card{height:150px}
+@media (max-width:900px){
+  .skel-kpis{flex-direction:column}
+  .grid-panels, .skel-cards{grid-template-columns:1fr}
+}
+
 .cp{display:flex; flex-direction:column; padding:18px 18px 15px}
 .cp-h{display:flex; align-items:flex-start; justify-content:space-between; gap:12px}
 .cp-t{font-family:var(--display); font-size:14px; font-weight:600; letter-spacing:-.014em}

@@ -154,7 +154,11 @@ def verify_compiles(inst, names):
             "try { new %s(); out['%s'] = 'ok'; } "
             "catch (e) { out['%s'] = String(e).substring(0, 160); }" % (n, n, n)
         )
-    js.append("gs.print('@@' + new JSON().encode(out));")
+    # gs.info and JSON.stringify, not gs.print and new JSON(): `print` is fenced
+    # inside a scope, and an es_latest app has the native JSON object, so the
+    # legacy encoder is not a function there. Both forms work in global too, so
+    # there is one convention rather than a branch.
+    js.append("gs.info('@@' + JSON.stringify(out));")
 
     result = inst.run_json("\n".join(js))
     broken = {k: v for k, v in result.items() if v != "ok"}
@@ -229,7 +233,7 @@ def build_pages(script_hashes):
     return out
 
 
-def prune_assets(inst, current):
+def prune_assets(inst, current, scope_id=None):
     """Removes content-hashed assets that no deployed page references any more.
 
     Without this the instance accumulates one orphaned UI Script per edit, and a
@@ -240,7 +244,12 @@ def prune_assets(inst, current):
     """
     stems = tuple(Path(fn).stem for fn in UI_SCRIPTS)
     stale = []
-    for row in inst.query("sys_ui_script", "nameSTARTSWITHcmd_", ["name", "sys_id"], limit=200):
+    # Scoped and global deployments carry the same asset names, so a prune that
+    # ignored the scope would delete the other deployment's live assets and take
+    # it down with no error anywhere.
+    q = "nameSTARTSWITHcmd_"
+    q += f"^sys_scope={scope_id}" if scope_id else "^sys_scope=global"
+    for row in inst.query("sys_ui_script", q, ["name", "sys_id"], limit=200):
         name = row["name"]
         if name in current:
             continue
@@ -266,6 +275,10 @@ def main():
                     help="si = script includes; ui = client assets AND the pages "
                          "that carry their hashes, which cannot be separated")
     ap.add_argument("--credentials", default=None)
+    ap.add_argument("--scope", default=None,
+                    help="deploy into this scoped application (e.g. "
+                         "x_2185255_command) instead of global. The app must "
+                         "already exist. The global deployment is left alone.")
     args = ap.parse_args()
 
     print()
@@ -299,17 +312,28 @@ def main():
         return 0
 
     inst = Instance(args.credentials).login()
+
+    # Scope is a property of the session, not of the payload. use_scope() sets the
+    # current application and re-authenticates; without it a write carrying
+    # sys_scope=<app> is still created in global and answers 200.
+    # Always set it, including back to global: the preference persists on the
+    # instance between runs, so "no --scope" has to mean global explicitly.
+    scope_id = inst.use_scope(args.scope or "global")
+    # Every write is keyed within its own scope so a scoped deploy can never
+    # find, and overwrite, the global record of the same name.
+    where = f"sys_scope={scope_id}" if scope_id else f"sys_scope={GLOBAL_SCOPE}"
+    api_ns = args.scope if args.scope else GLOBAL_SCOPE
     print()
 
     if args.only in (None, "si"):
         for name, src in includes:
             inst.upsert_verified(
                 "sys_script_include", "name", name,
-                {"script": src, "api_name": f"global.{name}",
+                {"script": src, "api_name": f"{api_ns}.{name}",
                  "client_callable": "false", "active": "true",
-                 "access": "public", "sys_scope": GLOBAL_SCOPE,
+                 "access": "public",
                  "description": f"COMMAND dashboards. See product/script-includes/{name}.js"},
-                verify_field="script")
+                verify_field="script", match_query=where)
 
         verify_compiles(inst, [n for n, _ in includes])
 
@@ -319,9 +343,9 @@ def main():
             current.add(asset)
             inst.upsert_verified(
                 "sys_ui_script", "name", asset,
-                {"script": src, "active": "true", "sys_scope": GLOBAL_SCOPE,
+                {"script": src, "active": "true",
                  "description": f"COMMAND dashboards client asset. content hash {h}"},
-                verify_field="script")
+                verify_field="script", match_query=where)
 
     # Pages carry the content hashes of the client assets, so a UI script can
     # never be deployed without them. Separating the two is what let a correct
@@ -331,9 +355,8 @@ def main():
             inst.upsert_verified(
                 "sys_ui_page", "name", name,
                 {"html": html, "category": "general", "direct": "false",
-                 "sys_scope": GLOBAL_SCOPE,
                  "description": "COMMAND dashboards surface"},
-                verify_field="html")
+                verify_field="html", match_query=where)
 
     # Pruning old assets happens LAST, after the pages that reference the new
     # ones have already landed. It used to run right after the new scripts were
@@ -346,11 +369,18 @@ def main():
     # There is no version of this ordering that is fine to get wrong "just this
     # once" -- flip it back and the window returns immediately.
     if args.only in (None, "ui"):
-        prune_assets(inst, current)
+        prune_assets(inst, current, scope_id)
 
     print(f"\n  all writes verified by readback")
-    print(f"  catalog:   https://{inst.host}/cmd_catalog.do")
-    print(f"  dashboard: https://{inst.host}/cmd_dashboard.do\n")
+    # A scoped UI Page is not served at <name>.do -- that route resolves global
+    # pages only and answers 200 with "Page not found" for a scoped one. The
+    # platform serves it at <scope>_<name>.do and records that in the page's
+    # `endpoint` field, which is read back here rather than assembled by hand.
+    for name, _ in pages:
+        row = inst.get_one("sys_ui_page", f"name={name}^{where}", ["endpoint", "name"])
+        url = (row.get("endpoint") if row else None) or f"{name}.do"
+        print(f"  {name + ':':22s} https://{inst.host}/{url}")
+    print()
     return 0
 
 

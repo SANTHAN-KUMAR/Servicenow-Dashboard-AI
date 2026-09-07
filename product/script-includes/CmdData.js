@@ -704,30 +704,23 @@ CmdData.prototype = {
      */
     fastGroupBy: function (table, field, query) {
         var all = [];
+
+        /* Booleans are counted explicitly rather than grouped. See _boolGroupBy:
+           the accessor that used to tell a NULL boolean from a '0' one is fenced
+           inside a scoped application, and asking the database for each bucket by
+           name is both exact and allowed in every engine. */
+        if (this._isBool(table, field)) return this._boolGroupBy(table, field, query);
+
         var ga = new GlideAggregate(table);
         if (query) ga.addEncodedQuery(query);
         ga.addAggregate('COUNT');
         ga.groupBy(field);
         ga.query();
         while (ga.next()) {
-            /* Not ga.getValue(field). Measured live on asmt_metric_result.is_default:
-               a boolean column with 294 rows genuinely NULL and 1,034 genuinely '0'
-               groups correctly into two buckets at the database level, but
-               GlideAggregate's field-name accessor reports both as the string
-               'false' -- getValue AND getDisplayValue, on every group, not just the
-               empty one. Confirmed with the Table API too: it serialises the NULL
-               rows as "false" as well, so this is not a client-side formatting
-               choice, it is how the platform represents a grouped boolean. The
-               element accessor is the one path that still tells the two apart --
-               proven against the same rows: gr.getElement('is_default').getValue()
-               returns null for the NULL group and '0' for the other, matched
-               against the true count from an explicit addQuery(field, false), which
-               only ever counts the real 1,034.
-               The consequence otherwise: every boolean breakdown on the whole
-               product draws two slices and labels both of them with the same word,
-               because _label's own `raw === null` guard never fires -- raw was
-               never really null by the time it got there. */
-            var raw = ga.getElement(field).getValue();
+            /* Safe here because booleans never reach this loop -- they are routed
+               to _boolGroupBy above, for the reason recorded there. For every
+               other type the field-name accessor and the element accessor agree. */
+            var raw = ga.getValue(field);
             all.push({
                 key: this._canonKey(table, field, raw),
                 label: this._label(ga, field, raw),
@@ -738,6 +731,68 @@ CmdData.prototype = {
         return all.length > CmdData.MAX_GROUPS
             ? all.slice(0, CmdData.MAX_GROUPS)
             : all;
+    },
+
+    _isBool: function (table, field) {
+        try {
+            var f = this.meta().field(table, field);
+            return !!f && f.type === 'boolean';
+        } catch (e) {
+            return false;
+        }
+    },
+
+    /**
+     * The three buckets of a boolean, each counted by name.
+     *
+     * Grouping a boolean and reading the group back does not survive a scoped
+     * application, and did not really work before that either.
+     *
+     * Measured live on `asmt_metric_result.is_default`: a boolean column with 294
+     * rows genuinely NULL and 1,034 genuinely '0' groups correctly into two
+     * buckets at the database level, but GlideAggregate's field-name accessor
+     * reports both as the string 'false' -- getValue AND getDisplayValue, on every
+     * group. The Table API serialises the NULL rows as "false" too, so this is how
+     * the platform represents a grouped boolean, not a formatting choice. The
+     * element accessor was the one path that told them apart, and
+     * `ga.getElement(field)` is fenced inside a scope:
+     * "Function getElement is not allowed in scope x_2185255_command".
+     *
+     * So the question is asked of the database directly instead. A boolean has at
+     * most three buckets, so this is three exact counts rather than a group and a
+     * guess, it needs no accessor the platform can withdraw, and it returns the
+     * same answer in both engines -- verified against those same rows: 294 null
+     * and 1,034 false, matching what getElement reported in global.
+     *
+     * The consequence of getting this wrong, which is what makes it worth three
+     * queries: every boolean breakdown in the product draws two slices and labels
+     * both with the same word, because _label's `raw === null` guard never fires.
+     */
+    _boolGroupBy: function (table, field, query) {
+        var out = [];
+        var buckets = [
+            { raw: null,    label: '',      cond: 'null'  },
+            { raw: '0',     label: 'false', cond: false   },
+            { raw: '1',     label: 'true',  cond: true    }
+        ];
+        for (var i = 0; i < buckets.length; i++) {
+            var b = buckets[i];
+            var ga = new GlideAggregate(table);
+            if (query) ga.addEncodedQuery(query);
+            ga.addAggregate('COUNT');
+            if (b.cond === 'null') ga.addNullQuery(field);
+            else ga.addQuery(field, b.cond);
+            ga.query();
+            var n = ga.next() ? (parseInt(ga.getAggregate('COUNT'), 10) || 0) : 0;
+            if (!n) continue;
+            out.push({
+                key: this._canonKey(table, field, b.raw),
+                label: b.label,
+                count: n
+            });
+        }
+        out.sort(function (a, b2) { return b2.count - a.count; });
+        return out;
     },
 
     /**

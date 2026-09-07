@@ -59,7 +59,17 @@
             stats: { user: gs.getUserDisplayName(), userName: gs.getUserName(),
                      offered: 0, considered: 0, denied: 0, tooSmall: 0 } };
   }
-  GlideStringUtil.base64Encode(JSON.stringify(out));
+  /* The two engines offer different base64 encoders and neither has both.
+     Measured on dev390988: in global, GlideStringUtil.base64Encode works and
+     typeof gs.base64Encode is 'undefined'; inside a scoped application it is the
+     other way round and GlideStringUtil is not a usable object there. Feature
+     detected rather than branched on scope, so one page source deploys to both
+     and neither deployment carries a code path the other never runs. */
+  var payloadJson = JSON.stringify(out);
+  var encoded = (typeof gs.base64Encode === 'function')
+      ? gs.base64Encode(payloadJson)
+      : GlideStringUtil.base64Encode(payloadJson);
+  encoded;
 </g:evaluate>
 
 <style>
