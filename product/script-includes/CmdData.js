@@ -1910,18 +1910,35 @@ CmdData.prototype = {
         if (spec.kind === 'duration') {
             var ds = {}, dn = {}, dvals = {}, dlab = {}, dskip = 0, dkept = 0;
             var dgf = spec.groupField || null;
+            /* Either endpoint may be the wall clock rather than a column, written
+               '*now*'. That is the difference between a duration and an age: how
+               long something took has two stored timestamps, how old something is
+               has one and the present moment. Performance Analytics writes the
+               second as `score_end`, and every age indicator on the client's CEO
+               dashboard is that shape. Read once here, not per row, so every row in
+               one scan is measured against the same instant -- otherwise a long
+               scan would measure its last rows against a later "now" than its
+               first, and the total would depend on how slow the scan was. */
+            var dNow = epochSecOf(new GlideDateTime().getValue());
+            var dStartNow = (spec.startField === '*now*');
+            var dEndNow = (spec.endField === '*now*');
+            var dFields = [];
+            if (!dStartNow) dFields.push(spec.startField);
+            if (!dEndNow) dFields.push(spec.endField);
             return {
                 id: id,
-                valueFields: [spec.startField, spec.endField],
+                valueFields: dFields,
                 displayFields: dgf ? [dgf] : [],
                 row: function (r, lc) {
-                    var sv = r[spec.startField], ev = r[spec.endField];
+                    var sv = dStartNow ? dNow : r[spec.startField];
+                    var ev = dEndNow ? dNow : r[spec.endField];
                     if (!sv || !ev) return;
                     /* Arithmetic on the stored string rather than two GlideDateTime
                        constructions and a subtract. Both are UTC in the database, so
                        the difference is the same number, and it is roughly two orders
                        of magnitude cheaper inside a 20,000-row loop. */
-                    var hrs = (epochSecOf(ev) - epochSecOf(sv)) / 3600;
+                    var hrs = ((dEndNow ? dNow : epochSecOf(ev)) -
+                               (dStartNow ? dNow : epochSecOf(sv))) / 3600;
                     if (hrs === null || isNaN(hrs)) return;
                     /* Negative elapsed time is dirty data, not a fast resolution.
                        Counted and excluded rather than silently averaged in. */
@@ -1942,6 +1959,12 @@ CmdData.prototype = {
                         rows.push({
                             key: k, label: dlab[k],
                             hours: round1(ds[k] / dn[k]), n: dn[k],
+                            /* The total as well as the mean. A caller wanting the
+                               sum would otherwise have to multiply a one-decimal
+                               mean back by the row count, which is accurate enough
+                               but is arithmetic on a rounded number, and PA's
+                               elapsed-time indicators are sums. */
+                            sumHours: round1(ds[k]),
                             /* The median is reported next to the mean because
                                duration distributions on this data are strongly
                                right-skewed and the mean alone flatters them. */
