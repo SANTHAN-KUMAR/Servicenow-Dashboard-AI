@@ -384,13 +384,23 @@ through **Retrieved Update Sets → Import Update Set from XML → Preview → C
 | 3 · CEO Portfolio 1 | 8 cards, real monthly trends, refusals where PA prints a zero |
 | 4 · packaging and docs | reproducible update set, code traces, licence register |
 
-**End-to-end on the scoped build, all passing:** catalog renders; it offers
-exactly one portfolio; the incident dashboard draws its panels; Portfolio 1 draws
-8 cards with real trends; a category drill returns 816 rows; a month drill returns
-624 and is labelled "Jun 2026"; an out-of-range drill returns nothing and says so.
+**`product/tests/acceptance_live.py` passes 13/13 on both deployments** -- the
+scoped one and the global fallback. It checks the product rather than the engine:
+that every page a client opens renders, that its numbers are proved rather than a
+floor, that every CEO card opens an in-portal analysis stating which rows it is
+over, and that a drill matching nothing says so.
 
-**534 offline tests pass**, and `oracle_ceo.py` reports 11 resolution matches and 0
-mismatches against Performance Analytics' own answers.
+It deliberately does **not** assert a panel count. The page has a wall-clock scan
+budget and spends it on reductions, so a loaded instance draws fewer panels rather
+than taking longer -- that is the design. The same instance was measured at 0.23ms
+and 1.29ms per permission-checked row a day apart, and in one acceptance run the
+scoped build drew 7 panels while the global one drew 11, minutes apart, from
+identical source. Pinning eleven would be pinning the weather.
+
+**534 offline tests pass**, and `oracle_ceo.py` last reported 11 resolution matches
+and 0 mismatches against Performance Analytics' own answers. That check needs
+read access to the client instance, which has since lapsed; the recorded result
+stands and it should be re-run before a demo once access returns.
 
 ## Fixed after the client's first look
 

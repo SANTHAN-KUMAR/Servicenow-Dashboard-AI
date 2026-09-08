@@ -44,6 +44,7 @@ from snclient import Instance, InstanceError  # noqa: E402
 
 SEED_TAG = "CMD_SEED_V1"          # what seed.py stamps
 LIFECYCLE_TAG = "CMD_LIFECYCLE_V1"  # what this stamps on top
+TODAY_TAG = "CMD_TODAY_V1"          # one day's activity, separately reversible
 
 APPLY_JS = r"""
 var seedTag = '__SEED__', lifeTag = '__LIFE__';
@@ -139,6 +140,116 @@ while (gr.next()) {
 gs.info('@@' + JSON.stringify(out));
 """
 
+TODAY_JS = r"""
+var seedTag = '__SEED__', todayTag = '__TODAY__';
+var out = { opened: 0, resolved: 0, closed: 0 };
+
+var s = 20260908;
+function rnd() { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; }
+function pick(a) { return a[Math.floor(rnd() * a.length)]; }
+
+var CODES = ['Solved (Work Around)', 'Solved (Permanently)',
+             'Solved Remotely (Work Around)', 'Solved Remotely (Permanently)',
+             'Not Solved (Not Reproducible)', 'Closed/Resolved by Caller'];
+var CATS = ['hardware', 'software', 'network', 'database', 'inquiry'];
+var PRIOS = ['2', '3', '3', '3', '4', '4', '5'];
+
+/* Somewhere inside working hours today, and never in the future: an incident
+   stamped an hour from now would be counted by "opened today" and be visibly
+   wrong on the record it came from. */
+function todayAt(hour, minute) {
+    var d = new GlideDateTime();
+    var iso = d.getValue().substr(0, 10);
+    var t = new GlideDateTime(iso + ' ' + (hour < 10 ? '0' + hour : hour) + ':' +
+                              (minute < 10 ? '0' + minute : minute) + ':00');
+    return (t.compareTo(d) > 0) ? d : t;
+}
+
+/* 1. A day's arrivals. */
+for (var i = 0; i < __NEW__; i++) {
+    var g = new GlideRecord('incident');
+    g.initialize();
+    g.setValue('short_description', 'Seeded incident, ' + (i + 1) + ' of todays arrivals');
+    g.setValue('category', pick(CATS));
+    g.setValue('priority', pick(PRIOS));
+    g.setValue('impact', pick(['2', '3', '3']));
+    g.setValue('urgency', pick(['2', '3', '3']));
+    g.setValue('state', 1);
+    g.setValue('incident_state', 1);
+    g.setValue('correlation_id', seedTag);
+    g.setValue('correlation_display', todayTag);
+    g.setValue('opened_at', todayAt(8 + Math.floor(rnd() * 9), Math.floor(rnd() * 60)).getValue());
+    g.setWorkflow(false);
+    g.autoSysFields(false);
+    if (g.insert()) out.opened++;
+}
+
+/* 2. Work closed out today, taken from what was already open. */
+var r = new GlideRecord('incident');
+r.addQuery('correlation_id', seedTag);
+r.addNullQuery('resolved_at');
+r.addQuery('opened_at', '<', new GlideDateTime().getValue().substr(0, 10) + ' 00:00:00');
+r.setLimit(__RESOLVED__);
+r.query();
+while (r.next()) {
+    var when = todayAt(9 + Math.floor(rnd() * 8), Math.floor(rnd() * 60));
+    r.setValue('resolved_at', when.getValue());
+    r.setValue('state', 6);
+    r.setValue('incident_state', 6);
+    r.setValue('close_code', pick(CODES));
+    r.setValue('close_notes', 'Resolved during synthetic activity seeding.');
+    r.setValue('correlation_display', todayTag);
+    r.setWorkflow(false);
+    r.autoSysFields(false);
+    if (r.update()) out.resolved++;
+}
+
+/* 3. And a subset of those signed off today. */
+var c = new GlideRecord('incident');
+c.addQuery('correlation_id', seedTag);
+c.addQuery('correlation_display', todayTag);
+c.addNotNullQuery('resolved_at');
+c.addNullQuery('closed_at');
+c.setLimit(__CLOSED__);
+c.query();
+while (c.next()) {
+    var cw = todayAt(13 + Math.floor(rnd() * 5), Math.floor(rnd() * 60));
+    c.setValue('closed_at', cw.getValue());
+    c.setValue('state', 7);
+    c.setValue('incident_state', 7);
+    c.setWorkflow(false);
+    c.autoSysFields(false);
+    if (c.update()) out.closed++;
+}
+gs.info('@@' + JSON.stringify(out));
+"""
+
+UNTODAY_JS = r"""
+var seedTag = '__SEED__', todayTag = '__TODAY__';
+var out = { deleted: 0, reverted: 0 };
+var g = new GlideRecord('incident');
+g.addQuery('correlation_id', seedTag);
+g.addQuery('correlation_display', todayTag);
+g.query();
+while (g.next()) {
+    /* Rows this pass created are removed; rows it only advanced are put back. */
+    if (String(g.getValue('short_description')).indexOf('todays arrivals') !== -1) {
+        g.deleteRecord();
+        out.deleted++;
+    } else {
+        g.setValue('resolved_at', '');
+        g.setValue('closed_at', '');
+        g.setValue('state', 2);
+        g.setValue('incident_state', 2);
+        g.setValue('correlation_display', '');
+        g.setWorkflow(false);
+        g.autoSysFields(false);
+        if (g.update()) out.reverted++;
+    }
+}
+gs.info('@@' + JSON.stringify(out));
+"""
+
 STATUS_JS = r"""
 var seedTag = '__SEED__';
 function c(q) {
@@ -148,19 +259,27 @@ function c(q) {
     a.addAggregate('COUNT'); a.query(); a.next();
     return parseInt(a.getAggregate('COUNT'), 10) || 0;
 }
+var today = new GlideDateTime().getValue().substr(0, 10);
 gs.info('@@' + JSON.stringify({
     seeded: c(''),
     resolved: c('resolved_atISNOTEMPTY'),
     closed: c('closed_atISNOTEMPTY'),
-    open: c('resolved_atISEMPTY')
+    open: c('resolved_atISEMPTY'),
+    opened_today: c('opened_at>=' + today + ' 00:00:00'),
+    resolved_today: c('resolved_at>=' + today + ' 00:00:00'),
+    closed_today: c('closed_at>=' + today + ' 00:00:00')
 }));
 """
 
 
-def render(js, limit=100000):
+def render(js, limit=100000, new=18, resolved=15, closed=9):
     return (js.replace("__SEED__", SEED_TAG)
               .replace("__LIFE__", LIFECYCLE_TAG)
-              .replace("__LIMIT__", str(limit)))
+              .replace("__TODAY__", TODAY_TAG)
+              .replace("__LIMIT__", str(limit))
+              .replace("__NEW__", str(new))
+              .replace("__RESOLVED__", str(resolved))
+              .replace("__CLOSED__", str(closed)))
 
 
 def main():
@@ -168,6 +287,10 @@ def main():
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--revert", action="store_true")
     ap.add_argument("--limit", type=int, default=100000)
+    ap.add_argument("--today", action="store_true",
+                    help="give the instance one day's activity, so the measures "
+                         "defined for today are not all zero")
+    ap.add_argument("--untoday", action="store_true")
     args = ap.parse_args()
 
     inst = Instance(verbose=False).login()
@@ -178,12 +301,30 @@ def main():
         print(f"\n  seeded incidents : {st['seeded']:,}")
         print(f"  with resolved_at : {st['resolved']:,}")
         print(f"  with closed_at   : {st['closed']:,}")
-        print(f"  still open       : {st['open']:,}\n")
+        print(f"  still open       : {st['open']:,}")
+        print(f"  opened today     : {st['opened_today']:,}")
+        print(f"  resolved today   : {st['resolved_today']:,}")
+        print(f"  closed today     : {st['closed_today']:,}\n")
         return 0
 
     if args.revert:
         r = inst.run_json(render(REVERT_JS, args.limit))
         print(f"\n  {r['reverted']:,} incidents returned to open\n")
+        return 0
+
+    if args.untoday:
+        r = inst.run_json(render(UNTODAY_JS))
+        print(f"\n  {r['deleted']:,} of today's arrivals removed, "
+              f"{r['reverted']:,} incidents returned to open\n")
+        return 0
+
+    if args.today:
+        r = inst.run_json(render(TODAY_JS))
+        print(f"\n  opened {r['opened']}, resolved {r['resolved']}, "
+              f"closed {r['closed']}")
+        st = inst.run_json(render(STATUS_JS))
+        print(f"  today now: {st['opened_today']} opened, "
+              f"{st['resolved_today']} resolved, {st['closed_today']} closed\n")
         return 0
 
     r = inst.run_json(render(APPLY_JS, args.limit))
