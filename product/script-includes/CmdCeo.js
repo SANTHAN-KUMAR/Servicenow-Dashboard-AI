@@ -700,9 +700,22 @@ CmdCeo.prototype = {
                 card.note = node.kind === 'formula'
                     ? 'derived from other measures'
                     : (node.table + (node.query ? ', filtered' : ''));
-                if (node.table) {
-                    card.table = node.table;
-                    card.query = node.query;
+                /* A formula has no query of its own -- it is arithmetic over
+                   other measures -- so the records behind it are the records
+                   behind its parts. Where every part rests on one table and one
+                   filter, that is a real destination; where they disagree, there
+                   is no single honest answer and the card simply has no link.
+                   Without this, the four formula cards were the only things on
+                   the page still offering nothing to click. */
+                var src = node;
+                if (node.kind === 'formula') {
+                    var leaf = this._formulaLeaf(slot.indicator, 0, {});
+                    if (leaf) src = leaf;
+                }
+                if (src.table) {
+                    card.table = src.table;
+                    card.query = src.query;
+                    card.derivedFrom = (src !== node) ? src.name : null;
                     /* A card is a number, so there is no value to filter the page
                        *by* -- which is why these were the only things on the page
                        with nothing to click. What a card can always do is show the
@@ -711,7 +724,7 @@ CmdCeo.prototype = {
                        on the platform's own list where row-level security is
                        enforced for us. */
                     card.recordsUrl = this.drill
-                        ? this.drill.listUrl(node.table, node.query)
+                        ? this.drill.listUrl(src.table, src.query)
                         : null;
                 }
                 var tr = this._trend(node);
@@ -746,6 +759,52 @@ CmdCeo.prototype = {
             'Analytics prints for the same measure.');
 
         return payload;
+    },
+
+    /**
+     * The one leaf a formula's records live in, or null when there is not one.
+     *
+     * A ratio of two counts over the same table and the same filter -- which is
+     * most of them here, since a percentage is usually `part / whole * 100` --
+     * has an unambiguous set of records behind it: the wider of the two. A
+     * formula whose parts span different tables or different filters does not,
+     * and gets no link rather than an arbitrary one.
+     */
+    _formulaLeaf: function (id, depth, seen) {
+        if (depth > CmdCeo.MAX_DEPTH) return null;
+        var node = this.resolve(id, depth, seen);
+        if (node.kind === 'count' || node.kind === 'duration') return node;
+        if (node.kind !== 'formula') return null;
+
+        var self = this;
+        var nextSeen = {};
+        for (var k in seen) { if (seen.hasOwnProperty(k)) nextSeen[k] = true; }
+        nextSeen[id] = true;
+
+        var found = [];
+        var walk = function (n) {
+            if (!n) return;
+            if (n.ref !== undefined) {
+                var leaf = self._formulaLeaf(n.ref, depth + 1, nextSeen);
+                if (leaf) found.push(leaf);
+                return;
+            }
+            walk(n.a); walk(n.b);
+        };
+        walk(node.ast);
+        if (!found.length) return null;
+
+        /* Same table for every part, or no answer. */
+        for (var i = 1; i < found.length; i++) {
+            if (found[i].table !== found[0].table) return null;
+        }
+        /* The widest filter among them: a part's records are a subset of the
+           whole's, so the shortest query is the set the card is really about. */
+        var best = found[0];
+        for (i = 1; i < found.length; i++) {
+            if ((found[i].query || '').length < (best.query || '').length) best = found[i];
+        }
+        return best;
     },
 
     /* The table a formula ultimately rests on, for deciding the page's subject. */

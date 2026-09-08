@@ -251,6 +251,37 @@ CmdData.REDUCE_MS = 3000;
  * more than this raise costs. */
 CmdData.SCAN_ALLOWANCE_MS = 6500;
 
+/* How long a completed permission proof may be reused for the same viewer.
+ *
+ * The proof is the expensive thing on the page and it is re-run from scratch on
+ * every load: a full permission-checked pass over every matching row. On
+ * dev390988 that is 1.0s when the instance is quiet and 4.0s when it is not, and
+ * measured across tables nobody had touched, the same instance moved from 0.23ms
+ * to 1.29ms per row inside a day. When the proof does not finish in PROOF_MS the
+ * page is honest about it and reports a lower bound -- which is correct, and is
+ * also a demo degrading because of someone else's background job.
+ *
+ * So a proof that *did* finish is remembered, under three conditions that keep it
+ * a proof rather than an assumption:
+ *
+ *   1. Only a completed one. A capped or timed-out proof is a lower bound and
+ *      caching it would make a bad moment permanent.
+ *   2. Only a trusted one. "This viewer can read everything here" is a property of
+ *      the ACLs; "this viewer can read 815 of them" is a count, and counts go
+ *      stale. The unfiltered count is re-taken every time either way -- it is an
+ *      indexed aggregate and costs about 20ms.
+ *   3. Only while the row count is unchanged. The count is taken fresh on every
+ *      load anyway, so comparing it against the count at proof time is free, and
+ *      any insert or delete under the query invalidates the proof immediately
+ *      rather than at the end of the window.
+ *
+ * It lives in the session, which is the part that matters most: an ACL verdict
+ * belongs to one viewer, and a shared cache that served one user's verdict to
+ * another would be the worst bug this product could have. The session cannot
+ * express that mistake. */
+CmdData.VERDICT_TTL_MS = 180000;      /* three minutes */
+CmdData.VERDICT_KEY = 'cmd.acl.v1.';
+
 /* The smallest slice a permission-checked count may have, even with the request
    allowance exhausted. A count of zero would be read as "there are no records"
    rather than as "this was not measured", and the difference matters more than
@@ -402,6 +433,22 @@ CmdData.prototype = {
             return v;
         }
 
+        /* A proof this viewer already passed, for this table and query, while the
+           row count was what it is now. See CmdData.VERDICT_TTL_MS for the three
+           conditions that make reusing it a proof rather than a guess. */
+        var remembered = this._recallTrust(table, query, fast);
+        if (remembered) {
+            v = { trusted: true, denied: false, aggregate: fast, secure: fast,
+                  delta: 0, capped: false, timedOut: false,
+                  tableCanRead: tableCanRead,
+                  proofAgeMs: remembered.age,
+                  proof: 'every row matching this query was permission-checked ' +
+                         Math.round(remembered.age / 1000) + 's ago, and the ' +
+                         'number of matching rows has not changed since' };
+            this._verdict[key] = v;
+            return v;
+        }
+
         /* The proof is a row scan, time-boxed.
          *
          * A structural shortcut was tried and abandoned: check whether any read ACL
@@ -456,8 +503,55 @@ CmdData.prototype = {
                 ? 'permission check stopped at the ' + CmdData.SECURE_SCAN_CAP + ' row cap'
                 : 'every permitted row was permission-checked'
         };
+        /* Only a completed, trusted proof is worth remembering, and only with the
+           row count it was taken against. Everything else is either a lower bound
+           or a number that goes stale. */
+        if (v.trusted && !v.capped && !v.timedOut) {
+            this._rememberTrust(table, query, fast);
+        }
+
         this._verdict[key] = v;
         return v;
+    },
+
+    /* ── remembering a proof ────────────────────────────────────────────── */
+
+    _verdictKey: function (table, query) {
+        return CmdData.VERDICT_KEY + table + '|' + (query || '');
+    },
+
+    /**
+     * A proof this viewer passed recently, or null.
+     *
+     * Session storage, so the entry belongs to one viewer and cannot be handed to
+     * another. Anything unreadable, expired, or taken against a different row
+     * count is treated as absent rather than repaired -- a permission cache that
+     * guesses is worse than one that misses.
+     */
+    _recallTrust: function (table, query, count) {
+        try {
+            var raw = gs.getSession().getClientData(this._verdictKey(table, query));
+            if (!raw) return null;
+            var got = JSON.parse(String(raw));
+            if (!got || got.trusted !== true) return null;
+            if (got.count !== count) return null;
+            var age = new Date().getTime() - got.at;
+            if (age < 0 || age > CmdData.VERDICT_TTL_MS) return null;
+            return { age: age };
+        } catch (e) {
+            return null;
+        }
+    },
+
+    _rememberTrust: function (table, query, count) {
+        try {
+            gs.getSession().putClientData(
+                this._verdictKey(table, query),
+                JSON.stringify({ trusted: true, count: count,
+                                 at: new Date().getTime() }));
+        } catch (e) {
+            /* Not being able to remember a proof only costs time. */
+        }
     },
 
     /**
