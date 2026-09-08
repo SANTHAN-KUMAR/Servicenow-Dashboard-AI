@@ -367,3 +367,64 @@ Raising `SCAN_ALLOWANCE_MS` would hide this rather than fix it, and the page is
 already slower than its stated budget: a full server round trip measures **8–10 s**
 against a first-paint target of 1.2 s and interactive of 2.5 s. That gap is now a
 measured number rather than an estimate, and it is the next thing worth attention.
+
+---
+
+# Delivered — 2026-09-08
+
+All four phases are done. The deliverable is
+`product/dist/COMMAND-Analytics-0.1.0-update-set.xml`, installed on the target
+through **Retrieved Update Sets → Import Update Set from XML → Preview → Commit**.
+
+| phase | state |
+|---|---|
+| 0 · gates | passed. The one consequence is the URL: `x_2185255_command_cmd_dashboard.do` |
+| 1 · scoped application | 9 Script Includes, 2 UI Pages, 3 assets, all readback-verified and compiling in scope |
+| 2 · dynamic drilldown | a click filters; 22 of 25 renderers drillable; empty slices say so |
+| 3 · CEO Portfolio 1 | 8 cards, real monthly trends, refusals where PA prints a zero |
+| 4 · packaging and docs | reproducible update set, code traces, licence register |
+
+**End-to-end on the scoped build, all passing:** catalog renders; it offers
+exactly one portfolio; the incident dashboard draws its panels; Portfolio 1 draws
+8 cards with real trends; a category drill returns 816 rows; a month drill returns
+624 and is labelled "Jun 2026"; an out-of-range drill returns nothing and says so.
+
+**534 offline tests pass**, and `oracle_ceo.py` reports 11 resolution matches and 0
+mismatches against Performance Analytics' own answers.
+
+## What is not done, stated plainly
+
+**Page time misses its budget and is the top of the next list.** 4.9–9.5 s of
+server work against a 2.5 s interactive target. Payload passes at ~107 KB gzipped
+against 250 KB. The cause is measured and the two duplications behind it are
+named in `19-how-it-works-code-traces.md` §6: the ACL proof scans every row to
+count them and the first reduction scans the same rows again to read them, and the
+page opens separate reduction passes over one row set. Either is worth more than
+the allowance raise that currently absorbs the difference.
+
+**Two CEO cards carry no trend.** Both rest on elapsed-time measures, which would
+need a scan per period. The other six carry a real one.
+
+**The global deployment is still live** and should stay until the scoped build has
+run in front of the client. It is the fallback, and it is byte-identical in source.
+
+**The PDI's Portfolio 1 is thinner than the client's will be.** Several of its
+measures are defined for a single day and dev390988 has little activity today —
+which is also true of the client's own page, where the same cards read 0. The
+difference is that ours says why.
+
+## The four platform findings worth carrying forward
+
+Each cost real time and each is invisible until it bites:
+
+1. A Table API write lands in the **session's** current application, not the one
+   named in `sys_scope`.
+2. A scoped UI Page is served at `<scope>_<name>.do`; `<name>.do` answers 200 with
+   "Page not found".
+3. A UI Script's `name` is the **API Name** — `<scope>.<script_name>` — it is
+   capped at 40 characters, and the platform truncates instead of refusing.
+4. `GlideRecord.getValue()` on a boolean returns `'1'`/`'0'`, never `'true'`.
+
+The first three all produce a page that answers HTTP 200 with nothing on it. The
+deploy now checks for all of them, and the check that generalises is
+`verify_assets_served`: a readback proves storage and has never proved routing.
