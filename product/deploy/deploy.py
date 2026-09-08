@@ -69,6 +69,21 @@ UI_PAGES = [
 # so the page has no second request to make.
 SHARED_CSS = "cmd.css"
 
+# sys_ui_script.name is the API Name and is capped at 40 characters. In a scoped
+# application it is computed as `<scope>.<script_name>`, so the scope prefix eats
+# into the same 40 -- and the platform truncates rather than refusing.
+#
+# That is not a tidiness problem. `x_2185255_command.cmd_render_d5209a624137` is
+# 41 characters, was stored as 40, and the page went on asking for the name it
+# actually wrote: the dashboard served HTTP 200 with its renderer 404ing, which is
+# a blank page with nothing in any log. The two smaller assets fitted, so two of
+# three worked and the failure looked like something wrong with cmd_render.
+#
+# So the hash is short enough to fit the longest name under the longest scope, and
+# ASSET_NAME_MAX is enforced at build time rather than trusted.
+ASSET_NAME_MAX = 40
+ASSET_HASH_LEN = 8
+
 
 # ── validation ──────────────────────────────────────────────────────────────
 
@@ -194,16 +209,44 @@ def build_ui_scripts():
         src = p.read_text()
         name = p.stem
         validate_script(name, src)
-        h = content_hash(src)
+        h = content_hash(src, ASSET_HASH_LEN)
         # The deployed asset name carries the content hash, because that is the
         # only part of a .jsdbx URL the browser cache respects. See the comment in
         # the page templates for the two approaches that failed before this one.
-        out.append((name, src, h, f"{name}_{h}"))
+        asset = f"{name}_{h}"
+        out.append((name, src, h, asset))
     return out
 
 
-def build_pages(script_hashes):
-    """Substitutes asset hashes into each page, then validates the result."""
+def check_asset_names(scripts, api_prefix):
+    """Refuse a deploy whose asset names the platform would silently truncate.
+
+    The API Name is capped, the platform cuts rather than complains, and the page
+    keeps requesting the untruncated name -- so the symptom is a 404 on one asset
+    and a dashboard that renders nothing, with no error anywhere. Caught here,
+    where the name is still ours.
+    """
+    for _, _, _, asset in scripts:
+        full = api_prefix + asset
+        if len(full) > ASSET_NAME_MAX:
+            raise InstanceError(
+                f"asset name {full!r} is {len(full)} characters and the platform "
+                f"stores at most {ASSET_NAME_MAX}, silently truncating the rest. "
+                f"The page would then request a name no record has. Shorten "
+                f"ASSET_HASH_LEN or the script's filename.")
+    return True
+
+
+def build_pages(script_hashes, api_prefix=""):
+    """Substitutes asset hashes into each page, then validates the result.
+
+    `api_prefix` is what a scoped deployment has to put in front of an asset name.
+    A UI Script's `name` is not a name: it is the API Name, computed by the
+    platform as `<scope>.<script_name>`, and it is what the `.jsdbx` URL resolves
+    against. In global the two are the same string, so the distinction never came
+    up; in a scope the page must ask for `x_2185255_command.cmd_render_<hash>` and
+    asking for `cmd_render_<hash>` gets a 404.
+    """
     out = []
     for fn in UI_PAGES:
         p = UIP / fn
@@ -225,7 +268,7 @@ def build_pages(script_hashes):
             html = html.replace("@@CSS@@", css)
         for name, (h, asset) in script_hashes.items():
             html = html.replace(f"@@{name.upper()}_V@@", h)
-            html = html.replace(f"@@{name.upper()}_ASSET@@", asset)
+            html = html.replace(f"@@{name.upper()}_ASSET@@", api_prefix + asset)
         left = re.findall(r"@@[A-Z_]+@@", html)
         if left:
             raise InstanceError(f"{p.name}: unsubstituted placeholders {set(left)}")
@@ -245,13 +288,18 @@ def prune_assets(inst, current, scope_id=None):
     """
     stems = tuple(Path(fn).stem for fn in UI_SCRIPTS)
     stale = []
-    # Scoped and global deployments carry the same asset names, so a prune that
+    # Matched on script_name, not name. `name` is the API Name and in a scope it
+    # is `<scope>.<script_name>`, so a prefix match on "cmd_" finds nothing there
+    # -- which is why a scoped instance accumulated 21 copies of three assets
+    # before this was noticed.
+    #
+    # Scoped and global deployments carry the same script_names, so a prune that
     # ignored the scope would delete the other deployment's live assets and take
     # it down with no error anywhere.
-    q = "nameSTARTSWITHcmd_"
+    q = "script_nameSTARTSWITHcmd_"
     q += f"^sys_scope={scope_id}" if scope_id else "^sys_scope=global"
-    for row in inst.query("sys_ui_script", q, ["name", "sys_id"], limit=200):
-        name = row["name"]
+    for row in inst.query("sys_ui_script", q, ["script_name", "name", "sys_id"], limit=500):
+        name = row["script_name"]
         if name in current:
             continue
         for stem in stems:
@@ -297,7 +345,11 @@ def main():
         includes.append((p.stem, src))
 
     scripts = build_ui_scripts()
-    pages = build_pages({n: (h, asset) for n, _, h, asset in scripts})
+    # A scoped UI Script is addressed by its API Name, `<scope>.<script_name>`,
+    # so the page has to ask for that and not for the bare asset name.
+    api_prefix = f"{args.scope}." if args.scope else ""
+    check_asset_names(scripts, api_prefix)
+    pages = build_pages({n: (h, asset) for n, _, h, asset in scripts}, api_prefix)
 
     print(f"  validated {len(includes)} script includes, {len(scripts)} ui scripts, "
           f"{len(pages)} pages")
@@ -343,7 +395,7 @@ def main():
         for name, src, h, asset in scripts:
             current.add(asset)
             inst.upsert_verified(
-                "sys_ui_script", "name", asset,
+                "sys_ui_script", "script_name", asset,
                 {"script": src, "active": "true",
                  "description": f"COMMAND dashboards client asset. content hash {h}"},
                 verify_field="script", match_query=where)
