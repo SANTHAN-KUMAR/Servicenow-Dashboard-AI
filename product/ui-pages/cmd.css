@@ -644,3 +644,11 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
 .empty-slice { max-width: 640px; }
 .empty-slice .h3 { margin-bottom: 6px; }
 .empty-acts { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+/* A KPI card's own history. Sized to sit under the number without competing with
+   it: the value is the statement, the line is the context. */
+.kpi-spark { margin-top: 6px; opacity: 0.85; }
+.kpi-spark .spark { width: 100%; height: 22px; display: block; }
+/* A measure that could not be computed. Muted rather than alarming: on the source
+   dashboard the same card shows a confident 0. */
+.kpi-n.none { color: var(--ink-3); font-weight: 500; }

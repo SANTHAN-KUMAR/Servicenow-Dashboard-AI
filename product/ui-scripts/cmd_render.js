@@ -1897,8 +1897,23 @@
     box.appendChild(top);
 
     var valueRow = el('div', 'kpi-v');
-    valueRow.appendChild(el('span', 'kpi-n',
-      panel.unit === 'h' ? num(panel.value) + 'h' : compact(panel.value)));
+    /* A card with no value says so, rather than printing a zero. On a converted
+       CEO page that distinction is the product: the source dashboard shows 0 for
+       a measure it could not compute, and a leader cannot tell that from a real
+       zero. The reason goes in the subtitle below. */
+    var shown;
+    if (panel.value === null || panel.value === undefined) {
+      shown = '—';
+    } else if (panel.unit === 'h') {
+      shown = num(panel.value) + 'h';
+    } else if (panel.unit === '%') {
+      shown = num(panel.value) + '%';
+    } else if (panel.unit === 'd') {
+      shown = num(panel.value) + 'd';
+    } else {
+      shown = compact(panel.value);
+    }
+    valueRow.appendChild(el('span', 'kpi-n' + (panel.value === null ? ' none' : ''), shown));
 
     var d = panel.delta;
     if (d && d.change !== null) {
@@ -1913,13 +1928,36 @@
     }
     box.appendChild(valueRow);
 
+    /* A real history, where there is one.
+     *
+     * Worth being precise about why this matters on a converted card: the
+     * dashboard this is redrawn from puts a sparkline beside every number and has
+     * no score history at all behind them, so those lines are the same shape on
+     * every card whatever the card says. This one is counted per month from the
+     * records themselves, through the same permission-checked path as the number
+     * above it, and is absent rather than flat when there is nothing to draw. */
+    if (panel.spark && panel.spark.length) {
+      var sp = el('div', 'kpi-spark');
+      sp.appendChild(sparkline(panel.spark, panel.periods));
+      sp.title = panel.sparkLabel || 'monthly';
+      box.appendChild(sp);
+    }
+
     var sub = el('div', 'kpi-s');
-    if (d && d.change !== null) {
+    if (panel.refused) {
+      sub.textContent = panel.refused;
+    } else if (d && d.change !== null) {
       sub.textContent = (d.partial ? 'projected against ' : 'against ') +
         fmt(d.previous) + ' in ' + d.previousLabel;
     } else if (panel.median !== undefined && panel.median !== null) {
       sub.textContent = 'median ' + num(panel.median) +
         (panel.n ? '  ·  n = ' + fmt(panel.n) : '');
+    } else if (panel.sparkLabel) {
+      /* Said rather than implied. Several of these measures are defined for a
+         single day while the line beneath them is monthly, so the last point is
+         not the number above it, and a card that let a reader assume otherwise
+         would be worse than one with no line at all. */
+      sub.textContent = panel.sparkLabel;
     } else {
       sub.textContent = panel.reason || '';
     }

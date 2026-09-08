@@ -339,6 +339,18 @@ CmdCatalog.prototype = {
             return b.rows - a.rows;
         });
 
+        /* Redrawn dashboards, where the instance has any.
+         *
+         * These are not subjects and are not derived like the cards above: a
+         * subject card is discovered by measuring a table, and these are pages
+         * somebody already curated elsewhere that we redraw. They belong on the
+         * catalog anyway, because the catalog is the entry point and a page the
+         * viewer cannot reach from it may as well not exist.
+         *
+         * Added last and sorted separately, so they sit in their own area rather
+         * than competing with subjects for the top of the list. */
+        cards = cards.concat(this._portfolioCards());
+
         return {
             areas: this._group(cards),
             cards: cards,
@@ -495,6 +507,51 @@ CmdCatalog.prototype = {
             if (table.indexOf(CmdCatalog.EXCLUDE_PREFIX[i]) === 0) return true;
         }
         return false;
+    },
+
+    /**
+     * A card per portfolio of a redrawn dashboard, or none.
+     *
+     * Deliberately cheap: no scan, no counts, no ACL verdict. Every one of those
+     * is computed when the page itself is opened, and paying for eight of them to
+     * decorate a catalog entry would put a second full dashboard's work behind
+     * the entry point -- which is the cost the catalog was bounded for in the
+     * first place.
+     *
+     * The permission question still has to be answered honestly, and it is,
+     * one level down: opening a portfolio computes its verdict and refuses card
+     * by card. A viewer who can read nothing behind it gets a page saying so
+     * rather than a card that was silently withheld.
+     */
+    _portfolioCards: function () {
+        var out = [];
+        if (typeof CmdCeo === 'undefined') return out;
+        var ceo;
+        try {
+            ceo = new CmdCeo(this.data, this.meta, null);
+            if (!ceo.available()) return out;
+        } catch (e) {
+            return out;
+        }
+        var names = ceo.offered();
+        for (var i = 0; i < names.length; i++) {
+            out.push({
+                table: null,
+                portfolio: names[i],
+                label: ceo.portfolioLabel(names[i]),
+                area: 'Redrawn dashboards',
+                rows: null,
+                capped: false,
+                dimensions: 0,
+                dates: 0,
+                leadDimension: null,
+                leadDate: null,
+                preview: null,
+                note: 'redrawn from the CEO Dashboard, counted against your access',
+                url: '/cmd_dashboard.do?portfolio=' + encodeURIComponent(names[i])
+            });
+        }
+        return out;
     },
 
     area: function (table) {
