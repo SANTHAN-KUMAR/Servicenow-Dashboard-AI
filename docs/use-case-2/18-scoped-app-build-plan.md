@@ -392,15 +392,44 @@ exactly one portfolio; the incident dashboard draws its panels; Portfolio 1 draw
 **534 offline tests pass**, and `oracle_ceo.py` reports 11 resolution matches and 0
 mismatches against Performance Analytics' own answers.
 
+## Fixed after the client's first look
+
+Three defects the client found within minutes of opening the pages, all real:
+
+1. **The dashboard degraded to a floor.** It read "1,250 records · COUNTS ARE A
+   LOWER BOUND" with five panels where the day before it read 4,266 and VERIFIED
+   with eleven. The instance had become 4-5x slower at permission evaluation
+   (0.23ms to 1.29ms per row, on tables nobody had written to), the proof overran
+   its budget, and the page correctly refused to state what it had not proved.
+   A completed proof is now remembered for the viewer who passed it, for three
+   minutes, and only while the row count is unchanged: **1,465ms cold, 4ms
+   reused**, and the page is back to VERIFIED with all eleven panels.
+2. **Nothing on the CEO page was clickable.** Every slot is a KPI, a KPI is one
+   number, and one number gives nothing to filter by -- so unlike a bar it was
+   never a drill target and the page had no affordance at all. A measured card now
+   links to its records in the platform list. Six of eight link; the two that do
+   not are the two with no value to open.
+3. **The header read "built in undefinedms".** `portfolio()` opened a timer named
+   `t0` and the subject-picking loop twelve lines later reused `t0` for a table
+   name; `var` is function-scoped, so `number - "incident"` was NaN.
+
 ## What is not done, stated plainly
 
-**Page time misses its budget and is the top of the next list.** 4.9–9.5 s of
-server work against a 2.5 s interactive target. Payload passes at ~107 KB gzipped
-against 250 KB. The cause is measured and the two duplications behind it are
-named in `19-how-it-works-code-traces.md` §6: the ACL proof scans every row to
-count them and the first reduction scans the same rows again to read them, and the
-page opens separate reduction passes over one row set. Either is worth more than
-the allowance raise that currently absorbs the difference.
+**Page time still misses its budget.** 3.8-10.3 s of server work against a 2.5 s
+interactive target. Payload passes at ~107 KB gzipped against 250 KB. Remembering
+the proof did not fix this and was never going to -- the proof is about 1.3 s of
+roughly 10. The rest is the reduction passes that produce the panels, and those
+are the answer itself rather than a check on it.
+
+The two duplications behind it are named in `19-how-it-works-code-traces.md` §6.2:
+the proof scans every row to count them and the first reduction scans the same
+rows again to read them, and the page opens separate reduction passes over one row
+set where one carrying every spec would do. Either is worth more than any further
+budget raise.
+
+**Timing figures on a shared instance are one reading, not a property.** The same
+instance measured 0.23ms and 1.29ms per permission-checked row a day apart. Any
+number in these documents should be re-measured before it is quoted.
 
 **Two CEO cards carry no trend.** Both rest on elapsed-time measures, which would
 need a scan per period. The other six carry a real one.

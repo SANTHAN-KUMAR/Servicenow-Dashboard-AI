@@ -291,40 +291,69 @@ asset URL the pages will ask for and fails the deploy if one does not come back.
 
 ## 6. Performance, measured
 
-Measured on dev390988, best of two runs per surface, scoped build.
+Measured on dev390988, scoped build. **These figures move**: the same instance was
+measured a day apart at 0.23ms and 1.29ms per permission-checked row, on tables
+nobody had written to. Any number here is one reading of a shared instance.
 
 | surface | server time | HTML | gzipped |
 |---|---|---|---|
-| catalog | 6.9 s | 80 KB | 21 KB |
-| dashboard `incident` | 9.5 s | 164 KB | 31 KB |
-| dashboard `change_request` | 6.0 s | 99 KB | 29 KB |
-| CEO Portfolio 1 | 6.2 s | 75 KB | 21 KB |
+| catalog | 6.9–7.4 s | 80 KB | 21 KB |
+| dashboard `incident` | 9.6–10.3 s | 164 KB | 31 KB |
+| CEO Portfolio 1 | 3.8–5.8 s | 75 KB | 21 KB |
 | one drill level | 4.9 s | 192 KB | 32 KB |
 
-Client assets, fetched once and then cached: 86 KB gzipped
-(theme 0.7 KB, fonts 39 KB, renderer 46 KB).
+Client assets, fetched once then cached: 86 KB gzipped (theme 0.7, fonts 39,
+renderer 46).
 
 **Against the stated budget:**
 
-- **Payload — passes.** First load is ≈107 KB gzipped against a 250 KB budget, and
-  every page after that is HTML only, 21–32 KB.
-- **Time — does not pass, and by a lot.** The budget is 1.2 s to first paint and
-  2.5 s to interactive; the server alone takes 4.9–9.5 s.
+- **Payload — passes.** ≈107 KB gzipped on first load against 250 KB, and every
+  page after that is HTML only, 21–32 KB.
+- **Time — does not pass.** The budget is 1.2 s to first paint and 2.5 s to
+  interactive; the server alone takes 3.8–10.3 s.
 
-This is a real gap and it is the top of the remaining work. The cause is measured,
-not guessed: a page spends its time in permission-checked row scans, bounded to
-6.5 s per request by `CmdData.SCAN_ALLOWANCE_MS`, and two duplications inside that
-budget are already identified — the ACL proof scans every row to count them and
-the first reduction scans the same rows again to read them, and the page opens
-separate reduction passes over one row set where a single pass carrying every spec
-would do. Closing either is worth more than the ceiling raise that currently
-absorbs the difference.
+### 6.1 What the permission proof costs, and why it is now remembered
+
+The proof is a full permission-checked pass over every matching row. On `incident`
+that is 4,266 rows, and it cost **1.0 s** one day and **4.0 s** the next.
+
+When it overruns `PROOF_MS` the page refuses to state a number it has not proved
+and reports a floor. That is correct, and it is also how a dashboard comes to read
+*"1,250 records · COUNTS ARE A LOWER BOUND"* with five panels instead of 4,266
+with eleven — because of load on a shared instance rather than anything about the
+data.
+
+So a completed proof is now remembered for the viewer who passed it, for three
+minutes, and only while the row count is unchanged. Measured: **1,465 ms cold,
+4 ms reused.** The dashboard is back to VERIFIED with all eleven panels.
+
+The three conditions are what keep it a proof rather than an assumption, and they
+are asserted against the live session store by
+`product/tests/verdict_cache_live.py` — a changed row count, an expired entry, an
+entry that was never trusted, and a corrupted one are each refused. The entry
+lives in the **session**, so it belongs to one viewer and cannot be served to
+another; a shared cache could express that mistake and a session cannot.
+
+### 6.2 What is still slow, and what would fix it
+
+The cache did **not** fix page time, and it was never going to: the proof is about
+1.3 s of roughly 10. The rest is the reduction passes that produce the panels, and
+those are the answer itself — they cannot be reused the way a verdict can.
+
+Two duplications inside that remain the real target, both identified by
+measurement:
+
+1. The proof scans every row to **count** them and the first reduction then scans
+   the same rows again to **read** them. One pass could do both.
+2. The page opens separate reduction passes over one row set where a single pass
+   carrying every spec would do — a second pass for a single accumulator measured
+   537 ms, nearly all of it cursor overhead.
+
+Closing either is worth more than any further budget raise.
 
 What the skeleton buys is perceived speed, and it is honest about it: the shape of
-the page is on screen immediately, but the numbers are not there until the server
+the page is on screen immediately, the numbers are not there until the server
 finishes.
-
----
 
 ## 7. How to check any of this yourself
 
@@ -332,6 +361,7 @@ finishes.
 python3 product/deploy/deploy.py --dry-run        # build and validate, write nothing
 bash     product/tests/run_all.sh                 # 534 offline tests
 python3  product/tests/oracle_ceo.py Portfolio1   # our reading of PA against PA's own answers
+python3  product/tests/verdict_cache_live.py      # the permission-proof cache and its guards
 python3  product/deploy/package.py                # produce the update set
 ```
 
