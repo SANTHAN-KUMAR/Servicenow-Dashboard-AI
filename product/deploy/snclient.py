@@ -335,6 +335,24 @@ class Instance:
 
         return sys_id, action, verified
 
+    def fetch(self, path):
+        """GET a non-API path as the browser would, returning the body.
+
+        Used to prove an asset is actually served at the URL a page will request.
+        Deliberately not _call: that one speaks JSON to the Table API, and this
+        has to see whatever the platform hands a browser, including a 404.
+        """
+        if not self.token:
+            raise InstanceError("Not authenticated. Call login() first.")
+        req = urllib.request.Request(
+            self.base + path,
+            headers={"X-UserToken": self.token, "Accept": "*/*"})
+        try:
+            with self._op.open(req, timeout=CALL_TIMEOUT) as r:
+                return r.read().decode("utf-8", "replace")
+        except urllib.error.HTTPError as e:
+            raise InstanceError(f"HTTP {e.code}")
+
     def property(self, name):
         row = self.get_one("sys_properties", f"name={name}", ["value"])
         return row["value"] if row else None

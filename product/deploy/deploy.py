@@ -277,7 +277,46 @@ def build_pages(script_hashes, api_prefix=""):
     return out
 
 
-def prune_assets(inst, current, scope_id=None):
+def verify_assets_served(inst, scripts, api_prefix):
+    """Fetch every asset URL the pages will ask for, and refuse a deploy that
+    leaves one unreachable.
+
+    A readback proves the record holds the right bytes. It does not prove the
+    platform will serve them at the URL the page requests, and twice now it did
+    not: a scoped asset whose API Name was truncated at 40 characters, and a
+    global asset whose API Name was left empty because only `script_name` was
+    written. Both readbacks passed. Both produced a dashboard that answered
+    HTTP 200 with no client JavaScript and nothing in any log.
+
+    So the last thing the deploy does is behave like the browser: ask for each
+    `.jsdbx` and insist on a body of roughly the right size. This is the only
+    check in the file that tests the platform's routing rather than its storage,
+    which is precisely where both failures lived.
+    """
+    problems = []
+    for name, src, h, asset in scripts:
+        url = f"/{api_prefix}{asset}.jsdbx"
+        try:
+            body = inst.fetch(url)
+        except Exception as exc:                       # noqa: BLE001
+            problems.append(f"{url} -> {exc}")
+            continue
+        # The platform wraps and may minify, so this is a sanity floor rather
+        # than an equality: what it must not be is a 404 body or an empty one.
+        if len(body) < max(200, len(src) // 4):
+            problems.append(
+                f"{url} -> served {len(body):,} bytes for a {len(src):,} byte "
+                f"asset, which is not this script")
+        else:
+            print(f"  serves   {url:52s} {len(body):>9,}b  ok")
+    if problems:
+        raise InstanceError(
+            "deployed, but the pages ask for assets the instance will not serve:\n    "
+            + "\n    ".join(problems))
+    return True
+
+
+def prune_assets(inst, current, scope_id=None, api_prefix=""):
     """Removes content-hashed assets that no deployed page references any more.
 
     Without this the instance accumulates one orphaned UI Script per edit, and a
@@ -296,10 +335,19 @@ def prune_assets(inst, current, scope_id=None):
     # Scoped and global deployments carry the same script_names, so a prune that
     # ignored the scope would delete the other deployment's live assets and take
     # it down with no error anywhere.
-    q = "script_nameSTARTSWITHcmd_"
-    q += f"^sys_scope={scope_id}" if scope_id else "^sys_scope=global"
-    for row in inst.query("sys_ui_script", q, ["script_name", "name", "sys_id"], limit=500):
-        name = row["script_name"]
+    # Either field: records written before script_name was understood carry the
+    # asset name in `name` and nothing in `script_name`, and they are exactly the
+    # ones that need clearing out.
+    scope_clause = f"^sys_scope={scope_id}" if scope_id else "^sys_scope=global"
+    seen = {}
+    for field in ("script_name", "name"):
+        for row in inst.query("sys_ui_script", f"{field}STARTSWITHcmd_{scope_clause}",
+                              ["script_name", "name", "sys_id"], limit=500):
+            seen[row["sys_id"]] = row
+    for row in seen.values():
+        name = row.get("script_name") or row.get("name") or ""
+        if api_prefix and name.startswith(api_prefix):
+            name = name[len(api_prefix):]
         if name in current:
             continue
         for stem in stems:
@@ -394,9 +442,15 @@ def main():
         current = set()
         for name, src, h, asset in scripts:
             current.add(asset)
+            # Both fields, deliberately. `script_name` is the name; `name` is the
+            # API Name the .jsdbx URL resolves against. In a scope the platform
+            # computes name as `<scope>.<script_name>` and ignores what we send;
+            # in global nothing computes it, so setting only script_name left it
+            # empty and every asset 404'd -- the global dashboard lost its client
+            # JavaScript the moment the scoped one got it back.
             inst.upsert_verified(
                 "sys_ui_script", "script_name", asset,
-                {"script": src, "active": "true",
+                {"script": src, "active": "true", "name": api_prefix + asset,
                  "description": f"COMMAND dashboards client asset. content hash {h}"},
                 verify_field="script", match_query=where)
 
@@ -422,7 +476,8 @@ def main():
     # There is no version of this ordering that is fine to get wrong "just this
     # once" -- flip it back and the window returns immediately.
     if args.only in (None, "ui"):
-        prune_assets(inst, current, scope_id)
+        verify_assets_served(inst, scripts, api_prefix)
+        prune_assets(inst, current, scope_id, api_prefix)
 
     print(f"\n  all writes verified by readback")
     # A scoped UI Page is not served at <name>.do -- that route resolves global
