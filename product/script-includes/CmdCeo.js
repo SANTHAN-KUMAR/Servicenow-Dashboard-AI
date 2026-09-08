@@ -654,7 +654,14 @@ CmdCeo.prototype = {
             derivedFrom: (src !== node) ? (src.name || '') : null,
             portfolio: opts.portfolio || '',
             portfolioLabel: opts.portfolio ? this.portfolioLabel(opts.portfolio) : '',
-            unit: this._unitCode(node.unit)
+            unit: this._unitCode(node.unit),
+            /* Which rows this page is over, in words.
+             *
+             * Two measures can legitimately share a row set -- the count of open
+             * incidents and their average age are two questions about the same
+             * records -- and without this the second page reads as the first one
+             * repeated. Stating the slice makes the overlap deliberate. */
+            slice: this._describeQuery(src.table, src.query)
         };
         return payload;
     },
@@ -819,13 +826,27 @@ CmdCeo.prototype = {
     },
 
     /**
-     * The one leaf a formula's records live in, or null when there is not one.
+     * The records a formula is *about*, or null.
      *
-     * A ratio of two counts over the same table and the same filter -- which is
-     * most of them here, since a percentage is usually `part / whole * 100` --
-     * has an unambiguous set of records behind it: the wider of the two. A
-     * formula whose parts span different tables or different filters does not,
-     * and gets no link rather than an arbitrary one.
+     * A ratio is about its numerator. "% of open incidents not updated in last 30
+     * days" is `stale / open * 100`, and the records worth opening are the stale
+     * ones -- the thing the percentage is measuring -- not the open ones, which
+     * are only what it is measured against.
+     *
+     * The first version of this took the widest leaf, reasoning that a part is a
+     * subset of the whole so the shortest query is the real subject. That is
+     * backwards, and it showed: three different cards on Portfolio 1 opened the
+     * same 1,552 rows, because two of them were opening their denominator.
+     *
+     * So the division is found in the tree and its left side followed. Constant
+     * factors are stepped through on the way -- `(a / b) * 100` and
+     * `a / b / 24` are the two shapes here, and the 100 and the 24 are units
+     * rather than measures.
+     *
+     * Two of these still legitimately land on the same rows: the count of open
+     * incidents and their average age are two questions about one set of records.
+     * That is not a defect, and the page says which rows it is analysing so it
+     * reads as deliberate rather than as a repeat.
      */
     _formulaLeaf: function (id, depth, seen) {
         if (depth > CmdCeo.MAX_DEPTH) return null;
@@ -838,30 +859,91 @@ CmdCeo.prototype = {
         for (var k in seen) { if (seen.hasOwnProperty(k)) nextSeen[k] = true; }
         nextSeen[id] = true;
 
-        var found = [];
-        var walk = function (n) {
-            if (!n) return;
-            if (n.ref !== undefined) {
-                var leaf = self._formulaLeaf(n.ref, depth + 1, nextSeen);
-                if (leaf) found.push(leaf);
-                return;
-            }
-            walk(n.a); walk(n.b);
+        /* The subject of the expression: the numerator of the first division,
+           or the first reference when there is no division. */
+        var subject = function (n) {
+            if (!n) return null;
+            if (n.ref !== undefined) return n.ref;
+            if (n.num !== undefined) return null;
+            if (n.op === '/') return subject(n.a);
+            if (n.op === 'neg') return subject(n.a);
+            return subject(n.a) || subject(n.b);
         };
-        walk(node.ast);
-        if (!found.length) return null;
 
-        /* Same table for every part, or no answer. */
-        for (var i = 1; i < found.length; i++) {
-            if (found[i].table !== found[0].table) return null;
+        var ref = subject(node.ast);
+        return ref ? this._formulaLeaf(ref, depth + 1, nextSeen) : null;
+    },
+
+    /**
+     * An encoded query as a short phrase, or '' when there is nothing to say.
+     *
+     * Not a general renderer: it covers the shapes Performance Analytics actually
+     * writes -- a date window, an equality, an emptiness test -- and drops
+     * anything it does not recognise rather than printing a raw clause at a
+     * leader. Better to say less than to say something unreadable.
+     */
+    _describeQuery: function (table, query) {
+        if (!query) return 'every record on this table';
+        var parts = String(query).split('^'), out = [], i;
+        for (i = 0; i < parts.length && out.length < 4; i++) {
+            var p = parts[i];
+            if (!p || p === 'EQ') continue;
+
+            var m = /^([a-z0-9_]+)ON([A-Za-z][A-Za-z ]*)/.exec(p);
+            if (m) { out.push(this._fieldLabel(table, m[1]) + ' ' +
+                              m[2].toLowerCase().replace(/@.*$/, '').replace(/\s+$/, '')); continue; }
+
+            m = /^([a-z0-9_]+)ISEMPTY$/.exec(p);
+            if (m) { out.push('never ' + this._pastTense(table, m[1])); continue; }
+
+            m = /^([a-z0-9_]+)ISNOTEMPTY$/.exec(p);
+            if (m) { out.push(this._pastTense(table, m[1])); continue; }
+
+            m = /^([a-z0-9_]+)=([^=^]*)$/.exec(p);
+            if (m) { out.push(this._fieldLabel(table, m[1]) + ' is ' +
+                              (m[2] === '' ? 'empty' : this._choiceLabel(table, m[1], m[2]))); continue; }
+
+            m = /^([a-z0-9_]+)!=([^=^]*)$/.exec(p);
+            if (m) { out.push('not ' + this._choiceLabel(table, m[1], m[2])); continue; }
+
+            m = /^([a-z0-9_]+)RELATIVE[A-Z]+@[a-z]+@ago@([0-9]+)/.exec(p);
+            if (m) { out.push(this._fieldLabel(table, m[1]) + ' over ' + m[2] + ' days ago'); continue; }
         }
-        /* The widest filter among them: a part's records are a subset of the
-           whole's, so the shortest query is the set the card is really about. */
-        var best = found[0];
-        for (i = 1; i < found.length; i++) {
-            if ((found[i].query || '').length < (best.query || '').length) best = found[i];
+        return out.length ? out.join(', ') : '';
+    },
+
+    /**
+     * A choice value as the label somebody declared for it.
+     *
+     * `state!=8` on a leadership page is not a filter description, it is a
+     * database artefact. sys_choice already holds the word, so use it and fall
+     * back to the raw value only when there is none.
+     */
+    _choiceLabel: function (table, field, value) {
+        try {
+            var list = this.meta.choices(table, field);
+            for (var i = 0; list && i < list.length; i++) {
+                if (String(list[i].value) === String(value)) return list[i].label;
+            }
+        } catch (e) { /* fall through */ }
+        return value;
+    },
+
+    /* "resolved_at is empty" reads better as "never resolved" than as
+       "no resolved". Date columns on task tables are named for the event. */
+    _pastTense: function (table, name) {
+        var base = String(name).replace(/_at$/, '').replace(/_/g, ' ');
+        if (base && base !== name) return base;
+        return this._fieldLabel(table, name).toLowerCase();
+    },
+
+    _fieldLabel: function (table, name) {
+        try {
+            var f = this.meta.field(table, name);
+            return f && f.label ? f.label : name;
+        } catch (e) {
+            return name;
         }
-        return best;
     },
 
     /* The table a formula ultimately rests on, for deciding the page's subject. */

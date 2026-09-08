@@ -3452,13 +3452,18 @@
       what.textContent = payload.measure.name;
       mb.appendChild(what);
 
+      /* Which rows, in words. Two measures can legitimately be about the same
+         records, and without saying so the second page reads as the first one
+         repeated rather than as a second question about one set. */
+      var slice = payload.measure.slice
+        ? fmt(payload.subject.rows) + ' records \u00b7 ' + payload.measure.slice
+        : fmt(payload.subject.rows) + ' records';
+      mb.appendChild(el('span', 'measure-n', slice));
+
       if (payload.measure.derivedFrom) {
         mb.appendChild(el('span', 'measure-n',
-          'a derived measure, so this analyses the records behind it: ' +
+          '\u00b7 derived, so these are the records behind ' +
           payload.measure.derivedFrom));
-      } else {
-        mb.appendChild(el('span', 'measure-n',
-          'the records this measure counts, analysed here'));
       }
       mount.appendChild(mb);
     }
