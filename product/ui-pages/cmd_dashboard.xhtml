@@ -107,17 +107,34 @@
      treats it as one. */
   var portfolio = '' + (RP.getParameterValue('portfolio') || '');
 
+  /* One measure of a portfolio, opened as a subject in our own surface. Only the
+     indicator's id travels here; its query is re-resolved server-side from
+     pa_indicators, so no encoded query ever arrives from a browser. */
+  var measure = '' + (RP.getParameterValue('measure') || '');
+
   var out;
   try {
     var builder = new CmdPayload();
-    if (portfolio) {
+    if (portfolio || measure) {
       var ceo = new CmdCeo(builder.data, builder.meta, builder.drill);
       if (!ceo.available()) {
         throw 'no CEO dashboard source is configured on this instance. ' +
               'Set the property ' + CmdCeo.SOURCE_PROPERTY + ' to the table ' +
               'holding the slot configuration.';
       }
-      out = ceo.portfolio(portfolio, { months: months });
+      if (measure) {
+        out = ceo.measure(builder, measure, path,
+                          { months: months, forms: forms, focus: focus,
+                            portfolio: portfolio });
+        if (!out) {
+          throw 'that measure could not be resolved to a table and a filter, ' +
+                'so there is nothing to analyse.';
+        }
+      } else {
+        out = ceo.portfolio(portfolio, { months: months });
+      }
+      out.window = { months: months, allowed: allowed };
+      out.forms = forms;
     } else if (reportId) {
       var conv = new CmdReport(builder.data, builder.meta, builder.form);
       out = conv.convert(builder, reportId, path, { months: months, forms: forms, focus: focus });

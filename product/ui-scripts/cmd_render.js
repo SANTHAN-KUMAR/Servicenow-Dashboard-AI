@@ -1976,11 +1976,12 @@
      * on a dashboard is "which records are these", and the platform's own list
      * answers it with row-level security enforced by the platform rather than by
      * us. */
-    if (panel.recordsUrl && panel.value !== null && panel.value !== undefined) {
-      var open = el('a', 'kpi-open', 'Open records →');
-      open.href = panel.recordsUrl;
-      open.title = 'The records this number counted, in the platform list, ' +
-                   'filtered exactly as this measure defines it.';
+    if (panel.analysisUrl && panel.value !== null && panel.value !== undefined) {
+      var open = el('a', 'kpi-open', 'Analyse this →');
+      open.href = panel.analysisUrl;
+      open.title = 'Opens this measure as a subject here -- the same charts, ' +
+                   'drilldown and permission checking as any other page. The ' +
+                   'platform record list is one step further on, from there.';
       box.appendChild(open);
     }
     return box;
@@ -3432,6 +3433,35 @@
     }
 
     mount.appendChild(buildHeader(payload));
+
+    /* One measure of a portfolio, opened as a subject.
+     *
+     * Without this the page is an unexplained analysis of a filtered table: the
+     * viewer clicked "Average age open incidents" and landed on something headed
+     * "Incident", with no statement of which slice it is or how to get back. */
+    if (payload.measure) {
+      var mb = el('div', 'measure-bar');
+      var back = el('a', 'btn sm ghost');
+      back.textContent = '← ' + (payload.measure.portfolioLabel || 'Back');
+      back.href = payload.measure.portfolio
+        ? ('?portfolio=' + encodeURIComponent(payload.measure.portfolio))
+        : 'cmd_catalog.do';
+      mb.appendChild(back);
+
+      var what = el('span', 'measure-l');
+      what.textContent = payload.measure.name;
+      mb.appendChild(what);
+
+      if (payload.measure.derivedFrom) {
+        mb.appendChild(el('span', 'measure-n',
+          'a derived measure, so this analyses the records behind it: ' +
+          payload.measure.derivedFrom));
+      } else {
+        mb.appendChild(el('span', 'measure-n',
+          'the records this measure counts, analysed here'));
+      }
+      mount.appendChild(mb);
+    }
 
     /* Which slice is on screen, and how to step out of it. Above everything,
        because a page showing a filtered subset while looking like the whole table

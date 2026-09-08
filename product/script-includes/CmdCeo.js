@@ -607,6 +607,58 @@ CmdCeo.prototype = {
         return null;
     },
 
+    /**
+     * A full COMMAND analysis of one measure, inside our own surface.
+     *
+     * This is what a card click has to do. The platform list is the *terminal*
+     * step of a drill -- the place you land when you finally want the rows, and
+     * the one place being inside ServiceNow beats an external BI tool, because
+     * the platform enforces row-level security on it so we neither build a record
+     * grid nor have to get its security right. It is not the *first* step. Making
+     * it the only thing a card offered turned this product into a launcher for
+     * native ServiceNow, which is the opposite of the brief.
+     *
+     * So a card opens the measure as a subject: the same chart chooser, the same
+     * drilldown, the same ACL badge as any other page here, restricted to the rows
+     * that measure counts. From there the platform list is still one click away,
+     * where it belongs.
+     *
+     * The indicator's id travels in the URL, never its query. The query is
+     * re-resolved here from `pa_indicators` and `pa_cubes`, which are instance
+     * configuration rather than user input -- so there is no encoded query
+     * arriving from a browser to validate, and the whole injection surface that
+     * sanitizePath exists to close never opens.
+     */
+    measure: function (builder, indicatorId, path, opts) {
+        opts = opts || {};
+        if (!/^[0-9a-f]{32}$/.test(String(indicatorId || ''))) {
+            return null;
+        }
+        var node = this.resolve(indicatorId);
+        var src = node;
+        if (node.kind === 'formula') {
+            src = this._formulaLeaf(indicatorId, 0, {}) || node;
+        }
+        if (!src.table) return null;
+
+        var payload = builder.dashboard(src.table, path, {
+            months: opts.months, forms: opts.forms || {}, focus: opts.focus || '',
+            baseQuery: src.query
+        });
+
+        /* What this page is a view of, so the header can say so and offer the way
+           back rather than stranding someone one level down. */
+        payload.measure = {
+            id: indicatorId,
+            name: node.name || '',
+            derivedFrom: (src !== node) ? (src.name || '') : null,
+            portfolio: opts.portfolio || '',
+            portfolioLabel: opts.portfolio ? this.portfolioLabel(opts.portfolio) : '',
+            unit: this._unitCode(node.unit)
+        };
+        return payload;
+    },
+
     /* ── the page ──────────────────────────────────────────────────────── */
 
     /**
@@ -723,6 +775,11 @@ CmdCeo.prototype = {
                        has about a number on a leadership dashboard, and it lands
                        on the platform's own list where row-level security is
                        enforced for us. */
+                    /* Our analysis of this measure, not the platform list. The
+                       list is still reachable from that page, which is where a
+                       terminal step belongs. */
+                    card.analysisUrl = '?portfolio=' + encodeURIComponent(name) +
+                                       '&measure=' + encodeURIComponent(slot.indicator);
                     card.recordsUrl = this.drill
                         ? this.drill.listUrl(src.table, src.query)
                         : null;
