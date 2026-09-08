@@ -619,6 +619,12 @@ CmdCeo.prototype = {
      */
     portfolio: function (name, opts) {
         opts = opts || {};
+        /* Named for what it is, and not `t0`: the subject-picking loop below uses
+           `t0` for a table name, `var` is function-scoped, and the timer was
+           therefore a string by the time it was read -- `number - "incident"` is
+           NaN, which JSON writes as null, which the header printed as
+           "built in undefinedms". */
+        var startedAt = new Date().getTime();
         var slots = this.slots(name);
         var slotNames = CmdCeo.SLOT_ORDER;
         var i, k;
@@ -694,7 +700,20 @@ CmdCeo.prototype = {
                 card.note = node.kind === 'formula'
                     ? 'derived from other measures'
                     : (node.table + (node.query ? ', filtered' : ''));
-                if (node.table) { card.table = node.table; card.query = node.query; }
+                if (node.table) {
+                    card.table = node.table;
+                    card.query = node.query;
+                    /* A card is a number, so there is no value to filter the page
+                       *by* -- which is why these were the only things on the page
+                       with nothing to click. What a card can always do is show the
+                       records it counted, which is the question a leader actually
+                       has about a number on a leadership dashboard, and it lands
+                       on the platform's own list where row-level security is
+                       enforced for us. */
+                    card.recordsUrl = this.drill
+                        ? this.drill.listUrl(node.table, node.query)
+                        : null;
+                }
                 var tr = this._trend(node);
                 if (tr) {
                     card.spark = tr.counts;
@@ -716,6 +735,10 @@ CmdCeo.prototype = {
                 ' on this page could not be measured, and say why rather than ' +
                 'showing a zero. On the source dashboard the same cards are blank.');
         }
+        /* The header prints this. A dashboard payload sets it and this one did
+           not, so the page read "built in undefinedms". */
+        payload.timingMs = new Date().getTime() - startedAt;
+
         payload.notes.push(
             'Redrawn from ' + name + ' of the ' +
             'CEO Dashboard. Every number here is counted against your own ' +

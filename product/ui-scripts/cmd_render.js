@@ -1966,6 +1966,23 @@
     if (panel.capped) {
       box.appendChild(el('div', 'kpi-c', 'lower bound'));
     }
+
+    /* The way through to the records behind the number.
+     *
+     * A KPI is a single value, so there is nothing to filter the page *by* and it
+     * is not a drill target like a bar or a slice. That left a page made only of
+     * KPI cards with nothing clickable on it at all, which is how the converted
+     * CEO page first shipped. The question a leader actually has about a number
+     * on a dashboard is "which records are these", and the platform's own list
+     * answers it with row-level security enforced by the platform rather than by
+     * us. */
+    if (panel.recordsUrl && panel.value !== null && panel.value !== undefined) {
+      var open = el('a', 'kpi-open', 'Open records →');
+      open.href = panel.recordsUrl;
+      open.title = 'The records this number counted, in the platform list, ' +
+                   'filtered exactly as this measure defines it.';
+      box.appendChild(open);
+    }
     return box;
   }
 

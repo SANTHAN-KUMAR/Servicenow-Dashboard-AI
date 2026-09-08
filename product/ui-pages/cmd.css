@@ -652,3 +652,15 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
 /* A measure that could not be computed. Muted rather than alarming: on the source
    dashboard the same card shows a confident 0. */
 .kpi-n.none { color: var(--ink-3); font-weight: 500; }
+
+/* The record link on a KPI card. Quiet until pointed at: the number is the
+   statement, this is the way to check it. */
+.kpi-open{
+  display:inline-block; margin-top:10px;
+  font-family:var(--mono,ui-monospace,monospace); font-size:11px;
+  letter-spacing:.04em; text-transform:uppercase;
+  color:var(--ink-3); text-decoration:none;
+  border-bottom:1px solid transparent; transition:color .12s, border-color .12s;
+}
+.kpi-open:hover, .kpi-open:focus{ color:var(--c1); border-bottom-color:var(--c1); }
+.kpi{ display:flex; flex-direction:column; }
