@@ -722,7 +722,30 @@ CmdCeo.prototype = {
                 label: (d && d.label) ? d.label : table,
                 rows: this.data.total(table, '').count
             },
-            ceo: { portfolio: name, source: this.sourceTable() },
+            /* What this page IS, carried separately from the table its numbers
+               happen to come from.
+             *
+             * The header used to be built entirely from `subject`, and `subject`
+             * is the dominant table -- so every portfolio rendered as "Incident
+             * analysis / 4,284 records", including Portfolio 2, whose leading two
+             * cards are request benchmarks. Eight different portfolios all
+             * announced themselves as the same incident page, which is exactly
+             * what the client reported back: "each portfolio will have different
+             * stuff, not same incident analyst report page". The cards underneath
+             * were already different; only the frame around them lied.
+             *
+             * So the renderer is given the portfolio's own identity to draw from,
+             * and `subject` goes back to being what it always was -- the table the
+             * machinery counts against. */
+            ceo: {
+                portfolio: name,
+                label: this.portfolioLabel(name),
+                source: this.sourceTable(),
+                /* Named so the page can say what it rests on instead of implying
+                   one table. Filled in below, once the slots have resolved. */
+                tables: [],
+                measures: 0
+            },
             acl: {
                 mode: verdict.denied ? 'DENIED'
                     : (verdict.trusted ? 'VERIFIED' : 'FILTERED'),
@@ -806,11 +829,44 @@ CmdCeo.prototype = {
             payload.kpis.push(card);
         }
 
+        /* What the page rests on, counted from the cards that actually resolved
+           rather than from the dominant-table guess above. Portfolio 2 spans
+           requests and incidents and should say so. */
+        var tset = {}, tlist = [];
+        for (i = 0; i < payload.kpis.length; i++) {
+            var kt = payload.kpis[i].table;
+            if (kt && !tset[kt]) { tset[kt] = true; tlist.push(kt); }
+        }
+        payload.ceo.tables = tlist;
+        payload.ceo.measures = payload.kpis.length;
+
         if (refusedCount) {
             payload.notes.push(
                 refusedCount + (refusedCount === 1 ? ' card' : ' cards') +
                 ' on this page could not be measured, and say why rather than ' +
                 'showing a zero. On the source dashboard the same cards are blank.');
+        }
+
+        /* A portfolio whose slots are all one indicator is a fact about the source
+           configuration, and saying so is the difference between a page that looks
+           broken and a page that has found something.
+           On the client's own instance portfolios 3 to 6 are exactly this: one
+           indicator repeated across every slot, unconfigured. Left silent, a
+           viewer opening one sees eight identical cards and reasonably concludes
+           the redraw is at fault. */
+        var distinctInd = {}, nInd = 0;
+        for (i = 0; i < slotNames.length; i++) {
+            var sX = slots[slotNames[i]];
+            if (!sX || slotNames[i] === 'Bubblechart') continue;
+            if (!distinctInd[sX.indicator]) { distinctInd[sX.indicator] = true; nInd++; }
+        }
+        if (nInd === 1 && payload.kpis.length > 1) {
+            payload.notes.push(
+                'Every card slot in ' + payload.ceo.label + ' points at the same ' +
+                'indicator in the source configuration, so this page has one ' +
+                'measure repeated rather than ' + payload.kpis.length +
+                ' different ones. That is how the portfolio is configured on the ' +
+                'source dashboard, not a result of redrawing it.');
         }
         /* The header prints this. A dashboard payload sets it and this one did
            not, so the page read "built in undefinedms". */

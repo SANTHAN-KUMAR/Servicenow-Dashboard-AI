@@ -676,3 +676,17 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
 }
 .measure-l{ font-family:var(--display,inherit); font-weight:600; color:var(--ink-1); }
 .measure-n{ color:var(--ink-3); font-size:12.5px; }
+
+/* The gauge tile. The arc is centred in the space a tile has left after its
+   label and above its sub-line, and is capped in width so that a wide tile grows
+   the whitespace around it rather than blowing the arc up to a different scale
+   from every other mark on the page. */
+#cmd-wrap .kpi-gauge{
+  display:flex; align-items:center; justify-content:center;
+  margin:2px 0 4px; flex:1 1 auto}
+#cmd-wrap .kpi-gauge .ch.gauge{width:100%; max-width:210px; height:auto; display:block}
+/* The value inside the arc. Sized in the gauge's own viewBox units so it clears
+   the arc's inner radius, rather than inheriting the 46px meant for a viewBox
+   two and a half times wider. */
+svg.ch.gauge .gval{fill:var(--ink-1); font-family:var(--display); font-size:27px;
+  font-weight:600; letter-spacing:-.04em; font-variant-numeric:lining-nums}

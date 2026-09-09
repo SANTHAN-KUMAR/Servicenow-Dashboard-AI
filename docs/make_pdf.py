@@ -71,7 +71,13 @@ pre{ background:var(--surface-2); border:1px solid var(--edge);
   border-left:2.5px solid var(--c1); border-radius:5px; padding:.75em .9em;
   overflow-x:auto; margin:0 0 .9em; page-break-inside:avoid; }
 pre code{ background:none; padding:0; font-size:8.1pt; line-height:1.5;
-  color:var(--ink-1); white-space:pre-wrap; word-break:break-word; }
+  color:var(--ink-1); white-space:pre-wrap; word-break:break-word;
+  /* JetBrains Mono ligates operators, so `!==` in a quoted source line renders as
+     `==` with a struck-through equals and reads as a different operator than the
+     one the file contains. In a document whose whole claim is that the code is
+     copied verbatim, that is the one place a ligature cannot be allowed. */
+  font-variant-ligatures:none; font-feature-settings:"liga" 0, "calt" 0; }
+code{ font-variant-ligatures:none; font-feature-settings:"liga" 0, "calt" 0; }
 table{ border-collapse:collapse; width:100%; margin:.35em 0 1em;
   font-size:8.7pt; page-break-inside:avoid; }
 th{ text-align:left; font-family:"Space Grotesk",sans-serif; font-weight:600;
@@ -92,6 +98,35 @@ h2,h3,h4{ page-break-after:avoid; }
 .cover .sub{ color:var(--ink-2); font-size:10.2pt; margin-top:.5em; }
 .cover .meta{ font-family:"JetBrains Mono",monospace; font-size:7.7pt;
   color:var(--ink-3); margin-top:1em; }
+"""
+
+# A tighter setting for a document with a stated page budget.
+#
+# The client asked the "under the hood" brief to be one or two pages, and at the
+# default setting it ran to 2.3 -- which is the worst of both, a third page
+# holding a paragraph. The alternative was cutting the honesty section or the
+# deployment section to make the arithmetic work, and neither is worth losing to
+# a leading value. So the type comes down about 7%, the margins about 3mm, and
+# nothing about the document changes.
+#
+# Opt-in, so every document already rendered against the default is unaffected.
+DENSE = """
+@page { margin: 14mm 14mm 13mm 14mm; }
+body{ font-size:8.9pt; line-height:1.43; }
+h1{ font-size:19pt; }
+h2{ font-size:12.6pt; margin-top:1.35em; }
+h3{ font-size:10.4pt; margin-top:1.1em; }
+p{ margin:0 0 .6em; }
+pre{ padding:.62em .8em; margin:0 0 .72em; }
+pre code{ font-size:7.5pt; line-height:1.44; }
+table{ font-size:8.2pt; margin:.3em 0 .8em; }
+th{ padding:.34em .5em .3em; }
+td{ padding:.34em .5em; }
+ul,ol{ margin:0 0 .65em; }
+li{ margin-bottom:.22em; }
+.cover{ padding-bottom:.85em; margin-bottom:1.15em; }
+.cover .sub{ font-size:9.6pt; }
+.cover .meta{ margin-top:.75em; }
 """
 
 
@@ -124,7 +159,7 @@ def find_chrome():
     sys.exit("No Chrome or Chromium on PATH; cannot render a PDF.")
 
 
-def to_html(md_text, title, subtitle, source_name):
+def to_html(md_text, title, subtitle, source_name, dense=False):
     import markdown
 
     # The first H1 becomes the cover heading rather than being repeated in flow.
@@ -155,7 +190,7 @@ def to_html(md_text, title, subtitle, source_name):
 
     return (f"<!doctype html><html><head><meta charset='utf-8'>"
             f"<title>{htmllib.escape(heading)}</title>"
-            f"<style>{font_face_rules()}\n{CSS}</style></head>"
+            f"<style>{font_face_rules()}\n{CSS}\n{DENSE if dense else ''}</style></head>"
             f"<body>{cover}{body}</body></html>")
 
 
@@ -165,6 +200,8 @@ def main():
     ap.add_argument("--out", default=None)
     ap.add_argument("--subtitle", default="")
     ap.add_argument("--title", default="")
+    ap.add_argument("--dense", action="store_true",
+                    help="tighter type and margins, for a document with a page budget")
     args = ap.parse_args()
 
     src = Path(args.source)
@@ -174,7 +211,8 @@ def main():
 
     html = to_html(src.read_text(encoding="utf-8"),
                    args.title or src.stem, args.subtitle,
-                   f"{src.as_posix()}  ·  rendered for review")
+                   f"{src.as_posix()}  ·  rendered for review",
+                   dense=args.dense)
 
     chrome = find_chrome()
     with tempfile.TemporaryDirectory() as tmp:

@@ -1665,7 +1665,12 @@
       p.s.appendChild(svgEl('line', { x1: p.x0, y1: gy, x2: p.x1, y2: gy, 'class': 'gl' }));
       p.s.appendChild(text(p.x0 - 8, gy + 3, num(yMax - (g / 4) * (yMax - yMin)), 'tk', 'end'));
       var gx = p.x0 + (g / 4) * p.iw;
-      p.s.appendChild(text(gx, p.h - 30, num(xMin + (g / 4) * (xMax - xMin)), 'tk', 'middle'));
+      /* Ticks sit directly under the plot, leaving the row below them free for
+         the axis title. Both used to be drawn on this same line, and since the
+         last tick is centred on p.x1 and the title ends on p.x1, they always
+         overlapped: the incident scatter rendered "6.75Reassignment count9" as
+         one run of glyphs. */
+      p.s.appendChild(text(gx, p.y1 + 14, num(xMin + (g / 4) * (xMax - xMin)), 'tk', 'middle'));
     }
 
     /* Reference quadrants at the medians. The brand kit specifies these and they
@@ -1714,7 +1719,9 @@
       p.s.appendChild(dot);
     }
 
-    p.s.appendChild(text(p.x1, p.h - 30, panel.xFieldLabel, 'tk', 'end'));
+    /* Its own row, below the ticks and above the legend: 194 plot / 208 ticks /
+       224 title / 242 legend, inside the 250-high frame this chart asks for. */
+    p.s.appendChild(text(p.x1, p.h - 26, panel.xFieldLabel, 'tk', 'end'));
     p.s.appendChild(text(p.x0 - 40, p.y0 - 6, panel.yFieldLabel, 'tk', 'start'));
     if (multi) {
       var items = [];
@@ -1850,12 +1857,36 @@
    * data.
    */
   function drawGauge(panel) {
-    var s = svgRoot(W, 176);
+    /* A gauge is a KPI tile, so it is built as one.
+     *
+     * This used to return a bare <svg> straight into the KPI row, which put an
+     * unwrapped chart element into a grid of cards. Two things followed and both
+     * were visible on the incident dashboard: the gauge had no card background
+     * and no field label, so it read as a stray graphic floating between two
+     * tiles; and it was laid out on the full-width panel viewBox while sitting in
+     * a quarter-width slot, so "median" hung off its left edge and the caption
+     * "mean of 4,281, target 100" printed straight through the arc's own 0 and
+     * 100 end labels.
+     *
+     * The fix is structural rather than a nudge to the coordinates. The chrome is
+     * the same .kpi box every neighbouring tile uses, the viewBox is sized for a
+     * tile instead of a panel, and everything that is words rather than marks is
+     * HTML underneath the arc -- laid out by the browser, wrapping when it must,
+     * and unable to collide with anything by construction. Only the two end
+     * labels stay inside the SVG, because they are positional: they name the ends
+     * of the arc and have to travel with it. */
+    var box = el('div', 'kpi');
+    box.appendChild(el('div', 'kpi-l', panel.fieldLabel || ''));
+
     var target = panel.target || 100;
     var val = Math.max(0, Math.min(target, panel.value || 0));
     var frac = target > 0 ? val / target : 0;
 
-    var cx = W / 2, cy = 126, r = 82, thick = 20;
+    /* Tile geometry, independent of the panel width the page last drew at. */
+    var GW = 210, GH = 104;
+    var s = svgRoot(GW, GH);
+    s.setAttribute('class', 'ch gauge');
+    var cx = GW / 2, cy = 84, r = 62, thick = 15;
     var a0 = Math.PI, a1 = Math.PI * 2;
 
     s.appendChild(svgEl('path', { d: arc(cx, cy, r, r - thick, a0, a1),
@@ -1866,23 +1897,43 @@
         fill: v('--c1') }));
     }
 
+    /* The median as a notch on the arc, and no label beside it. The label was
+       what overflowed the tile, and the value it named is stated in words in the
+       sub-line below, where it has room. */
     if (panel.median !== undefined && panel.median !== null && target > 0) {
       var mf = Math.max(0, Math.min(1, panel.median / target));
       var ma = a0 + mf * (a1 - a0);
-      s.appendChild(svgEl('line', {
-        x1: cx + (r - thick - 4) * Math.cos(ma), y1: cy + (r - thick - 4) * Math.sin(ma),
-        x2: cx + (r + 4) * Math.cos(ma), y2: cy + (r + 4) * Math.sin(ma),
-        stroke: v('--ink-1'), 'stroke-width': 2 }));
-      s.appendChild(text(cx + (r + 14) * Math.cos(ma), cy + (r + 14) * Math.sin(ma) + 4,
-        'median', 'tk', mf > 0.5 ? 'start' : 'end'));
+      var notch = svgEl('line', {
+        x1: cx + (r - thick - 3) * Math.cos(ma), y1: cy + (r - thick - 3) * Math.sin(ma),
+        x2: cx + (r + 3) * Math.cos(ma), y2: cy + (r + 3) * Math.sin(ma),
+        stroke: v('--ink-1'), 'stroke-width': 2 });
+      var tip = svgEl('title');
+      tip.textContent = 'median ' + num(panel.median);
+      notch.appendChild(tip);
+      s.appendChild(notch);
     }
 
-    s.appendChild(text(cx, cy - 8, num(panel.value), 'huge', 'middle'));
-    s.appendChild(text(cx, cy + 14, 'mean of ' + fmt(panel.n) + ', target ' + target,
-      'tk', 'middle'));
-    s.appendChild(text(cx - r, cy + 16, '0', 'tk', 'middle'));
-    s.appendChild(text(cx + r, cy + 16, String(target), 'tk', 'middle'));
-    return s;
+    /* `huge` is 46px, sized against the 520-wide panel viewBox. This one is 210
+       wide, so the same class renders the value at more than twice the scale it
+       was drawn for and the digits spill over the arc they sit inside. */
+    s.appendChild(text(cx, cy - 8, num(panel.value), 'gval', 'middle'));
+    /* Anchored outward at each end rather than centred on it, so neither end
+       label can reach back across the arc towards the other. */
+    s.appendChild(text(cx - r - 2, cy + 14, '0', 'tk', 'end'));
+    s.appendChild(text(cx + r + 2, cy + 14, String(target), 'tk', 'start'));
+
+    var wrap = el('div', 'kpi-gauge');
+    wrap.appendChild(s);
+    box.appendChild(wrap);
+
+    var bits = [];
+    if (panel.n) bits.push('mean of ' + fmt(panel.n));
+    if (panel.median !== undefined && panel.median !== null) {
+      bits.push('median ' + num(panel.median));
+    }
+    bits.push('target ' + target);
+    box.appendChild(el('div', 'kpi-s', bits.join('  \u00b7  ')));
+    return box;
   }
 
   /**
@@ -2697,11 +2748,44 @@
   function buildHeader(payload) {
     var h = el('div', 'app-h');
 
+    /* A redrawn portfolio is its own page, not a view of a table.
+     *
+     * Everything here used to be built from `payload.subject`, and on a portfolio
+     * `subject` is whichever table most of the cards happen to rest on. So all
+     * eight portfolios rendered with the same heading -- "Incident analysis" over
+     * "4,284 records" -- including the ones led by request and problem
+     * benchmarks. The cards below differed; the frame around them insisted they
+     * were the same page, and the client read it exactly that way: "each
+     * portfolio will have different stuff, not same incident analyst report
+     * page."
+     *
+     * So a portfolio is titled with its own name, counts what it actually has
+     * (measures, not rows of some table), names the tables its cards rest on, and
+     * drops the whole-table record link that had nothing to do with it. */
+    var ceo = payload.ceo && payload.ceo.label ? payload.ceo : null;
+    /* One measure of a portfolio, opened as its own analysis. Same problem as a
+       portfolio and the same fix: it is `builder.dashboard(incident, ...)`
+       underneath, so every measure of every portfolio was headed "Incident
+       analysis" and only the bar below it said which measure. Eight cards on
+       eight portfolios, sixty-four routes, one heading. */
+    var meas = (!ceo && payload.measure && payload.measure.name)
+      ? payload.measure : null;
+
     var left = el('div');
     var crumb = el('div', 'crumb');
-    var root = el('a', '', payload.subject.label);
-    root.href = subjectBase(payload);
+    var root = el('a', '', ceo ? 'CEO Dashboard' : payload.subject.label);
+    root.href = ceo ? 'cmd_catalog.do' : subjectBase(payload);
     crumb.appendChild(root);
+    if (ceo) {
+      crumb.appendChild(el('span', 'sep', '\u203a'));
+      crumb.appendChild(el('span', 'now', ceo.label));
+    }
+    if (meas && meas.portfolioLabel) {
+      crumb.appendChild(el('span', 'sep', '\u203a'));
+      var pfl = el('a', '', meas.portfolioLabel);
+      pfl.href = '?portfolio=' + encodeURIComponent(meas.portfolio);
+      crumb.appendChild(pfl);
+    }
     for (var i = 0; i < payload.path.length; i++) {
       crumb.appendChild(el('span', 'sep', '›'));
       var seg = payload.path[i];
@@ -2717,12 +2801,32 @@
     /* A converted report keeps its own name. Appending "analysis" to it produces
        "Problems By State analysis", which reads as a different artefact than the
        one the viewer clicked. */
-    left.appendChild(el('h1', 'd2', payload.report
-      ? payload.subject.label
-      : payload.subject.label + ' analysis'));
+    left.appendChild(el('h1', 'd2', ceo
+      ? ceo.label
+      : (meas
+          ? meas.name
+          : (payload.report
+              ? payload.subject.label
+              : payload.subject.label + ' analysis'))));
 
     var sub = el('div', 'sub');
-    sub.appendChild(el('span', '', recs(payload.subject.rows)));
+    if (meas) {
+      /* The table is named here rather than in the title, because on a measure
+         page it is the answer to "of what", not the subject of the page. */
+      sub.appendChild(el('span', '', recs(payload.subject.rows)));
+      sub.appendChild(el('span', 'dot', '\u00b7'));
+      sub.appendChild(el('span', '', 'of ' + payload.subject.label.toLowerCase() +
+        (meas.slice ? ', ' + meas.slice : '')));
+    } else if (ceo) {
+      var nm = ceo.measures || (payload.kpis || []).length;
+      sub.appendChild(el('span', '', nm + (nm === 1 ? ' measure' : ' measures')));
+      if (ceo.tables && ceo.tables.length) {
+        sub.appendChild(el('span', 'dot', '\u00b7'));
+        sub.appendChild(el('span', '', 'on ' + ceo.tables.join(', ')));
+      }
+    } else {
+      sub.appendChild(el('span', '', recs(payload.subject.rows)));
+    }
     if (payload.report && payload.subject.sublabel) {
       sub.appendChild(el('span', 'dot', '·'));
       sub.appendChild(el('span', '', 'on ' + payload.subject.sublabel));
@@ -2737,9 +2841,14 @@
     if (payload.window) right.appendChild(windowControl(payload));
     right.appendChild(exportControl(payload));
     right.appendChild(themeToggle());
-    var lst = el('a', 'btn', 'Open record list');
-    lst.href = payload.subject.listUrl;
-    right.appendChild(lst);
+    /* No whole-table record list on a portfolio: its cards each count a
+       different query, and several of them a different table, so there is no one
+       list that is "the records behind this page". Each card carries its own. */
+    if (!ceo) {
+      var lst = el('a', 'btn', 'Open record list');
+      lst.href = payload.subject.listUrl;
+      right.appendChild(lst);
+    }
     var back = el('a', 'btn', payload.report ? 'All reports' : 'All subjects');
     back.href = payload.report ? 'cmd_catalog.do?view=reports' : 'cmd_catalog.do';
     right.appendChild(back);
@@ -3332,6 +3441,45 @@
     return wrap;
   }
 
+  /**
+   * Promotes any half-width panel that has nothing to sit beside it.
+   *
+   * The panel grid is two columns and the panel order is meaningful: CmdPayload
+   * ranks builders by usefulness and the renderer follows that order exactly, so
+   * it cannot be permuted to make the halves line up. What that leaves is half
+   * panels separated by full ones, and every one of those lands alone on its row
+   * with an empty column beside it. Live on the incident dashboard that was two
+   * holes roughly 700px wide -- the scatter and the donut each in the left half of
+   * an otherwise blank row -- and on the task dashboard, whose entire content is
+   * one half-width drill panel, it was a page that looked broken.
+   *
+   * Run over the grid's own children rather than over the payload, because the
+   * drill panel, the matrix and the declared-hierarchy table are appended after
+   * the panels and are laid out by the same two columns. Nothing is reordered and
+   * nothing is dropped: a lone panel is given the space it was going to occupy
+   * anyway.
+   */
+  function packGrid(grid) {
+    var kids = grid.childNodes, col = 0, i;
+    var wide = [], node;
+    for (i = 0; i < kids.length; i++) {
+      if (kids[i].nodeType === 1) wide.push(kids[i]);
+    }
+    for (i = 0; i < wide.length; i++) {
+      node = wide[i];
+      if ((' ' + node.className + ' ').indexOf(' span2 ') !== -1) { col = 0; continue; }
+      if (col === 0) {
+        var next = wide[i + 1];
+        var nextWide = !next ||
+          (' ' + next.className + ' ').indexOf(' span2 ') !== -1;
+        if (nextWide) { node.className += ' span2'; continue; }
+        col = 1;
+      } else {
+        col = 0;
+      }
+    }
+  }
+
   /** The KPI row. */
   function buildKpiRow(kpis) {
     var row = el('div', 'kpi-row');
@@ -3448,17 +3596,16 @@
         : 'cmd_catalog.do';
       mb.appendChild(back);
 
+      /* The measure's name and its slice are now the page's own heading and
+         subheading (buildHeader), so repeating them here would say the same
+         thing twice, one line apart. What this bar is left doing is the part the
+         heading cannot: saying where you came from and how to get back. */
       var what = el('span', 'measure-l');
-      what.textContent = payload.measure.name;
+      what.textContent = 'One measure of ' +
+        (payload.measure.portfolioLabel || 'the CEO Dashboard') +
+        ', analysed here with the same charts, drilldown and permission ' +
+        'checking as any other page.';
       mb.appendChild(what);
-
-      /* Which rows, in words. Two measures can legitimately be about the same
-         records, and without saying so the second page reads as the first one
-         repeated rather than as a second question about one set. */
-      var slice = payload.measure.slice
-        ? fmt(payload.subject.rows) + ' records \u00b7 ' + payload.measure.slice
-        : fmt(payload.subject.rows) + ' records';
-      mb.appendChild(el('span', 'measure-n', slice));
 
       if (payload.measure.derivedFrom) {
         mb.appendChild(el('span', 'measure-n',
@@ -3537,6 +3684,9 @@
     if (dp) grid.appendChild(dp);
     var decl = buildDeclaredPanel(payload);
     if (decl) grid.appendChild(decl);
+    /* After every child exists, because whether a half is alone depends on what
+       comes after it and the drill panel is appended last. */
+    packGrid(grid);
     mount.appendChild(grid);
 
     /* Behaviour is attached after the DOM exists, and both handlers are delegated

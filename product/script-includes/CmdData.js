@@ -1251,9 +1251,35 @@ CmdData.prototype = {
             if (rows[i].key === '') { emptyCount = rows[i].count; break; }
         }
 
+        /* Whether this shape rests on any rows at all.
+         *
+         * A bounded scan that spends its whole budget before admitting a single
+         * row returns exactly the same empty `rows` as a slice that genuinely
+         * holds none, and the two support opposite conclusions: one means "there
+         * is nothing to say here", the other means "we did not look". Collapsing
+         * them is how a measurement of nothing becomes a statement about
+         * everything.
+         *
+         * Measured live on dev390988: `task` profiled every candidate dimension
+         * at total 0 with the scan capped, and the drill gate read distinct 0 as
+         * "every record here has the same active" -- a universal claim over 8,503
+         * records that actually hold 7,380 true and 1,123 false, drawn from no
+         * rows whatsoever.
+         *
+         * So a capped scan that read nothing is marked unmeasured here, and any
+         * caller that would otherwise conclude absence has to say it could not
+         * look instead. See CmdDrill.gate, which is the caller that got this
+         * wrong. */
+        var measured = !(acl && acl.capped && total === 0);
+
         return {
             table: table, field: field,
             total: total,
+            /* Carried so a caller can tell a lower bound from a total. `capped`
+               means the numbers below are a floor; `measured` false means there
+               are no numbers below at all. */
+            capped: !!(acl && acl.capped),
+            measured: measured,
             distinct: distinct,
             /* The empty bucket is not a category. Excluded from distinct so a
                field with two real values plus blanks does not look like three. */

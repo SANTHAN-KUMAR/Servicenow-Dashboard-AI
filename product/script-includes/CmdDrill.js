@@ -133,19 +133,65 @@ CmdDrill.prototype = {
         var prof = this.data.profile(table, dim.name, query);
         res.fill = prof.fill;
         res.distinct = prof.distinctNonEmpty;
+        res.capped = !!prof.capped;
+
+        /* A bounded scan proves presence and never absence.
+         *
+         * This is the rule the rest of this method now obeys, and it is worth
+         * stating plainly because getting it wrong shipped the worst claim this
+         * product has made. Every rejection below except MAX_DISTINCT concludes
+         * that something is NOT there -- not enough distinct values, not enough
+         * fill -- and no such conclusion survives a scan that stopped early,
+         * because the rows it never reached are exactly the ones that would
+         * overturn it.
+         *
+         * Live on dev390988, `task` rejected six levels as "every record here has
+         * the same X" from a profile that had admitted no rows at all. The columns
+         * hold two to eight values each. The page stated a fact about 8,503
+         * records on the strength of having read none of them, and it stated it in
+         * the same calm voice it uses for measurements that are real -- which is
+         * what made it dangerous rather than merely wrong.
+         *
+         * The asymmetry is what makes a lower bound still useful: a prefix that
+         * already holds enough distinct values proves the whole slice does, and
+         * one that already holds too many proves that too. Those two directions
+         * survive capping. Nothing else does. */
+        if (!prof.measured) {
+            res.unmeasured = true;
+            res.reason = 'not measured: the permission-checked scan ran out of ' +
+                         'time on this subject before it read any rows, so ' +
+                         'whether this is a level is unknown rather than no';
+            return res;
+        }
+
+        /* Where the scan was capped, every number below describes the rows that
+           were read rather than the slice, and the wording has to say so. */
+        var read = prof.capped
+            ? ' of the ' + prof.total + ' records read before the scan stopped'
+            : ' of these records';
 
         if (prof.fill < G.FATAL_FILL) {
             res.reason = dim.label + ' is empty on ' +
-                         this._pct(1 - prof.fill) + ' of these records';
+                         this._pct(1 - prof.fill) + read;
             return res;
         }
 
         if (prof.distinctNonEmpty < G.MIN_DISTINCT) {
-            res.reason = 'every record here has the same ' + dim.label.toLowerCase();
+            /* Uniformity is an absence -- of a second value -- so it is only
+               claimable off a complete scan. Under a cap the honest statement is
+               about what was read, and it stops short of the whole slice. */
+            res.reason = prof.capped
+                ? 'the ' + prof.total + ' records read before the scan stopped all '
+                  + 'share one ' + dim.label.toLowerCase() +
+                  ', which is too few to tell whether the rest do'
+                : 'every record here has the same ' + dim.label.toLowerCase();
             return res;
         }
         if (prof.distinctNonEmpty > G.MAX_DISTINCT) {
-            res.reason = prof.distinctNonEmpty + ' distinct values, too many for a level';
+            /* Sound under a cap: a prefix holding this many distinct values is a
+               floor, and the whole slice can only hold more. */
+            res.reason = (prof.capped ? 'at least ' : '') + prof.distinctNonEmpty +
+                         ' distinct values, too many for a level';
             res.searchable = true;
             return res;
         }
@@ -155,12 +201,13 @@ CmdDrill.prototype = {
             res.offer = true;
             res.partial = true;
             res.reason = 'covers the ' + this._pct(prof.fill) + ' of records that have a ' +
-                         dim.label.toLowerCase();
+                         dim.label.toLowerCase() + (prof.capped ? ', of those read' : '');
             return res;
         }
 
         res.offer = true;
-        res.reason = prof.distinctNonEmpty + ' values, populated on ' + this._pct(prof.fill);
+        res.reason = prof.distinctNonEmpty + ' values, populated on ' +
+                     this._pct(prof.fill) + (prof.capped ? ' of those read' : '');
         return res;
     },
 

@@ -149,6 +149,41 @@ CmdAnalysis.prototype = {
             return base;
         }
 
+        /* Nothing yet in the current window is not a measured fall.
+         *
+         * The pace projection divides what has arrived by how much of the window
+         * has elapsed. That is sound while something has arrived and meaningless
+         * when nothing has: 0 / 0.29 is 0, so the card computes a change of -100%
+         * and prints it in the same confident red chip it would use for a real
+         * collapse.
+         *
+         * Live on this instance that is exactly what the incident dashboard showed
+         * -- "4,284  ▼100%", against 527 last month -- because the newest record on
+         * the table is dated 2026-08-28 and September holds none. A gap in the data
+         * was being presented as a collapse in the business, on the headline card,
+         * above every other number on the page.
+         *
+         * A period that is 29% elapsed with nothing in it is far more often a
+         * loading gap than a fall to zero, and in either case the honest statement
+         * is that there is nothing to compare yet. So the comparison is dropped
+         * rather than asserted, and the card says why. */
+        if (d.partial && d.current === 0) {
+            base.form = 'stat_tile';
+            base.reason = 'no records yet in ' + d.currentLabel + ', against ' +
+                          d.previous + ' in ' + d.previousLabel +
+                          ', so there is nothing to compare this period against';
+            base.caveats = [{
+                severity: 'warn',
+                text: d.currentLabel + ' is ' +
+                      Math.round(d.elapsedFraction * 100) + '% elapsed and holds ' +
+                      'no records at all, against ' + d.previous + ' in ' +
+                      d.previousLabel + '. That is usually a sign that this ' +
+                      'period\'s data has not arrived rather than a fall to zero, ' +
+                      'so no change is shown.'
+            }];
+            return base;
+        }
+
         base.form = 'stat_tile_delta';
         base.reason = 'compared with the previous month on ' + dateField;
         base.delta = d;
@@ -346,6 +381,57 @@ CmdAnalysis.prototype = {
             span: 2,
             caveats: []
         };
+
+        /* A share chart cannot draw a period that holds nothing.
+         *
+         * `stream` normalises each period to 100%, so a period with no records has
+         * no shares in it at all and every band is plotted at zero. What that draws
+         * is not an empty month, it is every category vanishing at once: a vertical
+         * cliff to 0% across the whole chart, which is the most alarming shape a
+         * dashboard can make and here it means only that the month has not
+         * happened yet.
+         *
+         * Live on this instance the newest incident is dated 2026-08-28 while the
+         * window runs into September, so the incident page shipped exactly that
+         * cliff under the heading "How has category moved over time?".
+         *
+         * Trailing empty periods are dropped for this form and no other. Zero is a
+         * real count on a line and a real absence on a small multiple; it is only
+         * on a proportion that it is undefined rather than low. Interior empties
+         * are left alone, because a gap in the middle of a window is a fact about
+         * the data and hiding it would be the same mistake in the other direction.
+         */
+        if (form === 'stream') {
+            var all = other ? kept.concat([other]) : kept;
+            var last = r.periods.length - 1;
+            while (last >= 0) {
+                var tot = 0;
+                for (i = 0; i < all.length; i++) tot += (all[i].counts[last] || 0);
+                if (tot > 0) break;
+                last--;
+            }
+            var emptyTail = (r.periods.length - 1) - last;
+            /* Two periods is the least a trend can be drawn from, so a window that
+               would be trimmed below that is left whole and the cliff is preferred
+               to a chart with nothing in it. */
+            if (emptyTail > 0 && last >= 1) {
+                out.periods = r.periods.slice(0, last + 1);
+                /* Copied rather than trimmed in place: these series objects come
+                   back from the shared scan accumulator and other panels on this
+                   page read the same arrays. */
+                out.series = this._clipSeries(kept, last + 1);
+                if (other) out.other = this._clipSeries([other], last + 1)[0];
+                out.caveats.push({
+                    severity: 'info',
+                    text: emptyTail === 1
+                        ? 'The final period holds no records yet, and a share of ' +
+                          'nothing is not a share, so it is left off this chart.'
+                        : 'The final ' + emptyTail + ' periods hold no records, and ' +
+                          'a share of nothing is not a share, so they are left off ' +
+                          'this chart.'
+                });
+            }
+        }
 
         if (dropped > 0) {
             out.caveats.push({
@@ -1277,6 +1363,27 @@ CmdAnalysis.prototype = {
             }
         }
         return occupied;
+    },
+
+    /**
+     * Copies a set of series with their counts cut to `n` periods.
+     *
+     * A copy rather than a splice because the arrays come from the request's
+     * shared scan accumulator and are read by every other panel built from the
+     * same field.
+     */
+    _clipSeries: function (series, n) {
+        var out = [], i, k;
+        for (i = 0; i < series.length; i++) {
+            var src = series[i], copy = {};
+            for (k in src) if (src.hasOwnProperty(k)) copy[k] = src[k];
+            copy.counts = src.counts.slice(0, n);
+            var t = 0;
+            for (var j = 0; j < copy.counts.length; j++) t += (copy.counts[j] || 0);
+            copy.total = t;
+            out.push(copy);
+        }
+        return out;
     },
 
     _foldSeries: function (rest, nPeriods) {
