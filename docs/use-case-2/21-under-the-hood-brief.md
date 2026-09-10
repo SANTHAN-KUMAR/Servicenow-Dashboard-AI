@@ -1,8 +1,10 @@
-You asked how this works under the hood. Every code block below is copied from a
-file running on your instance, with its line number, so you can open it and check.
+You asked how this works under the hood. Every code block below is quoted exactly
+from a file running on your instance, with the file and line number, so you can
+open it and check. Lines beginning `//` or `#` inside a block are the code's own
+comments; anything we have added to explain a block is outside it, in the text.
 
-**The shape of it.** Nine server scripts, one stylesheet and one browser script,
-all installed inside ServiceNow as ordinary configuration records. No server of
+**The shape of it.** Nine server scripts, three browser scripts, one stylesheet
+and two pages, all installed inside ServiceNow as ordinary configuration records. No server of
 ours, no database of ours. You open a page, ServiceNow runs our code against your
 own tables, and sends back one finished page with the numbers already in it.
 **Nothing is exported.** It is one round trip, because we measured that the
@@ -17,12 +19,13 @@ permissions** — it counts rows you are not allowed to open. That is the gap th
 product exists to close, so every page runs both counts and compares them.
 
 ```js
-// CmdData.js:402 — the fast count. Indexed aggregate; ignores row permissions.
-var fast  = this.fastCount(table, query);
-// CmdData.js:469 — the proof. Walks rows through GlideRecordSecure, which is the
-// platform's own permission check, inside a time budget.
-var proof = this.secureCountBoxed(table, query, CmdData.PROOF_MS);
+var fast = this.fastCount(table, query);                        // CmdData.js:402
+var proof = this.secureCountBoxed(table, query, CmdData.PROOF_MS);  // :469
 ```
+
+The first line is the indexed aggregate — fast, and blind to row permissions. The
+second walks the rows through `GlideRecordSecure`, which is the platform's own
+permission check, inside a time budget.
 
 The difference between the two *is* the rows you cannot open. The page shows the
 verdict as a badge, top right: **ACL VERIFIED** (both agree), **FILTERED** (you
@@ -51,18 +54,22 @@ Most tools save a chart type with the report. We measure the column first — ho
 many distinct values, how full, how concentrated — then pick a form that shape can
 carry honestly.
 
-```js
-// CmdData.js:1232 — the measured shape of one column, over your permitted rows
-var distinct = rows.length;              // how many values it holds
-var topShare = rows[0].count / total;    // how dominant the biggest one is
-//  fill:  (total - emptyCount) / total  // how populated the column is
+The shape of one column, measured over the rows *you* are allowed to read —
+how many values it holds, how dominant the biggest one is, how populated it is:
 
-// CmdForm.js:344 — the rules record why a form was refused, not just which won
-if (c.zeroVariance && form !== 'stat_tile') {
+```js
+var distinct = rows.length;                                    // CmdData.js:1232
+var topShare = (total > 0 && distinct > 0) ? rows[0].count / total : 0;
+fill: total > 0 ? (total - emptyCount) / total : 1,                     // :1288
+```
+
+And the rules record *why* a form was refused, not only which one won:
+
+```js
+if (c.zeroVariance && form !== 'stat_tile') {                   // CmdForm.js:344
     form = 'stat_tile';
-    reason = 'every category holds the same value, so the distribution ' +
-             'carries no information';
-}
+    demoted = true;
+    reason = 'every category holds the same value, so the distribution carries no information';
 ```
 
 So one subject draws different charts as its data changes: six categories become a
@@ -78,18 +85,19 @@ leads nowhere 99.7% of the time. So every level is measured against *your*
 permitted rows first, and a refused level says why instead of being a dead click.
 
 ```js
-// CmdDrill.js:161 — a bounded scan proves presence and never absence
+// CmdDrill.js:159 — a bounded scan proves presence and never absence
 if (!prof.measured) {
-    res.reason = 'not measured: the permission-checked scan ran out of time ' +
-                 'on this subject before it read any rows, so whether this ' +
-                 'is a level is unknown rather than no';
+    res.reason = 'not measured: the permission-checked scan ran out of ' +
+                 'time on this subject before it read any rows, so ' +
+                 'whether this is a level is unknown rather than no';
     return res;
 }
 if (prof.distinctNonEmpty < G.MIN_DISTINCT) {          // CmdDrill.js:179
-    res.reason = 'every record here has the same ' + dim.label.toLowerCase();
-    return res;
-}
+    res.reason = prof.capped
+        ? 'the ' + prof.total + ' records read before the scan stopped all '
 ```
+
+Only a complete scan is allowed to say *every*; a partial one says how far it got.
 
 That first branch was added on **9 September 2026**, after an audit found the page
 claiming *"every record here has the same active"* about a column that actually
@@ -101,15 +109,16 @@ everything — that rule is now in the code and in the test suite.
 ## 4. How it reaches your instance, and how we know it landed
 
 A ServiceNow write answers **HTTP 200 whether or not it stored what you sent**, so
-we never trust the status code. Every write is read back and compared byte for
-byte; each class is then constructed on the instance to prove it loads; each asset
-is fetched from the URL the page will request.
+we never trust the status code: every write is read back and compared byte for
+byte, and every asset is fetched from the URL the page will request. Even that is
+not enough — a compile error leaves the record byte-perfect and the class
+undefined — so the deploy ends by asking the instance to construct each class:
 
 ```python
-# deploy.py:166 — a readback proves the bytes landed, not that the script loads:
-# a compile error leaves the record byte-perfect and the class undefined.
-js.append("try { new %s(); out['%s'] = 'ok'; } "
-          "catch (e) { out['%s'] = String(e).substring(0, 160); }" % (n, n, n))
+        js.append(                                               # deploy.py:169
+            "try { new %s(); out['%s'] = 'ok'; } "
+            "catch (e) { out['%s'] = String(e).substring(0, 160); }" % (n, n, n)
+        )
 ```
 
 ## What it does not do — said plainly, so nothing surprises you later
