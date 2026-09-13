@@ -4110,7 +4110,19 @@
        than trusted. Producing the text and handing it to the browser are separate
        for the same reason: the first is testable offline and the second is three
        lines of DOM that are not. */
-    csv: csvFor
+    csv: csvFor,
+    /* The drawing kit, for the CEO page (cmd_ceo.js). That page composes its own
+       layout -- an orbit, a pulse grid, portfolio cards -- but every mark in it
+       is one of these, so it reads as the same product and a fix to a chart form
+       reaches both surfaces at once rather than one of two copies. */
+    kit: {
+      el: el, svgEl: svgEl, svgRoot: svgRoot, v: v, fmt: fmt, compact: compact,
+      pct: pct, num: num, recs: recs, truncate: truncate, niceMax: niceMax,
+      sparkline: sparkline, buildPanel: buildPanel, forms: FORMS,
+      gradients: gradients, tooltipLayer: tooltipLayer, themeToggle: themeToggle,
+      aclChip: aclChip, decode: decodePayload, tip: tip,
+      setWidth: function (w) { W = w; }
+    }
   };
 
   /**
@@ -4257,6 +4269,10 @@
 
     var holder = document.getElementById('cmd-data');
     var view = holder ? holder.getAttribute('data-view') : 'dashboard';
+
+    /* The CEO page boots itself from cmd_ceo.js, which loads after this file
+       and draws with the kit exported above. */
+    if (view === 'ceo') return;
 
     var payload;
     try {

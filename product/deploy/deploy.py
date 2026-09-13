@@ -49,25 +49,40 @@ SCRIPT_INCLUDES = [
     "CmdCeo.js",
     "CmdPayload.js",
     "CmdReport.js",
+    "CmdCeoBoard.js",
+    "CmdCeoAjax.js",
 ]
+
+# Script Includes the browser calls through GlideAjax. Everything else stays
+# server-only: a client-callable include is reachable by anyone who can post to
+# xmlhttp.do, so the flag is granted by name, never by default, and the include
+# checks the role itself.
+CLIENT_CALLABLE = {"CmdCeoAjax"}
 
 # Order is load order, and it matters: the theme must be on the root element
 # before the stylesheet can apply it, or the page paints light and repaints dark.
+# cmd_ceo comes after cmd_render because it draws with the renderer's kit.
 UI_SCRIPTS = [
     "cmd_theme.js",
     "cmd_fonts.js",
     "cmd_render.js",
+    "cmd_ceo.js",
 ]
 
 UI_PAGES = [
     "cmd_catalog.xhtml",
     "cmd_dashboard.xhtml",
+    "cmd_ceo.xhtml",
 ]
 
-# Shared stylesheet, substituted into both pages. Kept in one file so the two
+# Shared stylesheet, substituted into every page. Kept in one file so the
 # surfaces cannot drift apart visually, and inlined rather than served as an asset
 # so the page has no second request to make.
 SHARED_CSS = "cmd.css"
+
+# The CEO page's own styles, inlined only into the page that uses them, so the
+# catalog and the dashboard do not carry the weight of an orbit they never draw.
+PAGE_CSS = {"@@CEO_CSS@@": "cmd_ceo.css"}
 
 # sys_ui_script.name is the API Name and is capped at 40 characters. In a scoped
 # application it is computed as `<scope>.<script_name>`, so the scope prefix eats
@@ -266,6 +281,18 @@ def build_pages(script_hashes, api_prefix=""):
                 if bad in css:
                     raise InstanceError(f"{SHARED_CSS} contains {bad!r} ({why})")
             html = html.replace("@@CSS@@", css)
+        for placeholder, fname in PAGE_CSS.items():
+            if placeholder not in html:
+                continue
+            extra_path = UIP / fname
+            if not extra_path.exists():
+                raise InstanceError(f"{p.name} wants {placeholder} but {fname} is missing")
+            extra = extra_path.read_text()
+            for bad, why in (("]]>", "CDATA terminator"), ("${", "Jelly expression"),
+                             ("$[", "Jelly expression")):
+                if bad in extra:
+                    raise InstanceError(f"{fname} contains {bad!r} ({why})")
+            html = html.replace(placeholder, extra)
         for name, (h, asset) in script_hashes.items():
             html = html.replace(f"@@{name.upper()}_V@@", h)
             html = html.replace(f"@@{name.upper()}_ASSET@@", api_prefix + asset)
@@ -431,7 +458,8 @@ def main():
             inst.upsert_verified(
                 "sys_script_include", "name", name,
                 {"script": src, "api_name": f"{api_ns}.{name}",
-                 "client_callable": "false", "active": "true",
+                 "client_callable": "true" if name in CLIENT_CALLABLE else "false",
+                 "active": "true",
                  "access": "public",
                  "description": f"COMMAND dashboards. See product/script-includes/{name}.js"},
                 verify_field="script", match_query=where)

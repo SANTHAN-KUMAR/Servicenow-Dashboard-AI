@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+
+<!--
+  COMMAND CEO Dashboard. One page: the front page and the navigation together.
+
+  The client's words, 2026-09-13: "for ceo dashboard front page and navigation page
+  all in one page with multiple section". Their Control Tower app is a Summary
+  page plus a header menu that swaps the whole screen per portfolio; this holds
+  all eight portfolios, their cross-portfolio pulse and every portfolio's full
+  slot set on one scrolling page, navigated from an orbit of the portfolios.
+
+  What the server does here is deliberately small. It checks the role, builds
+  the frame (portfolios, slots, names, units, filters: about 200ms of
+  configuration reads) and embeds it, so the whole layout paints on the first
+  response. The numbers arrive after, over GlideAjax (CmdCeoAjax), several calls
+  in flight at once. A viewer who opened the page in the last three minutes
+  already has their numbers remembered, and those are embedded too, so a reload
+  paints complete.
+
+  The same three constraints as every other COMMAND page: no inline script (the
+  platform stores it as text), no ${} in data (the payload travels base64), and
+  every client asset loaded by g:requires under a content-hashed name.
+-->
+
+<g:evaluate var="jvar_b64" jelly="true">
+  var out;
+  try {
+    if (!CmdCeoBoard.allowed()) {
+      out = { view: 'ceo', denied: true, role: CmdCeoBoard.ROLE,
+              viewer: { name: gs.getUserName(), display: gs.getUserDisplayName() } };
+    } else {
+      var board = new CmdCeoBoard();
+      out = board.frame();
+
+      /* Coerced to JavaScript strings before use: RP.getParameterValue returns a
+         java.lang.String, whose split and length are Java's. See the dashboard
+         page for the incident that taught this. */
+      var period = '' + (RP.getParameterValue('period') || '');
+      var fraw = '' + (RP.getParameterValue('f') || '');
+      var focus = ('' + (RP.getParameterValue('focus') || '')).replace(/[^A-Za-z0-9_]/g, '').substring(0, 40);
+      out.request = { period: CmdCeoBoard.periodOf(period).key,
+                      filters: board.parseFilters(fraw), focus: focus };
+
+      out.groups = board.groups(out);
+      var warm = {};
+      for (var gi = 0; gi &lt; out.groups.length; gi++) {
+        var hit = board.cachedMeasures(out.groups[gi].ids, out.request.period, fraw);
+        if (hit) warm[out.groups[gi].name] = hit;
+      }
+      out.warm = warm;
+
+      var scopeName = '' + gs.getCurrentScopeName();
+      out.scope = scopeName.indexOf('x_') === 0 ? scopeName : '';
+    }
+  } catch (e) {
+    out = { view: 'ceo', error: 'The CEO Dashboard could not be built: ' + e };
+  }
+  var payloadJson = JSON.stringify(out);
+  var encoded = (typeof gs.base64Encode === 'function')
+      ? gs.base64Encode(payloadJson)
+      : GlideStringUtil.base64Encode(payloadJson);
+  encoded;
+</g:evaluate>
+
+<style>
+@@CSS@@
+@@CEO_CSS@@
+</style>
+
+<div id="cmd-wrap" class="ceo" data-default-theme="dark">
+  <div id="cmd-data" data-view="ceo" data-b64="${jvar_b64}"></div>
+  <div id="cmd-root"></div>
+</div>
+
+<g:requires name="@@CMD_THEME_ASSET@@.jsdbx" includes="true" />
+<g:requires name="@@CMD_FONTS_ASSET@@.jsdbx" includes="true" />
+<g:requires name="@@CMD_RENDER_ASSET@@.jsdbx" includes="true" />
+<g:requires name="@@CMD_CEO_ASSET@@.jsdbx" includes="true" />
+
+</j:jelly>

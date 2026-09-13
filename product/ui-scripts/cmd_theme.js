@@ -20,9 +20,22 @@
     try { return window.localStorage.getItem(KEY); } catch (e) { return null; }
   }
 
+  /* A page may declare the theme it was designed in. The CEO Dashboard is: its
+     orbit is a lit object on a dark ground, the way the client's own references
+     draw it, and it is the page most likely to be put on a wall. A viewer's own
+     choice still wins, and the operating system's preference still decides every
+     page that declares nothing. */
+  function pageDefault() {
+    var wrap = document.getElementById('cmd-wrap');
+    var d = wrap ? wrap.getAttribute('data-default-theme') : null;
+    return d === 'dark' || d === 'light' ? d : null;
+  }
+
   function resolve() {
     var s = stored();
     if (s === 'dark' || s === 'light') return s;
+    var p = pageDefault();
+    if (p) return p;
     try {
       if (window.matchMedia &&
           window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
@@ -30,21 +43,26 @@
     return 'light';
   }
 
-  function apply(t) {
+  /* Only a viewer's explicit choice is remembered. Remembering the resolved
+     default as well turned the first page anyone opened into a stored preference,
+     after which no page could ever declare a default of its own. */
+  function apply(t, remember) {
     document.documentElement.setAttribute('data-cmd-theme', t);
-    try { window.localStorage.setItem(KEY, t); } catch (e) {}
+    if (remember) {
+      try { window.localStorage.setItem(KEY, t); } catch (e) {}
+    }
   }
 
-  apply(resolve());
+  apply(resolve(), false);
 
   window.CmdTheme = {
     get: function () {
       return document.documentElement.getAttribute('data-cmd-theme') || 'light';
     },
-    set: apply,
+    set: function (t) { apply(t, true); },
     toggle: function () {
       var next = this.get() === 'dark' ? 'light' : 'dark';
-      apply(next);
+      apply(next, true);
       return next;
     }
   };
