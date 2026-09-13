@@ -73,6 +73,22 @@
 
   function v(token) { return 'var(' + token + ')'; }
 
+  /* The scope prefix of the page we are on, and every COMMAND link rewritten to
+     carry it. A scoped UI Page is served at <scope>_<name>.do, so a relative
+     `cmd_dashboard.do` from the scoped catalog resolved to the GLOBAL fallback
+     page -- the same product, a different deployment, and a quiet way for a
+     demo of the delivered scoped app to be running the fallback instead. */
+  var PFX = (function () {
+    var m = /\/(x_[a-z0-9_]+?_)cmd_(?:dashboard|catalog|ceo)\.do/.exec((window.location && window.location.pathname) || '');
+    return m ? m[1] : '';
+  })();
+
+  function P(u) {
+    return String(u || '').replace(/(^|\/)(cmd_(?:dashboard|catalog|ceo)\.do)/, function (m0, lead, name) {
+      return lead + PFX + name;
+    });
+  }
+
   function catColour(i) { return i < CAT.length ? v(CAT[i]) : v(OTHER); }
 
   function fmt(n) {
@@ -2458,9 +2474,16 @@
    */
   function subjectBase(payload) {
     if (payload.report && payload.report.sysId) {
-      return 'cmd_dashboard.do?report=' + encodeURIComponent(payload.report.sysId);
+      return P('cmd_dashboard.do?report=') + encodeURIComponent(payload.report.sysId);
     }
-    return 'cmd_dashboard.do?table=' + encodeURIComponent(payload.subject.table);
+    /* A measure opened from the CEO Dashboard is its own subject: a drill from
+       it has to stay on that measure's rows, not fall back to the whole table. */
+    if (payload.measure && payload.measure.id && payload.measure.portfolio) {
+      return P('cmd_dashboard.do?portfolio=') + encodeURIComponent(payload.measure.portfolio) +
+             '&measure=' + encodeURIComponent(payload.measure.id) +
+             (payload.measure.periodKey ? '&period=' + encodeURIComponent(payload.measure.periodKey) : '');
+    }
+    return P('cmd_dashboard.do?table=') + encodeURIComponent(payload.subject.table);
   }
 
   /**
@@ -2773,8 +2796,15 @@
 
     var left = el('div');
     var crumb = el('div', 'crumb');
-    var root = el('a', '', ceo ? 'CEO Dashboard' : payload.subject.label);
-    root.href = ceo ? 'cmd_catalog.do' : subjectBase(payload);
+    /* A measure opened from the CEO Dashboard leads back to it -- the same
+       portfolio, the same period -- rather than to the whole table it happens to
+       be counted on. */
+    var fromCeo = ceo || (meas && meas.portfolio);
+    var root = el('a', '', fromCeo ? 'CEO Dashboard' : payload.subject.label);
+    root.href = fromCeo
+      ? P('cmd_ceo.do?focus=') + encodeURIComponent((ceo ? ceo.portfolio : meas.portfolio) || '') +
+        (meas && meas.periodKey ? '&period=' + encodeURIComponent(meas.periodKey) : '')
+      : subjectBase(payload);
     crumb.appendChild(root);
     if (ceo) {
       crumb.appendChild(el('span', 'sep', '\u203a'));
@@ -2850,7 +2880,7 @@
       right.appendChild(lst);
     }
     var back = el('a', 'btn', payload.report ? 'All reports' : 'All subjects');
-    back.href = payload.report ? 'cmd_catalog.do?view=reports' : 'cmd_catalog.do';
+    back.href = P(payload.report ? 'cmd_catalog.do?view=reports' : 'cmd_catalog.do');
     right.appendChild(back);
     h.appendChild(right);
     return h;
@@ -3574,7 +3604,7 @@
       var e = el('div', 'panel pad');
       e.appendChild(el('div', 'h3', 'Cannot show this subject'));
       e.appendChild(el('p', 'sm', payload.error));
-      var back = el('a', 'btn', 'All subjects'); back.href = 'cmd_catalog.do';
+      var back = el('a', 'btn', 'All subjects'); back.href = P('cmd_catalog.do');
       e.appendChild(back);
       mount.appendChild(e);
       return;
@@ -3593,7 +3623,7 @@
       back.textContent = '← ' + (payload.measure.portfolioLabel || 'Back');
       back.href = payload.measure.portfolio
         ? ('?portfolio=' + encodeURIComponent(payload.measure.portfolio))
-        : 'cmd_catalog.do';
+        : P('cmd_catalog.do');
       mb.appendChild(back);
 
       /* The measure's name and its slice are now the page's own heading and
@@ -3722,10 +3752,10 @@
   function catalogTabs(payload) {
     var t = el('div', 'tabs');
     var subs = el('a', 'tab' + (payload.view === 'reports' ? '' : ' now'), 'Subjects');
-    subs.href = 'cmd_catalog.do';
+    subs.href = P('cmd_catalog.do');
     t.appendChild(subs);
     var reps = el('a', 'tab' + (payload.view === 'reports' ? ' now' : ''), 'Saved reports');
-    reps.href = 'cmd_catalog.do?view=reports';
+    reps.href = P('cmd_catalog.do?view=reports');
     t.appendChild(reps);
     return t;
   }
@@ -3751,7 +3781,7 @@
        first 300 rows and nothing reached the rest, which is invisible at this
        instance's 682 reports and total at the 100,000+ the client described. */
     function reportsUrl(q, off) {
-      var u = 'cmd_catalog.do?view=reports';
+      var u = P('cmd_catalog.do?view=reports');
       if (q) u += '&q=' + encodeURIComponent(q);
       if (off > 0) u += '&offset=' + off;
       return u;
@@ -3870,7 +3900,7 @@
       for (var j = 0; j < rs.length; j++) {
         var rep = rs[j];
         var a = el('a', 'rep');
-        a.href = rep.url;
+        a.href = P(rep.url);
         a.appendChild(el('span', 'rep-t', rep.title));
         var meta = el('span', 'rep-m');
         meta.appendChild(el('code', '', rep.nativeType || 'report'));
@@ -4036,7 +4066,7 @@
    */
   function catalogCard(k) {
     var card = el('a', 'card');
-    card.href = k.url;
+    card.href = P(k.url);
 
     var head = el('div', 'card-h');
     head.appendChild(el('div', 'card-n', k.label));

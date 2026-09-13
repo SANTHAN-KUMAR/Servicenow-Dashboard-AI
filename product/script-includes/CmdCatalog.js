@@ -533,23 +533,24 @@ CmdCatalog.prototype = {
         } catch (e) {
             return out;
         }
+        /* The CEO Dashboard is role-gated, so its cards are too: a card that
+           opens onto "this dashboard is for leadership roles" is a card the
+           viewer should never have been shown. */
+        if (typeof CmdCeoBoard !== 'undefined' && !CmdCeoBoard.allowed()) return out;
+
         var names = ceo.offered();
+        var blank = function (label, portfolio, note, url) {
+            return { table: null, portfolio: portfolio, label: label, area: 'CEO Dashboard',
+                     rows: null, capped: false, dimensions: 0, dates: 0,
+                     leadDimension: null, leadDate: null, preview: null,
+                     note: note, url: url };
+        };
+        out.push(blank('CEO Dashboard', '', 'all ' + names.length + ' portfolios on one page, ' +
+                       'counted against your access', '/cmd_ceo.do'));
         for (var i = 0; i < names.length; i++) {
-            out.push({
-                table: null,
-                portfolio: names[i],
-                label: ceo.portfolioLabel(names[i]),
-                area: 'Redrawn dashboards',
-                rows: null,
-                capped: false,
-                dimensions: 0,
-                dates: 0,
-                leadDimension: null,
-                leadDate: null,
-                preview: null,
-                note: 'redrawn from the CEO Dashboard, counted against your access',
-                url: '/cmd_dashboard.do?portfolio=' + encodeURIComponent(names[i])
-            });
+            out.push(blank(ceo.portfolioLabel(names[i]), names[i],
+                           'opens on the CEO Dashboard, counted against your access',
+                           '/cmd_ceo.do?focus=' + encodeURIComponent(names[i])));
         }
         return out;
     },

@@ -27,6 +27,7 @@ import re
 import sys
 import urllib.parse
 import urllib.request
+import html
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "deploy"))
@@ -63,6 +64,68 @@ class Surface:
         return json.loads(base64.b64decode(m.group(1)).decode("utf-8"))
 
 
+def ajax(inst, method, **params):
+    """A GlideAjax call exactly as the page makes it: POST xmlhttp.do."""
+    body = {"sysparm_processor": f"{SCOPE_PREFIX[:-1]}.CmdCeoAjax", "sysparm_name": method}
+    body.update(params)
+    req = urllib.request.Request(
+        f"{inst.base}/xmlhttp.do", data=urllib.parse.urlencode(body).encode(), method="POST",
+        headers={"Content-Type": "application/x-www-form-urlencoded",
+                 "X-UserToken": inst.token, "Accept": "application/xml"})
+    with inst._op.open(req, timeout=300) as r:
+        xml = r.read().decode("utf-8", "replace")
+    m = re.search(r'answer="([^"]*)"', xml)
+    return json.loads(html.unescape(m.group(1))) if m else {"error": "no answer: " + xml[:200]}
+
+
+def ceo_checks(s, check, notes):
+    f = s.payload("ceo")
+    check("CEO page: frame renders", f and f.get("view") == "ceo" and f.get("portfolios"),
+          f"{len(f.get('portfolios') or [])} portfolios, frame {f.get('frameMs')}ms" if f else "no payload")
+    if not f or not f.get("portfolios"):
+        return
+    ids = list(f["indicators"].keys())
+    check("CEO page: calls ordered hero first", [g["name"] for g in f.get("groups", [])][:1] == ["hero"],
+          ", ".join(f"{g['name']}:{len(g['ids'])}" for g in f.get("groups", [])))
+
+    m = ajax(s.inst, "measures", sysparm_ids=",".join(ids), sysparm_period="30d", sysparm_nocache="1")
+    res = m.get("results") or {}
+    check("CEO measures: every indicator answered", len(res) == len(ids) and not m.get("error"),
+          f"{len(res)} of {len(ids)}, {m.get('serverMs')}ms server")
+    head = res.get(f["headline"]) or {}
+    check("CEO measures: headline measured", head.get("ok") and head.get("value") is not None,
+          f"{head.get('name')} = {head.get('value')}")
+    modes = {t: v["mode"] for t, v in (m.get("tables") or {}).items()}
+    check("CEO measures: every table proved", modes and all(v in ("VERIFIED", "FILTERED", "BOUNDED", "DENIED")
+                                                          for v in modes.values()), str(modes))
+
+    bad = ajax(s.inst, "measures", sysparm_ids=",".join(ids[:3]), sysparm_period="999d",
+               sysparm_filters="category:software^ORsys_idISNOTEMPTY|caller_id:x")
+    check("CEO measures: bad period and injected filter are refused",
+          bad.get("period") == f.get("period") and bad.get("filters") == [],
+          f"period {bad.get('period')}, filters {bad.get('filters')}")
+
+    bd = ajax(s.inst, "breakdown", sysparm_portfolio=f["portfolios"][0]["key"], sysparm_period="30d")
+    check("CEO breakdown: a panel for the first portfolio", bd.get("panel") or bd.get("why"),
+          (bd["panel"]["form"] + f", {bd.get('total')} records") if bd.get("panel") else bd.get("why", ""))
+
+    # A card's analysis counts the same rows as the card.
+    new_id = next((i for i, d in f["indicators"].items() if d["name"] == "Number of new incidents"), None)
+    if new_id and res.get(new_id, {}).get("ok"):
+        port = next(p["key"] for p in f["portfolios"] if any(sl["id"] == new_id for sl in p["slots"]))
+        a = s.payload("dashboard", f"?portfolio={port}&measure={new_id}&period=30d")
+        rows = a["subject"]["rows"] if a else None
+        check("CEO: a card's analysis counts the card's rows", rows == res[new_id]["value"],
+              f"card {res[new_id]['value']}, analysis {rows}; {(a or {}).get('measure', {}).get('slice', '')}")
+
+    w = s.payload("ceo")
+    warm = (w or {}).get("warm") or {}
+    if warm:
+        check("CEO page: a returning viewer's numbers are embedded", True, ", ".join(warm.keys()))
+    else:
+        notes.append("CEO page embedded no remembered numbers on reload; the page still fills over GlideAjax")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--global", dest="use_global", action="store_true")
@@ -82,9 +145,11 @@ def main():
     cat = s.payload("catalog")
     check("catalog renders", cat and cat.get("areas"),
           f"{len(cat.get('areas') or [])} areas" if cat else "no payload")
-    redrawn = [c for a in (cat.get("areas") or []) if a["area"] == "Redrawn dashboards"
-               for c in a["cards"]] if cat else []
-    check("catalog offers one portfolio", len(redrawn) == 1, str(len(redrawn)))
+    ceo_cards = [c for a in (cat.get("areas") or []) if a["area"] == "CEO Dashboard"
+                 for c in a["cards"]] if cat else []
+    check("catalog offers the CEO Dashboard and its portfolios",
+          len(ceo_cards) >= 2 and all("cmd_ceo.do" in (c.get("url") or "") for c in ceo_cards),
+          f"{len(ceo_cards)} cards")
 
     # ── a subject dashboard ──
     d = s.payload("dashboard", "?table=incident")
@@ -132,6 +197,9 @@ def main():
         check("CEO: cards open our own analysis, each stating its rows",
               not bad, f"{len(slices)} distinct slices"
               + (f"; problems: {bad}" if bad else ""))
+
+    # ── the CEO Dashboard: one page, numbers over GlideAjax ──
+    ceo_checks(s, check, notes)
 
     # ── drilldown ──
     d = s.payload("dashboard", "?table=incident&path=" +

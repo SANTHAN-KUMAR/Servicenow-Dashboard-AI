@@ -160,6 +160,7 @@
 #cmd-wrap.ceo .val{display:inline-flex; align-items:baseline; gap:2px; font-family:var(--display);
   font-weight:600; letter-spacing:-.03em; font-variant-numeric:tabular-nums lining-nums}
 #cmd-wrap.ceo .val .u{font-size:.55em; font-weight:500; color:var(--ink-3); margin-left:1px}
+#cmd-wrap.ceo .val .u.sp{margin-left:.28em}
 #cmd-wrap.ceo .val .n.none{color:var(--ink-3)}
 #cmd-wrap.ceo .skel-line{display:inline-block; width:64px; height:.8em; border-radius:6px;
   background:var(--surface-3); position:relative; overflow:hidden; vertical-align:middle}
@@ -436,10 +437,19 @@
 /* ── print: the PDF export ── */
 @media print{
   #cmd-wrap.ceo{background:#fff !important; color:#111}
-  #cmd-wrap.ceo .ceo-bar .bar-r, #cmd-wrap.ceo .bar-nav, #cmd-wrap.ceo .drawer, #cmd-wrap.ceo .toast, #cmd-wrap.ceo .ipop, #cmd-wrap.ceo .kc-a, #cmd-wrap.ceo .ibtn, #cmd-wrap.ceo .ptabs{display:none !important}
+  #cmd-wrap.ceo .ceo-bar .bar-r, #cmd-wrap.ceo .bar-nav, #cmd-wrap.ceo .drawer, #cmd-wrap.ceo .toast,
+  #cmd-wrap.ceo .ipop, #cmd-wrap.ceo .kc-a, #cmd-wrap.ceo .ibtn, #cmd-wrap.ceo .ptabs,
+  #cmd-wrap.ceo .cp-f .lnk{display:none !important}
+  /* The platform's own print sheet hides buttons and prints every link's URL after
+     it. The orbs are buttons, and a query string is not something to read on paper. */
+  #cmd-wrap.ceo .orb{display:grid !important; box-shadow:0 0 0 1px #999 !important; animation:none !important}
+  #cmd-wrap.ceo .pc.cell, #cmd-wrap.ceo .pc.pn, #cmd-wrap.ceo .mv{display:grid !important}
+  #cmd-wrap.ceo .pc.pn, #cmd-wrap.ceo .mv{display:flex !important}
+  #cmd-wrap.ceo a[href]:after, #cmd-wrap.ceo a:after{content:none !important}
+  #cmd-wrap.ceo .orb, #cmd-wrap.ceo .mv, #cmd-wrap.ceo .pc, #cmd-wrap.ceo .ptab,
+  #cmd-wrap.ceo .opt{visibility:visible !important}
   #cmd-wrap.ceo .ceo-bar{position:static; background:#fff; backdrop-filter:none; border-bottom:1px solid #ccc}
-  #cmd-wrap.ceo .orb{box-shadow:0 0 0 1px #999 !important; animation:none !important}
   #cmd-wrap.ceo .orbit .ring.flow{animation:none}
-  #cmd-wrap.ceo .sec{break-inside:avoid; page-break-inside:avoid; padding-top:24px}
-  #cmd-wrap.ceo .kc, #cmd-wrap.ceo .pc.cell{break-inside:avoid}
+  #cmd-wrap.ceo .sec{padding-top:18px}
+  #cmd-wrap.ceo .orbit, #cmd-wrap.ceo .kc, #cmd-wrap.ceo .pr, #cmd-wrap.ceo .panel{break-inside:avoid; page-break-inside:avoid}
 }

@@ -96,11 +96,16 @@ async function waitFor(expr, timeout) {
 
 async function login(user, pw) {
   await navigate(`${BASE}/login.do`);
+  // The platform redirects after the POST (to navpage.do or a landing page), and
+  // a navigation issued before that redirect lands is overtaken by it. So wait
+  // for the post-login page to finish loading, then give its own scripts a beat.
+  const landed = waitEvent('Page.loadEventFired', 90000);
   await evaluate(`(function(){var u=document.getElementById('user_name'),p=document.getElementById('user_password');
     u.value=${JSON.stringify(user)};p.value=${JSON.stringify(pw)};
     var b=document.getElementById('sysverb_login'); if(b){b.click();}else{p.form.submit();} return true;})()`, false);
-  await sleep(1500);
+  await landed;
   await waitFor(`document.readyState==='complete' && location.pathname.indexOf('login.do')===-1`, 60000);
+  await sleep(2500);
 }
 
 (async () => {
@@ -185,6 +190,16 @@ async function login(user, pw) {
       const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: !!args.full, ...(clip ? { clip } : {}) });
       writeFileSync(args.shot, Buffer.from(shot.data, 'base64'));
       out.shot = args.shot;
+    }
+    // The PDF export is the browser's print pipeline, so print exactly what a
+    // viewer would get from "PDF, via print".
+    if (args.pdf) {
+      await send('Emulation.setEmulatedMedia', { media: 'print' });
+      if (args.printeval) out.printEval = await evaluate(args.printeval);
+      const pdf = await send('Page.printToPDF', { landscape: true, printBackground: true,
+                                                  preferCSSPageSize: false, scale: 0.72 });
+      writeFileSync(args.pdf, Buffer.from(pdf.data, 'base64'));
+      out.pdf = args.pdf;
     }
     out.url = await evaluate('location.href');
     out.ok = true;

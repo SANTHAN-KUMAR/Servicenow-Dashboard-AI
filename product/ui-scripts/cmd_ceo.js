@@ -92,7 +92,9 @@
 
   function fmtVal(v, unit) {
     if (v === null || v === undefined || isNaN(v)) return '—';
-    return fmtNum(v) + unitText(unit);
+    var u = unitText(unit);
+    /* "108kh" reads as a word; a compacted number keeps its unit apart. */
+    return fmtNum(v) + (u && u !== '%' && Math.abs(v) >= 100000 ? ' ' : '') + u;
   }
 
   function valueNode(v, unit, cls) {
@@ -103,7 +105,7 @@
     }
     n.appendChild(el('span', 'n', fmtNum(v)));
     var u = unitText(unit);
-    if (u) n.appendChild(el('span', 'u', u));
+    if (u) n.appendChild(el('span', 'u' + (u !== '%' && Math.abs(v) >= 100000 ? ' sp' : ''), u));
     return n;
   }
 
@@ -856,11 +858,24 @@
       nt++;
       if (rank[S.tables[t].mode] > rank[worst]) worst = S.tables[t].mode;
     }
+    /* The hero states the best summary that is true of every table: if some are
+       verified and some are closed to this viewer, "partial access" says it. */
+    var anyOpen = false;
+    for (var t2 in S.tables) {
+      if (S.tables.hasOwnProperty(t2) && S.tables[t2].mode !== 'DENIED' && S.tables[t2].aggregate) anyOpen = true;
+    }
     UI.heroStats.appendChild(stat(String(f.portfolios.length), 'portfolios'));
     UI.heroStats.appendChild(stat(String(nMeasures), 'measures'));
     UI.heroStats.appendChild(stat(nt ? String(nt) : '…', 'tables checked'));
     var chipWrap = el('div', 'hs chipw');
-    chipWrap.appendChild(nt ? K.aclChip({ mode: worst, delta: 0 }) : el('span', 'chip', 'checking access…'));
+    if (!nt) chipWrap.appendChild(el('span', 'chip', 'checking access…'));
+    else if (worst === 'DENIED' && anyOpen) {
+      var pc = el('span', 'chip warn');
+      pc.appendChild(el('span', 'dot'));
+      pc.appendChild(el('span', '', 'Partial access'));
+      pc.title = 'Some tables behind these measures are closed to you; the Trust section lists which.';
+      chipWrap.appendChild(pc);
+    } else chipWrap.appendChild(K.aclChip({ mode: worst, delta: 0 }));
     UI.heroStats.appendChild(chipWrap);
   }
 
@@ -1334,9 +1349,22 @@
       var v = S.tables[t];
       var row = el('div', 'tv-r');
       row.appendChild(el('span', 'tv-t', v.label || t));
-      row.appendChild(K.aclChip({ mode: v.mode, delta: v.delta }));
-      row.appendChild(el('span', 'tv-n', v.mode === 'DENIED' ? 'none readable'
-        : K.fmt(v.secure) + ' of ' + K.fmt(v.aggregate) + ' readable'));
+      /* A table whose query returns nothing for this viewer is not "verified" in
+         any sense a reader would recognise: the platform's own query rules (the
+         OOB "incident query" rule, for one) hid every row before any count was
+         taken. Say that, not "ACL verified, 0 of 0". */
+      if (v.mode !== 'DENIED' && !v.aggregate) {
+        var nv = el('span', 'chip');
+        nv.appendChild(el('span', 'dot'));
+        nv.appendChild(el('span', '', 'Nothing visible'));
+        nv.title = 'No record on this table is visible to you at all, so every measure on it reads zero.';
+        row.appendChild(nv);
+        row.appendChild(el('span', 'tv-n', 'the platform shows you no records on this table'));
+      } else {
+        row.appendChild(K.aclChip({ mode: v.mode, delta: v.delta }));
+        row.appendChild(el('span', 'tv-n', v.mode === 'DENIED' ? 'none readable'
+          : K.fmt(v.secure) + ' of ' + K.fmt(v.aggregate) + ' readable'));
+      }
       tl.appendChild(row);
     }
     if (!any) tl.appendChild(el('div', 'skel-block skel-sub'));

@@ -641,9 +641,22 @@ CmdCeo.prototype = {
         }
         if (!src.table) return null;
 
+        /* The period the CEO Dashboard was showing when this was opened. A card
+           there counts the last N days, not PA's "today", so its analysis has to
+           count the same rows or the click lands on a different number. Only an
+           event measure has a period to widen; a stock is left as it is. */
+        var baseQuery = src.query, periodLabel = '';
+        if (opts.periodDays && typeof CmdCeoBoard !== 'undefined') {
+            var widened = CmdCeoBoard.windowQuery(src.query, opts.periodDays);
+            if (widened) {
+                baseQuery = widened;
+                periodLabel = opts.periodLabel || ('last ' + opts.periodDays + ' days');
+            }
+        }
+
         var payload = builder.dashboard(src.table, path, {
             months: opts.months, forms: opts.forms || {}, focus: opts.focus || '',
-            baseQuery: src.query
+            baseQuery: baseQuery
         });
 
         /* What this page is a view of, so the header can say so and offer the way
@@ -655,15 +668,28 @@ CmdCeo.prototype = {
             portfolio: opts.portfolio || '',
             portfolioLabel: opts.portfolio ? this.portfolioLabel(opts.portfolio) : '',
             unit: this._unitCode(node.unit),
+            period: periodLabel,
+            periodKey: opts.periodKey || '',
             /* Which rows this page is over, in words.
              *
              * Two measures can legitimately share a row set -- the count of open
              * incidents and their average age are two questions about the same
              * records -- and without this the second page reads as the first one
              * repeated. Stating the slice makes the overlap deliberate. */
-            slice: this._describeQuery(src.table, src.query)
+            slice: periodLabel ? this._periodSlice(src, periodLabel)
+                               : this._describeQuery(src.table, src.query)
         };
         return payload;
+    },
+
+    /* "Opened in the last 30 days, reassignment count is 0": the widened
+       window said as the event it counts, then whatever else the filter holds. */
+    _periodSlice: function (src, periodLabel) {
+        var cls = ceoClassify(src.query);
+        var head = this._fieldLabel(src.table, cls.field || '') + ' in the ' +
+                   String(periodLabel).toLowerCase();
+        var rest = cls.rest ? this._describeQuery(src.table, cls.rest) : '';
+        return rest ? head + ', ' + rest : head;
     },
 
     /* ── the page ──────────────────────────────────────────────────────── */

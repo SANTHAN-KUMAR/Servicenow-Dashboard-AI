@@ -123,9 +123,20 @@
               'holding the slot configuration.';
       }
       if (measure) {
+        /* The CEO Dashboard's period, when the measure was opened from one of its
+           cards, so the analysis counts the same rows as the card did. Checked
+           against the board's own declared periods, never trusted. */
+        var ceoPeriod = '' + (RP.getParameterValue('period') || '');
+        var P = null;
+        if (ceoPeriod) {
+          if (typeof CmdCeoBoard !== 'undefined') P = CmdCeoBoard.periodOf(ceoPeriod);
+        }
         out = ceo.measure(builder, measure, path,
                           { months: months, forms: forms, focus: focus,
-                            portfolio: portfolio });
+                            portfolio: portfolio,
+                            periodDays: P ? P.days : 0,
+                            periodLabel: P ? P.label : '',
+                            periodKey: P ? P.key : '' });
         if (!out) {
           throw 'that measure could not be resolved to a table and a filter, ' +
                 'so there is nothing to analyse.';

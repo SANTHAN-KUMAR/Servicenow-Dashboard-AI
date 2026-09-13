@@ -1,0 +1,419 @@
+{
+ "incident": [
+  {
+   "sysId": "014d793037eb3910f08f1b25f3924b27",
+   "roles": [
+    "sn_sow_srm.srm_admin"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "2ae9f9625f011000b12e3572f2b477de",
+   "roles": [
+    "snc_internal"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "38469e20b85f2010f87792310b58b92e",
+   "roles": [
+    "sn_hamp.ham_user"
+   ],
+   "hasScript": false,
+   "hasCondition": true,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "38675a46df02020068c32df36bf263e9",
+   "roles": [
+    "sn_si.read"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "false",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "48975b6d775330107190308eec5a9941",
+   "roles": [
+    "sn_dpm.dpm_manager"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "546553d487300300b309452c97cb0b3f",
+   "roles": [
+    "ml_report_user",
+    "ml_admin"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "57c2e5794130e519c6f23bc3bbc72076",
+   "roles": [
+    "sn_sow_srm.srm_responder"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "7da37832c0a801662678a235d68675c6",
+   "roles": [
+    "itil"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "7da3bda1c0a801667dc88c1e9527f776",
+   "roles": [
+    "snc_internal"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "be7ff3d1870033000e56d61e36cb0b5b",
+   "roles": [
+    "sn_incident_read"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "ff7a5e513bd2330017142c2b54efc451",
+   "roles": [
+    "service_viewer",
+    "service_viewer"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  }
+ ],
+ "problem": [
+  {
+   "sysId": "1165f359534c33004558ddeeff7b12e3",
+   "roles": [
+    "sn_problem_read"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "1e9753209fe3020035c6786f957fcf75",
+   "roles": [
+    "sn_vul.vulnerability_admin"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "false",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "69ebb1225f011000b12e3572f2b477c4",
+   "roles": [
+    "snc_internal"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "80acd637c0a80166301429da60027571",
+   "roles": [
+    "problem_task_analyst",
+    "itil"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "a7841a46df02020068c32df36bf26308",
+   "roles": [
+    "sn_si.read"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "false",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "fd971f6d775330107190308eec5a995e",
+   "roles": [
+    "sn_dpm.dpm_manager"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  }
+ ],
+ "change_request": [
+  {
+   "sysId": "06f456992377230018a4fa9e27bf652e",
+   "roles": [
+    "sn_change_read"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "0987936d775330107190308eec5a99af",
+   "roles": [
+    "sn_dpm.dpm_manager"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "1cbf65965f011000b12e3572f2b4776e",
+   "roles": [
+    "snc_internal"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "61cba7aa70486cc9027fb049117aa8f3",
+   "roles": [
+    "sn_sow_srm.srm_responder"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "7daec459c0a80166389119d384f2e17b",
+   "roles": [
+    "snc_internal"
+   ],
+   "hasScript": false,
+   "hasCondition": true,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "7db40183c0a80166131b260d67c790a1",
+   "roles": [
+    "itil"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "80cade513bd2330017142c2b54efc4c2",
+   "roles": [
+    "service_viewer"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "cb541a46df02020068c32df36bf2638e",
+   "roles": [
+    "sn_si.read"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "false",
+   "unconditionalOpen": false
+  }
+ ],
+ "kb_knowledge": [
+  {
+   "sysId": "2c40ddbeb77333006d5739f32e11a9b8",
+   "roles": [
+    "public"
+   ],
+   "hasScript": true,
+   "hasCondition": true,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "3d61d554eb950e10860f9f67135228e2",
+   "roles": [
+    "public"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "false",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "65bbd9bcd71221004792a1737e610389",
+   "roles": [
+    "public"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "7d9dd050c0a801666e1223c8df88a4cc",
+   "roles": [
+    "public"
+   ],
+   "hasScript": true,
+   "hasCondition": true,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "d4318196ff6032101323ffffffffff84",
+   "roles": [
+    "sn_itom_leap.knowledge_read"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  }
+ ],
+ "task": [],
+ "sys_user": [
+  {
+   "sysId": "21deb08b0f430110e6d4fd820b767e15",
+   "roles": [
+    "sn_esm_location_agent",
+    "sn_customerservice.service_organization_contributor",
+    "sn_customerservice.svc_location_manager_core"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "936dc648eb3630003623666cd206fecc",
+   "roles": [
+    "snc_internal"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "9999ee535b31101022527d6f7281c7e8",
+   "roles": [
+    "sn_walkup.walkup_login"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "a34d52157790211088af7cdd1e5a995f",
+   "roles": [
+    "sn_slm.fulfiller",
+    "sn_slm.contact"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "a41ff1041b758110dadddc23b24bcb83",
+   "roles": [
+    "sn_va_as_service.contact_center_api"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "c9139735ff496290de2fffffffffff94",
+   "roles": [
+    "sn_bus_loc.location_org_hierarchy_viewer"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "cfa2be6167230200fba9f1d557415a3a",
+   "roles": [
+    "public"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "d5338d2dff05ea50de2fffffffffff16",
+   "roles": [
+    "sn_bus_loc.location_org_viewer"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "true",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "d7e8f9a1768b4f7fba2a9c87e07604ab",
+   "roles": [
+    "sn_ai_governance.ai_steward"
+   ],
+   "hasScript": false,
+   "hasCondition": false,
+   "adminOverrides": "false",
+   "unconditionalOpen": false
+  },
+  {
+   "sysId": "e5fc1b3d3b4c62101e5c9a8a04e45a9b",
+   "roles": [
+    "sn_jny.pre_hire"
+   ],
+   "hasScript": true,
+   "hasCondition": false,
+   "adminOverrides": "false",
+   "unconditionalOpen": false
+  }
+ ]
+}

@@ -1,0 +1,170 @@
+[
+ {
+  "elementId": "getmetricsoflandingpage",
+  "label": "getMetricsOfLandingPage",
+  "type": "TRANSFORM",
+  "uuid": null
+ },
+ {
+  "elementId": "totalworkflows",
+  "label": "Total workflows",
+  "type": "REST",
+  "uuid": "3c68b0101bb338dcf84a54e56e4bcbf1"
+ },
+ {
+  "elementId": "totalworkflowproducts",
+  "label": "Total Workflow Products",
+  "type": "REST",
+  "uuid": "9b19b0501bb338dcf84a54e56e4bcbaf"
+ },
+ {
+  "elementId": "p1_speed",
+  "label": "Portfolio1 Speed",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p1_prod",
+  "label": "Portfolio1 Productivity",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p1_risk",
+  "label": "Portfolio1 Risk",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p2_speed",
+  "label": "Portfolio2 Speed",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p2_prod",
+  "label": "Portfolio2 Productivity",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p2_risk",
+  "label": "Portfolio2 Risk",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p3_speed",
+  "label": "Portfolio3 Speed",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p3_prod",
+  "label": "Portfolio3 Productivity",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p3_risk",
+  "label": "Portfolio3 Risk",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p4_speed",
+  "label": "Portfolio4 Speed",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p4_prod",
+  "label": "Portfolio4 Productivity",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p4_risk",
+  "label": "Portfolio4 Risk",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p5_speed",
+  "label": "Portfolio5 Speed",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p5_prod",
+  "label": "Portfolio5 Productivity",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p5_risk",
+  "label": "Portfolio5 Risk",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p6_speed",
+  "label": "Portfolio6 Speed",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p6_prod",
+  "label": "Portfolio6 Productivity",
+  "type": "REST",
+  "uuid": null
+ },
+ {
+  "elementId": "p6_risk",
+  "label": "Portfolio6 Risk",
+  "type": "REST",
+  "uuid": true
+ },
+ {
+  "elementId": "p7_speed",
+  "label": "Portfolio7 Speed",
+  "type": "REST",
+  "uuid": true
+ },
+ {
+  "elementId": "p7_prod",
+  "label": "Portfolio7 Productivity",
+  "type": "REST",
+  "uuid": true
+ },
+ {
+  "elementId": "p7_risk",
+  "label": "Portfolio7 Risk",
+  "type": "REST",
+  "uuid": true
+ },
+ {
+  "elementId": "p8_speed",
+  "label": "Portfolio8 Speed",
+  "type": "REST",
+  "uuid": true
+ },
+ {
+  "elementId": "p8_prod",
+  "label": "Portfolio8 Productivity",
+  "type": "REST",
+  "uuid": true
+ },
+ {
+  "elementId": "p8_risk",
+  "label": "Portfolio8 Risk",
+  "type": "REST",
+  "uuid": true
+ },
+ {
+  "elementId": "getportfolionames",
+  "label": "Get Portfolio Names",
+  "type": "TRANSFORM",
+  "uuid": "sn_controltower.ceo_dashboard_portfolionames"
+ }
+]

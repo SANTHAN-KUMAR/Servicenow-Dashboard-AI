@@ -1,0 +1,297 @@
+[
+ {
+  "elementId": "stylized_text_3",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.totalworkflows.output.result[0].name;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_2",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.totalworkflows.output.result[0].value_unit.toUpperCase();\n//  return api.state.totalWorkflows;\n}"
+ },
+ {
+  "elementId": "stylized_text_4",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.totalworkflowproducts.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_5",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n  var val = api.state.totalWorkflowInstances;\n  return val.toString().replace(/\\B(?=(\\d{3})+(?!\\d))/g, \",\");\n  \n\t//return api.data.totalworkflowproducts.output.result[0].value_unit.toUpperCase();\n}"
+ },
+ {
+  "elementId": "rich_text_6",
+  "property": "html",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn '<a target=\"_self\" href=\"now/ceo/'+api.data.getmetricsoflandingpage.output.Portfolio8.Speed1[0].link+'\" style=\"color:#90CCD3;text-decoration:none\">'+api.data.getportfolionames.output.portfolio8Name+'</a>';\n}"
+ },
+ {
+  "elementId": "stylized_text_39",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p8_speed.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_40",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\nreturn api.data.p8_speed.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_41",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p8_prod.output.result[0].value_unit;\n \n}"
+ },
+ {
+  "elementId": "stylized_text_42",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\nreturn api.data.p8_prod.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_43",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p8_risk.output.result[0].value_unit;\n \n}"
+ },
+ {
+  "elementId": "stylized_text_44",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p8_risk.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "rich_text_4",
+  "property": "html",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n // @data.getmetricsoflandingpage.output.Portfolio1.Speed1.0.metric\n\treturn '<a target=\"_self\" href=\"now/ceo/'+api.data.getmetricsoflandingpage.output.Portfolio1.Speed1[0].link+'\" style=\"color:#90CCD3;text-decoration:none\">'+api.data.getportfolionames.output.portfolio1Name+'</a>';\n}"
+ },
+ {
+  "elementId": "stylized_text_23",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p1_speed.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_29",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p1_prod.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_30",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p1_prod.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_31",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p1_risk.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_32",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p1_risk.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "rich_text_1",
+  "property": "html",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn '<a target=\"_self\" href=\"now/ceo/'+api.data.getmetricsoflandingpage.output.Portfolio7.Speed1[0].link+'\" style=\"color:#90CCD3;text-decoration:none\">'+api.data.getportfolionames.output.portfolio7Name+'</a>';\n}"
+ },
+ {
+  "elementId": "stylized_text_8",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p7_speed.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_10",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\nreturn api.data.p7_speed.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_11",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p7_prod.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_12",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p7_prod.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_13",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p7_risk.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_14",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\nreturn api.data.p7_risk.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "rich_text_3",
+  "property": "html",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\nreturn '<a target=\"_self\" href=\"now/ceo/'+api.data.getmetricsoflandingpage.output.Portfolio6.Speed1[0].link+'\" style=\"color:#90CCD3;text-decoration:none\">'+api.data.getportfolionames.output.portfolio6Name+'</a>';\n}\n"
+ },
+ {
+  "elementId": "stylized_text_21",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p6_speed.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_24",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p6_speed.output.result[0].value_unit;\n \n}"
+ },
+ {
+  "elementId": "stylized_text_25",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p6_prod.output.result[0].value_unit;\n\n}\n"
+ },
+ {
+  "elementId": "stylized_text_26",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p6_prod.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_27",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n  return api.data.p6_risk.output.result[0].value_unit\n\n}"
+ },
+ {
+  "elementId": "stylized_text_28",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p6_risk.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "rich_text_8",
+  "property": "html",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn '<a target=\"_self\" href=\"now/ceo/'+api.data.getmetricsoflandingpage.output.Portfolio3.Speed1[0].link+'\" style=\"color:#90CCD3;text-decoration:none\">'+api.data.getportfolionames.output.portfolio3Name+'</a>';\n}"
+ },
+ {
+  "elementId": "stylized_text_51",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p3_speed.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_52",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\nreturn api.data.p3_speed.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_53",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p3_prod.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_54",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p3_prod.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_55",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p3_risk.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_56",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\nreturn api.data.p3_risk.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "rich_text_2",
+  "property": "html",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn '<a target=\"_self\" href=\"now/ceo/'+api.data.getmetricsoflandingpage.output.Portfolio2.Speed1[0].link+'\" style=\"color:#90CCD3;text-decoration:none\">'+api.data.getportfolionames.output.portfolio2Name+'</a>';\n}"
+ },
+ {
+  "elementId": "stylized_text_15",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p2_speed.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_16",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p2_speed.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_17",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p2_prod.output.result[0].value_unit;\n \n}"
+ },
+ {
+  "elementId": "stylized_text_18",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\nreturn api.data.p2_prod.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_19",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p2_risk.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_20",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\nreturn api.data.p2_risk.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "rich_text_7",
+  "property": "html",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn '<a target=\"_self\" href=\"now/ceo/'+api.data.getmetricsoflandingpage.output.Portfolio5.Speed1[0].link+'\" style=\"color:#90CCD3;text-decoration:none\">'+api.data.getportfolionames.output.portfolio5Name+'</a>';\n}"
+ },
+ {
+  "elementId": "stylized_text_45",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p5_speed.output.result[0].value_unit;\n \n}"
+ },
+ {
+  "elementId": "stylized_text_46",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p5_speed.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_47",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p5_prod.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_48",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p5_prod.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_49",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p5_risk.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_50",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p5_risk.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "rich_text_5",
+  "property": "html",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn '<a target=\"_self\" href=\"now/ceo/'+api.data.getmetricsoflandingpage.output.Portfolio4.Speed1[0].link+'\" style=\"color:#90CCD3;text-decoration:none\">'+api.data.getportfolionames.output.portfolio4Name+'</a>';\n}"
+ },
+ {
+  "elementId": "stylized_text_33",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p4_speed.output.result[0].value_unit;\n \n}"
+ },
+ {
+  "elementId": "stylized_text_34",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p4_speed.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_35",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p4_prod.output.result[0].value_unit;\n \n}"
+ },
+ {
+  "elementId": "stylized_text_36",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p4_prod.output.result[0].name;\n}"
+ },
+ {
+  "elementId": "stylized_text_37",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p4_risk.output.result[0].value_unit;\n\n}"
+ },
+ {
+  "elementId": "stylized_text_38",
+  "property": "text",
+  "inlineScript": "/**\n  * @param {params} params\n  * @param {api} params.api\n  * @param {any} params.imports\n  */\nfunction evaluateProperty({api}) {\n\treturn api.data.p4_risk.output.result[0].name;\n}"
+ }
+]

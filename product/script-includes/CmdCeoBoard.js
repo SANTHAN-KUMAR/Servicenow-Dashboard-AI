@@ -455,36 +455,46 @@ CmdCeoBoard.prototype = {
         var filters = this.parseFilters(filterStr);
         var fkey = ceoFilterKey(filters);
 
-        var cacheKey = CmdCeoBoard.CACHE_PREFIX +
-            ceoHash(gs.getUserID() + '|' + P.key + '|' + fkey + '|' + list.slice().sort().join(','));
-        if (!opts.nocache) {
-            var hit = this._cacheGet(cacheKey);
-            if (hit) {
-                hit.v.cached = true;
-                hit.v.ageMs = new Date().getTime() - hit.t;
-                return hit.v;
-            }
-        }
-
-        this.preload(list);
-        var ctx = this._ctx(P, filters);
-        var results = {};
+        /* Remembered per indicator, not per call: the page asks in three groups,
+           a period change asks again, an analysis page comes back -- and each of
+           those is a different set of ids over the same numbers. Keyed per
+           indicator, any view assembles from whatever this viewer already has and
+           computes only what is missing. */
+        var base = gs.getUserID() + '|' + P.key + '|' + fkey;
+        var results = {}, missing = [], oldest = null;
         for (i = 0; i < list.length; i++) {
-            try {
-                results[list[i]] = this._root(list[i], ctx);
-            } catch (e) {
-                results[list[i]] = { id: list[i], ok: false, value: null,
-                                     why: 'this measure could not be computed: ' + e };
+            var hit = opts.nocache ? null : this._cacheGet(ceoCacheKey(base, list[i]));
+            if (hit) {
+                results[list[i]] = hit.v;
+                if (oldest === null || hit.t < oldest) oldest = hit.t;
+            } else {
+                missing.push(list[i]);
+            }
+        }
+        var metaHit = opts.nocache ? null : this._cacheGet(ceoCacheKey(base, 'meta'));
+
+        var ctx = this._ctx(P, filters);
+        if (missing.length) {
+            this.preload(missing);
+            for (i = 0; i < missing.length; i++) {
+                try {
+                    results[missing[i]] = this._root(missing[i], ctx);
+                } catch (e) {
+                    results[missing[i]] = { id: missing[i], ok: false, value: null,
+                                            why: 'this measure could not be computed: ' + e };
+                }
+                this._cachePut(ceoCacheKey(base, missing[i]), results[missing[i]]);
             }
         }
 
-        var tables = {};
+        var tables = (metaHit && metaHit.v && metaHit.v.tables) ? metaHit.v.tables : {};
         for (var t in this._verdicts) {
             if (!this._verdicts.hasOwnProperty(t)) continue;
             var v = this._verdicts[t];
             tables[t] = { mode: ceoMode(v), aggregate: v.aggregate, secure: v.secure,
                           delta: v.delta, label: (this.meta.describe(t) || {}).plural || t };
         }
+        if (missing.length) this._cachePut(ceoCacheKey(base, 'meta'), { tables: tables });
 
         var out = {
             period: P.key, periodLabel: P.label, prevLabel: P.prev, days: P.days,
@@ -496,9 +506,10 @@ CmdCeoBoard.prototype = {
             tables: tables,
             generated: new GlideDateTime().getDisplayValue(),
             computeMs: new Date().getTime() - started,
-            cached: false, ageMs: 0
+            computed: missing.length,
+            cached: !missing.length,
+            ageMs: (!missing.length && oldest !== null) ? new Date().getTime() - oldest : 0
         };
-        this._cachePut(cacheKey, out);
         return out;
     },
 
@@ -1060,17 +1071,13 @@ CmdCeoBoard.prototype = {
         return out;
     },
 
-    /** The cached measures for this viewer, period and filters, if still fresh. */
+    /** This viewer's remembered measures for these ids, or null if any is missing. */
     cachedMeasures: function (ids, periodKey, filterStr) {
-        var P = CmdCeoBoard.periodOf(periodKey);
-        var filters = this.parseFilters(filterStr);
-        var key = CmdCeoBoard.CACHE_PREFIX +
-            ceoHash(gs.getUserID() + '|' + P.key + '|' + ceoFilterKey(filters) + '|' + ids.slice().sort().join(','));
-        var hit = this._cacheGet(key);
-        if (!hit) return null;
-        hit.v.cached = true;
-        hit.v.ageMs = new Date().getTime() - hit.t;
-        return hit.v;
+        for (var i = 0; i < ids.length; i++) {
+            if (!this._cacheGet(ceoCacheKey(gs.getUserID() + '|' + CmdCeoBoard.periodOf(periodKey).key + '|' +
+                                            ceoFilterKey(this.parseFilters(filterStr)), ids[i]))) return null;
+        }
+        return this.measures(ids, periodKey, filterStr, {});
     },
 
     type: 'CmdCeoBoard'
@@ -1389,6 +1396,11 @@ function ceoNaturalCompare(a, b) {
         return parseInt(ra[2], 10) - parseInt(rb[2], 10);
     }
     return String(a).toLowerCase() < String(b).toLowerCase() ? -1 : 1;
+}
+
+/** One remembered entry: this viewer, period and filter, and one indicator. */
+function ceoCacheKey(base, id) {
+    return CmdCeoBoard.CACHE_PREFIX + ceoHash(base) + '.' + id;
 }
 
 /** 32-bit FNV-1a, as hex. A cache key, not a secret. */

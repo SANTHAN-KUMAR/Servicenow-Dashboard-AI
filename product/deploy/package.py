@@ -48,7 +48,11 @@ PROCESSOR = "com.snc.apps.AppsAjaxProcessor"
 # What a complete package must contain. Checked after the publish, because a
 # publish that quietly produced an empty set answers exactly like one that worked
 # -- the first attempt at this returned an update set sys_id and zero files.
-EXPECTED = {"Script Include": 9, "UI Page": 2, "UI Script": 3, "Custom Application": 1}
+# 0.2.0 adds the CEO Dashboard: CmdCeoBoard and CmdCeoAjax, the cmd_ceo page and
+# its cmd_ceo script. Its roles, settings and menu travel too and are listed by
+# type in the output; they are not pinned here because their platform type labels
+# are the platform's to choose.
+EXPECTED = {"Script Include": 11, "UI Page": 3, "UI Script": 4, "Custom Application": 1}
 
 
 def ajax(inst, function, **params):
