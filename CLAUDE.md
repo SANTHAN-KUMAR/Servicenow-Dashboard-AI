@@ -231,6 +231,38 @@ scratch and do not treat it as an absolute ban on custom charting. The resolved 
   ACL claim tested only as admin is untested, and a persona test that finds nothing filtered
   should be assumed broken before the instance is.**
 
+  ✅ **Partially superseded, 2026-09-22.** The lesson above was right and cuts one layer
+  deeper than the 2026-08-15 fix reached. `GlideImpersonate` is not the same session type
+  as a real browser login: `gs.isInteractive()` is false even under `GlideImpersonate`
+  inside a background script, and `incident` carries an OOB **before-query business rule**
+  (`incident query`) that restricts a non-itil user to their own incidents — including in
+  `GlideAggregate` — **only when the session is interactive**. So the 4,266-vs-815 row in
+  the table above was never actually exercised by a real user's browser; it was exercised
+  by a script pretending to be one, on the one table where that distinction happens to
+  matter.
+
+  Re-measured 2026-09-22 with a genuine interactive login (`product/tests/verify_acl_live.py`
+  — form POST to `login.do`, real session cookie, no admin, no impersonation), both the
+  CEO-dashboard leader and role-less personas, six tables:
+
+  | table | native (GlideAggregate) | role-less reads | verdict |
+  |---|---:|---:|---|
+  | `incident` | 0 | 0 | **VERIFIED — no gap.** The business rule above already restricts the native aggregate for a real interactive user. Retire the 4,266-vs-815 `incident` claim; it does not reproduce with a real login. |
+  | `problem` | 544 | **0** | DENIED — clean, fully proven, no scan-bound caveat |
+  | `change_request` | 1,505 | **0** | DENIED — clean, fully proven, no scan-bound caveat |
+  | `task` | 8,838 | 146 (floor) | BOUNDED |
+  | `kb_knowledge` | 757 | 435 (floor) | BOUNDED |
+  | `sys_user` | 668 | 668 | VERIFIED — correctly no gap |
+
+  **The differentiator is not weakened by this — it is now proven on cleaner ground.**
+  `change_request` and `problem` need no impersonation caveat, no scan-bound caveat, and no
+  "was this session really interactive" caveat: 1,505 vs 0 and 544 vs 0, from a genuine
+  login, DENIED rather than FILTERED so there's nothing to round or bound. **Use
+  `change_request` or `problem` as the headline live-proof number from here on, not
+  `incident`.** The row counts above will also have drifted with normal instance activity
+  since 08-15 (`incident` is now 4,284, not 4,266) — re-run the script rather than quote
+  either table by memory.
+
 - **DRIFT: reaching for Highcharts by default.** It requires a paid commercial license, and an OEM
   license (quote-only, perpetual) if embedded in something distributed to and hosted by customers
   — directly relevant if this ships as a Store app. **Correction:** default to **ECharts**

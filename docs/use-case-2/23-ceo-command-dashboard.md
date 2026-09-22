@@ -139,7 +139,7 @@ the orbit (`hero`), then the Summary (`pulse`), then the rest.
 - **Not re-run tonight:** `oracle_ceo.py` against eypocinst — no access. Re-run it
   before the side-by-side is shown; it is read-only.
 
-## 7. Personas, and one finding that matters beyond this page
+## 7. Personas, and the ACL claim, re-measured live (2026-09-22)
 
 `setup_app.py` creates two demo logins (password in `product/deploy/credentials.json`,
 gitignored, key `demo_password`):
@@ -147,20 +147,52 @@ gitignored, key `demo_password`):
 - **ceo.leader** (ceo_viewer + itil): incidents, changes, problems, requests all
   VERIFIED; PA's job-log table is closed to itil, so the two PA-housekeeping cards
   on Portfolios 7 and 8 say *you cannot read any of the records behind this measure*.
-- **ceo.restricted** (ceo_viewer only): sees **no incidents at all** — and not
-  because of an ACL. The OOB `incident query` before-query business rule restricts a
-  user without itil / sn_incident_read to their own incidents **when the session is
-  interactive** (`gs.isInteractive()`), and it restricts GlideAggregate too.
+- **ceo.restricted** (ceo_viewer only, no other roles — the "role-less" persona):
+  sees **no incidents at all** — and not because of a row-level ACL. The OOB
+  `incident query` before-query business rule restricts a user without itil /
+  sn_incident_read to their own incidents **when the session is interactive**
+  (`gs.isInteractive()`), and it restricts `GlideAggregate` on `incident` too.
 
-**The consequence, stated carefully.** CLAUDE.md's headline — *native reporting
-counts 4,266 incidents for a role-less user and they can open 815* — was measured
-with `GlideImpersonate` in a background script, which is not an interactive session,
-so that business rule did not run. In a real browser session, the same user's
-aggregate on `incident` is already restricted by it. The overstatement may therefore
-not exist on `incident` for real UI viewers. It can still exist on tables without a
-query rule (task, problem, change_request, kb_knowledge have none on dev390988),
-but the incident figure should be **re-measured in a real browser session before it
-is quoted again**. `browse.mjs --user <persona>` now makes that a one-line test.
+**The 2026-09-14 note below flagged this needed re-testing in a real browser
+session, not a background script. Done today, six tables, both personas, real
+form-login sessions (not `GlideImpersonate`):**
+
+| table | native count (GlideAggregate) | ceo.restricted can open | verdict |
+|---|---:|---:|---|
+| `incident` | 0 | 0 | **VERIFIED — no gap on this table for this persona.** The query business rule above restricts the native aggregate too, in a real interactive session. The old 4,266-vs-815 claim does not reproduce here; retire it. |
+| `problem` | 544 | **0** | **DENIED.** Clean, fully proven (not a floor). |
+| `change_request` | 1,505 | **0** | **DENIED.** Clean, fully proven. Screenshots: `ceo-dashboard-screens/leader-change_request-verified.png` (1,505 records, full analysis) next to `restricted-change_request-denied.png` (same URL, same table, "This subject holds 1505 records and your permissions do not admit any of them"). |
+| `task` | 8,838 | 124 (floor — scan capped) | BOUNDED |
+| `kb_knowledge` | 757 | 435 (floor — scan capped) | BOUNDED |
+| `sys_user` | 668 | 668 | VERIFIED — correctly no gap |
+
+**What this means for the client story:** the mechanism is not weaker than
+claimed — it's stronger, because it's now demonstrated with a real login instead
+of a background-script trick, and the cleanest example (`change_request`: 1,505
+vs 0, same page, same URL, two real logins) needs no caveats about scan bounds
+or impersonation quirks at all. **Use `change_request` or `problem` for the
+demo, not `incident`.**
+
+Repeatable with `python3 product/tests/verify_acl_live.py` — real form login,
+no admin, no impersonation, both personas, all six tables, one command:
+
+```
+  ceo.leader
+    incident         VERIFIED  native=  4284  readable=  4284
+    problem          VERIFIED  native=   544  readable=   544
+    change_request   VERIFIED  native=  1505  readable=  1505
+    task             BOUNDED   native=  8838  readable=  1119
+    kb_knowledge     BOUNDED   native=   757  readable=   437
+    sys_user         VERIFIED  native=   668  readable=   668
+
+  ceo.restricted
+    incident         VERIFIED  native=     0  readable=     0
+    problem          DENIED    native=   544  readable=     0  <-- native says 544, this viewer opens 0
+    change_request   DENIED    native=  1505  readable=     0  <-- native says 1,505, this viewer opens 0
+    task             BOUNDED   native=  8838  readable=   146
+    kb_knowledge     BOUNDED   native=   757  readable=   435
+    sys_user         VERIFIED  native=   668  readable=   668
+```
 
 ## 8. Configuration
 
@@ -192,17 +224,29 @@ python3 product/deploy/package.py --version 0.2.0   # product/dist/COMMAND-Analy
    marked as on tables without the field.
 5. Scroll to Portfolios 3–6: marked as one indicator repeated, as the source is
    configured.
-6. Trust: the per-table verdict. If time allows, log in as ceo.restricted in a
-   second window and show the same page counted against a viewer who can read far
-   less.
-7. Present mode for the wall; PDF for the inbox.
+6. Trust: the per-table verdict.
+7. **The ACL proof, the sharpest moment of the demo.** Open a second window
+   logged in as `ceo.restricted`. Navigate both windows to
+   `cmd_dashboard.do?table=change_request`. Leader's window: 1,505 records, full
+   analysis, ACL VERIFIED. Restricted's window, same URL: *"This subject holds
+   1505 records and your permissions do not admit any of them."* Same page, same
+   code, same instant — the only thing that changed is who's logged in. This is
+   what a native PA scorecard or GlideAggregate-based report cannot do: it would
+   show 1,505 to both of them. Screenshots pre-captured at
+   `ceo-dashboard-screens/leader-change_request-verified.png` and
+   `restricted-change_request-denied.png` if you want a fallback that doesn't
+   depend on a live second login.
+8. Present mode for the wall; PDF for the inbox.
 
 ## 10. Still open
 
 - Their portfolio names and the Summary header counters: readable from eypocinst
   in about fifteen minutes of read-only GETs, once access returns.
 - `oracle_ceo.py` against eypocinst, before the side-by-side.
-- The incident overstatement figure, re-measured interactively (§7).
+- ~~The incident overstatement figure, re-measured interactively.~~ **Done
+  2026-09-22** — see §7. `incident` itself no longer demonstrates a gap for a
+  real interactive login (the platform's own business rule already restricts it);
+  `change_request` and `problem` do, cleanly, and are now the ones to use.
 - Cold load is bounded by the first proof per table; a per-user proof memory that
   survives a new login would remove most of it, and is a decision about how long a
   permission proof may be trusted, not an engineering one.
