@@ -2473,8 +2473,24 @@
    * its title replaced. One function so there is one place to be wrong.
    */
   function subjectBase(payload) {
+    /* Opened from a workspace list: every self-link carries the list's context
+       back to the server, which re-validates it through CmdWorkspace on every
+       load. The context is never trusted because it was on the last page. */
+    if (payload.workspace) {
+      var w = payload.workspace;
+      return P('cmd_dashboard.do?table=') + encodeURIComponent(payload.subject.table) +
+             '&ws=1' +
+             '&wq=' + encodeURIComponent(w.listQuery || '') +
+             (w.list ? '&wlist=' + encodeURIComponent(w.list) : '') +
+             (w.selected ? '&wsel=' + encodeURIComponent(w.selected) : '') +
+             (w.group ? '&wgroup=' + encodeURIComponent(w.group) : '') +
+             (w.title ? '&wtitle=' + encodeURIComponent(w.title) : '') +
+             (w.record && w.record.ok ? '&wrec=' + encodeURIComponent(w.record.sysId) : '') +
+             (payload.embed ? '&embed=1' : '');
+    }
     if (payload.report && payload.report.sysId) {
-      return P('cmd_dashboard.do?report=') + encodeURIComponent(payload.report.sysId);
+      return P('cmd_dashboard.do?report=') + encodeURIComponent(payload.report.sysId) +
+             (payload.embed ? '&embed=1' : '');
     }
     /* A measure opened from the CEO Dashboard is its own subject: a drill from
        it has to stay on that measure's rows, not fall back to the whole table. */
@@ -2800,7 +2816,9 @@
        portfolio, the same period -- rather than to the whole table it happens to
        be counted on. */
     var fromCeo = ceo || (meas && meas.portfolio);
-    var root = el('a', '', fromCeo ? 'CEO Dashboard' : payload.subject.label);
+    var wsp = payload.workspace || null;
+    var root = el('a', '', fromCeo ? 'CEO Dashboard'
+      : (wsp && wsp.title ? wsp.title : payload.subject.label));
     root.href = fromCeo
       ? P('cmd_ceo.do?focus=') + encodeURIComponent((ceo ? ceo.portfolio : meas.portfolio) || '') +
         (meas && meas.periodKey ? '&period=' + encodeURIComponent(meas.periodKey) : '')
@@ -2837,7 +2855,9 @@
           ? meas.name
           : (payload.report
               ? payload.subject.label
-              : payload.subject.label + ' analysis'))));
+              : (wsp && wsp.title
+                  ? wsp.title
+                  : payload.subject.label + ' analysis')))));
 
     var sub = el('div', 'sub');
     if (meas) {
@@ -2879,9 +2899,20 @@
       lst.href = payload.subject.listUrl;
       right.appendChild(lst);
     }
-    var back = el('a', 'btn', payload.report ? 'All reports' : 'All subjects');
-    back.href = P(payload.report ? 'cmd_catalog.do?view=reports' : 'cmd_catalog.do');
-    right.appendChild(back);
+    if (payload.embed) {
+      /* Inside the workspace modal there is no "All subjects" to go back to --
+         closing the modal is the way back. What the viewer can want instead is
+         more room, so the same analysis opens full screen in a browser tab. */
+      var full = el('a', 'btn', 'Open full screen');
+      full.href = window.location.href.replace(/([?&])embed=1(&|$)/, '$1').replace(/[?&]$/, '');
+      full.target = '_blank';
+      full.rel = 'noopener';
+      right.appendChild(full);
+    } else {
+      var back = el('a', 'btn', payload.report ? 'All reports' : 'All subjects');
+      back.href = P(payload.report ? 'cmd_catalog.do?view=reports' : 'cmd_catalog.do');
+      right.appendChild(back);
+    }
     h.appendChild(right);
     return h;
   }
@@ -3252,6 +3283,147 @@
    * breadcrumb, because the path is a set of filters and the thing you most often
    * want is to drop one from the middle without losing the rest.
    */
+  /**
+   * Which workspace list this analysis came from, in the list's own terms.
+   *
+   * A modal over a list that says only "4,284 records" leaves the viewer to
+   * trust that it is their list and not the whole table. This says which list,
+   * which conditions (read back from the query the server accepted, not echoed
+   * from the URL), the column they grouped by, and the selected rows if any.
+   */
+  function workspaceStrip(payload) {
+    var w = payload.workspace;
+    if (!w) return null;
+    var bar = el('div', 'ws-strip');
+    bar.appendChild(el('span', 'ws-l', 'From your workspace list'));
+    var clauses = w.clauses || [];
+    if (w.selected) {
+      var n = w.selected.split(',').length;
+      bar.appendChild(el('span', 'ws-c', n + (n === 1 ? ' selected row' : ' selected rows')));
+    } else if (!clauses.length) {
+      bar.appendChild(el('span', 'ws-c', 'every row, no filter'));
+    }
+    for (var i = 0; i < clauses.length; i++) {
+      bar.appendChild(el('span', clauses[i].joiner ? 'ws-j' : 'ws-c', clauses[i].text));
+    }
+    if (w.fields && w.fields.length) bar.appendChild(analyseByControl(payload));
+    var wrap = el('div');
+    wrap.appendChild(bar);
+    var rec = recordStrip(payload);
+    if (rec) wrap.appendChild(rec);
+    return wrap;
+  }
+
+  /**
+   * "Analyse by": the native Data visualization panel's Group-by dropdown,
+   * answered by COMMAND. The options are exactly the engine's own dimensions
+   * for this table, the list's columns first, so every choice is one the engine
+   * will honour -- or explain, in a note, why it could not draw.
+   *
+   * Choosing a field reloads the same analysis with that field leading, at the
+   * top level: the drill path is cleared because the question has changed.
+   */
+  function analyseByControl(payload) {
+    var w = payload.workspace;
+    var box = el('label', 'ws-by');
+    box.appendChild(el('span', 'ws-by-l', 'Analyse by'));
+    var sel = el('select', 'ws-by-s');
+    sel.setAttribute('aria-label', 'Analyse this list by a field');
+    var auto = el('option', '', 'Automatic (COMMAND picks)');
+    auto.value = '';
+    sel.appendChild(auto);
+    var inList = el('optgroup'); inList.label = 'Columns in this list';
+    var other = el('optgroup'); other.label = 'Other fields';
+    for (var i = 0; i < w.fields.length; i++) {
+      var f = w.fields[i];
+      var o = el('option', '', f.label);
+      o.value = f.name;
+      if (f.name === w.group) o.selected = true;
+      (f.inList ? inList : other).appendChild(o);
+    }
+    if (inList.children.length) sel.appendChild(inList);
+    if (other.children.length) sel.appendChild(other);
+    sel.addEventListener('change', function () {
+      var saved = w.group;
+      w.group = sel.value;
+      var url = subjectBase(payload) + stateTail(payload);
+      w.group = saved;
+      paintSkeleton(document.getElementById('cmd-root'), url);
+      window.location.href = url;
+    });
+    box.appendChild(sel);
+    return box;
+  }
+
+  /**
+   * One record, from the row menu: where it sits in this list, and a one-click
+   * "records like this one" by each field it has a value on. Each chip is an
+   * ordinary drill step (field:key) on top of the list's own filter, so it gets
+   * the drill gates, the ACL verdict and the breadcrumb like any other click.
+   */
+  function recordStrip(payload) {
+    var w = payload.workspace;
+    var r = w && w.record;
+    if (!r) return null;
+    var bar = el('div', 'ws-rec');
+    if (!r.ok) {
+      bar.appendChild(el('span', 'ws-l', 'This record'));
+      bar.appendChild(el('span', 'ws-c', r.error));
+      return bar;
+    }
+    bar.appendChild(el('span', 'ws-l', 'This record'));
+    var open = el('a', 'ws-rec-id', r.display);
+    open.href = '/now/sow/record/' + encodeURIComponent(r.table) + '/' + encodeURIComponent(r.sysId);
+    open.target = '_blank';
+    open.rel = 'noopener';
+    open.title = 'Open this record in a new tab';
+    bar.appendChild(open);
+    if (r.facts && r.facts.length) {
+      bar.appendChild(el('span', 'ws-j', 'records like it, by'));
+      for (var i = 0; i < r.facts.length; i++) {
+        var f = r.facts[i];
+        var a = el('a', 'ws-f');
+        a.appendChild(el('span', 'fb-f', f.label));
+        a.appendChild(el('span', 'fb-v', f.display));
+        a.href = drillUrl(payload, f.field, f.key);
+        a.title = 'Analyse the records in this list with ' + f.label + ' = ' + f.display;
+        bar.appendChild(a);
+      }
+    }
+    return bar;
+  }
+
+  /* The label the payload already carries for a field, or the name itself. */
+  function fieldLabelOf(payload, field) {
+    var ps = payload.panels || [];
+    for (var i = 0; i < ps.length; i++) {
+      if (ps[i].field === field && ps[i].fieldLabel) return ps[i].fieldLabel;
+    }
+    return field.replace(/_/g, ' ');
+  }
+
+  /**
+   * Inside the workspace modal the page is an iframe, so a record list or a
+   * record opened in place would replace the analysis inside the modal and
+   * strand the viewer. Everything that leaves COMMAND opens in a tab instead;
+   * COMMAND's own links (drill, window, forms) stay in the frame. Capture
+   * phase, so it runs before the skeleton navigator decides anything.
+   */
+  function wireEmbedLinks() {
+    document.addEventListener('click', function (e) {
+      var a = e.target;
+      while (a && a !== document && a.tagName !== 'A') a = a.parentNode;
+      if (!a || a === document || !a.href) return;
+      var path = a.pathname || '';
+      if (path.indexOf('cmd_dashboard.do') !== -1 ||
+          path.indexOf('cmd_catalog.do') !== -1 ||
+          path.indexOf('cmd_ceo.do') !== -1) return;
+      if (a.getAttribute('href').charAt(0) === '#') return;
+      a.target = '_blank';
+      a.rel = 'noopener';
+    }, true);
+  }
+
   function filterBar(payload) {
     if (!payload.path || !payload.path.length) return null;
 
@@ -3602,15 +3774,22 @@
 
     if (payload.error) {
       var e = el('div', 'panel pad');
-      e.appendChild(el('div', 'h3', 'Cannot show this subject'));
+      e.appendChild(el('div', 'h3', payload.workspace
+        ? 'COMMAND cannot analyse this list'
+        : 'Cannot show this subject'));
       e.appendChild(el('p', 'sm', payload.error));
-      var back = el('a', 'btn', 'All subjects'); back.href = P('cmd_catalog.do');
-      e.appendChild(back);
+      if (!payload.embed) {
+        var back = el('a', 'btn', 'All subjects'); back.href = P('cmd_catalog.do');
+        e.appendChild(back);
+      }
       mount.appendChild(e);
       return;
     }
 
     mount.appendChild(buildHeader(payload));
+
+    var ws = workspaceStrip(payload);
+    if (ws) mount.appendChild(ws);
 
     /* One measure of a portfolio, opened as a subject.
      *
@@ -4314,6 +4493,13 @@
       return;
     }
     if (!payload) return;
+
+    /* Opened inside the workspace modal: tighter chrome, and anything that
+       leaves COMMAND opens in a tab rather than inside the frame. */
+    if (payload.embed) {
+      document.documentElement.className += ' cmd-embed';
+      wireEmbedLinks();
+    }
 
     try {
       if (view === 'catalog') renderCatalog(payload, mount);

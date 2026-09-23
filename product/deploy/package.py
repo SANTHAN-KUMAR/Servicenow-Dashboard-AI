@@ -52,7 +52,10 @@ PROCESSOR = "com.snc.apps.AppsAjaxProcessor"
 # its cmd_ceo script. Its roles, settings and menu travel too and are listed by
 # type in the output; they are not pinned here because their platform type labels
 # are the platform's to choose.
-EXPECTED = {"Script Include": 11, "UI Page": 3, "UI Script": 4, "Custom Application": 1}
+# 0.3.0 adds the workspace integration: CmdWorkspace, the cmd_frame page and its
+# loader script, and the "Analyse in COMMAND" list action (an Action Assignment).
+EXPECTED = {"Script Include": 12, "UI Page": 4, "UI Script": 5, "Custom Application": 1,
+            "Action Assignment": 1}
 
 
 def ajax(inst, function, **params):

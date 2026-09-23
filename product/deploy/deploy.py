@@ -51,6 +51,9 @@ SCRIPT_INCLUDES = [
     "CmdReport.js",
     "CmdCeoBoard.js",
     "CmdCeoAjax.js",
+    # The workspace launcher's context gate. Only the dashboard page calls it,
+    # and only when opened from "Analyse in COMMAND" on a workspace list.
+    "CmdWorkspace.js",
 ]
 
 # Script Includes the browser calls through GlideAjax. Everything else stays
@@ -67,12 +70,15 @@ UI_SCRIPTS = [
     "cmd_fonts.js",
     "cmd_render.js",
     "cmd_ceo.js",
+    # The workspace modal's frame loader. See ui-pages/cmd_frame.xhtml.
+    "cmd_frame.js",
 ]
 
 UI_PAGES = [
     "cmd_catalog.xhtml",
     "cmd_dashboard.xhtml",
     "cmd_ceo.xhtml",
+    "cmd_frame.xhtml",
 ]
 
 # Shared stylesheet, substituted into every page. Kept in one file so the

@@ -112,6 +112,40 @@
      pa_indicators, so no encoded query ever arrives from a browser. */
   var measure = '' + (RP.getParameterValue('measure') || '');
 
+  /* Workspace context, from the "Analyse in COMMAND" list action. Coerced to
+     JavaScript strings for the same java.lang.String reason `path` is, and not
+     otherwise interpreted here: CmdWorkspace.context is the one place that
+     decides what of this the engine may use. `embed` only changes chrome. */
+  var wsMode = ('' + (RP.getParameterValue('ws') || '')) === '1';
+  var wq = '' + (RP.getParameterValue('wq') || '');
+  var wgroup = '' + (RP.getParameterValue('wgroup') || '');
+  var wsel = '' + (RP.getParameterValue('wsel') || '');
+  var wlist = '' + (RP.getParameterValue('wlist') || '');
+  var wrec = '' + (RP.getParameterValue('wrec') || '');
+  var wtitle = '' + (RP.getParameterValue('wtitle') || '');
+  var embed = ('' + (RP.getParameterValue('embed') || '')) === '1';
+
+  /* A saved report opened from a workspace list of reports (row menu, or one
+     report ticked). What the viewer means is "analyse this report", not
+     "analyse the table of report definitions", so it becomes the ordinary
+     converted-report page -- the report's own table and saved filter, re-read
+     from sys_report server-side, never from the URL. */
+  var reportFromList = false;
+  var wsReportRefusal = '';
+  if (wsMode) {
+    if (table === 'sys_report') {
+      var rid = /^[0-9a-f]{32}$/.test(wrec) ? wrec : (/^[0-9a-f]{32}$/.test(wsel) ? wsel : '');
+      if (rid) {
+        reportId = rid;
+        wsMode = false;
+        reportFromList = true;
+      } else {
+        wsReportRefusal = 'To analyse a saved report, open its row menu and choose ' +
+          'Analyse in COMMAND, or tick exactly one report and use the header button.';
+      }
+    }
+  }
+
   var out;
   try {
     var builder = new CmdPayload();
@@ -146,6 +180,45 @@
       }
       out.window = { months: months, allowed: allowed };
       out.forms = forms;
+    } else if (wsReportRefusal) {
+      out = { error: wsReportRefusal, workspace: { title: wtitle },
+              subject: { table: table, label: table, rows: 0 },
+              panels: [], path: [], notes: [], drill: { atMax: true, options: [] } };
+    } else if (wsMode) {
+      /* Opened from a workspace list by "Analyse in COMMAND". The list's own
+         query, grouping, selection and title arrive here as URL parameters and
+         go through CmdWorkspace before the engine sees any of them -- see the
+         class comment for the two ways a URL query differs from a report's
+         saved filter. A refused context is shown as a refusal and analyses
+         nothing; it never falls back to the whole table. */
+      var wsp = new CmdWorkspace();
+      var wctx = wsp.context(table, {
+        query: wq, list: wlist, group: wgroup, selected: wsel, title: wtitle });
+      if (!wctx.ok) {
+        out = { error: wctx.error,
+                subject: { table: table, label: table, rows: 0 },
+                panels: [], path: [], notes: [], drill: { atMax: true, options: [] } };
+      } else {
+        /* The grouped column leads only at the top level. Once the viewer has
+           drilled, the path is the question and forcing the list's grouping
+           back onto every level would redraw a breakdown of one value. */
+        out = builder.dashboard(table, path, {
+          months: months, forms: forms,
+          focus: focus || (path.length ? '' : wctx.focus),
+          baseQuery: wctx.query });
+      }
+      var wdims = wctx.ok ? builder.meta.dimensions(table) : [];
+      out.workspace = {
+        fields: wsp.fieldChoices(wdims, wctx.columns, wctx.focus),
+        record: wrec ? wsp.recordContext(table, wrec, wdims, wctx.columns) : null,
+        title: wctx.title,
+        listQuery: wctx.listQuery,
+        list: wctx.list,
+        selected: wctx.selectedIds.join(','),
+        group: wctx.focus,
+        clauses: wctx.clauses,
+        notes: wctx.notes
+      };
     } else if (reportId) {
       var conv = new CmdReport(builder.data, builder.meta, builder.form);
       out = conv.convert(builder, reportId, path, { months: months, forms: forms, focus: focus });
@@ -159,6 +232,7 @@
             subject: { table: table, label: table, rows: 0 },
             panels: [], path: [], notes: [], drill: { atMax: true, options: [] } };
   }
+  out.embed = embed;
   /* The two engines offer different base64 encoders and neither has both.
      Measured on dev390988: in global, GlideStringUtil.base64Encode works and
      typeof gs.base64Encode is 'undefined'; inside a scoped application it is the

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+
+<!--
+  COMMAND inside a workspace modal: the frame that holds the dashboard.
+
+  "Analyse in COMMAND" opens the analysis with g_modal.showFrame, the workspace's
+  own iframe modal. Measured on dev390988 (Australia): when the page inside that
+  iframe navigates, a drill click, the time window, the Analyse-by picker -
+  the workspace closes the modal. It is built for dialogs that finish when their
+  frame reloads. An analysis is navigated constantly, so the modal cannot hold the
+  dashboard directly.
+
+  So the modal holds this page, which never navigates, and this page holds the
+  dashboard in an inner iframe, where every navigation happens. Nothing about the
+  platform's modal is changed; it simply never sees a reload.
+
+  No server logic and no payload. The one script, cmd_frame, forwards this
+  page's own query string to the dashboard page on the same origin, the target
+  path is fixed in that script, never taken from a parameter.
+-->
+
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #F3F5F8; }
+  #cmd-inner { display: block; width: 100%; height: 100vh; border: 0; }
+  #cmd-frame-wait { position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: center; font: 13px -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #6B778A; pointer-events: none; }
+  @media (prefers-color-scheme: dark) { html, body { background: #0B0F14; } }
+</style>
+
+<div id="cmd-frame-wait">Analysing this list&#8230;</div>
+<iframe id="cmd-inner" title="COMMAND Analytics"></iframe>
+
+<g:requires name="@@CMD_FRAME_ASSET@@.jsdbx" includes="true" />
+
+</j:jelly>

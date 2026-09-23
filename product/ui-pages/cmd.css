@@ -507,6 +507,49 @@ svg.ch .huge{fill:var(--ink-1); font-family:var(--display); font-size:46px;
 #cmd-wrap .fb-clear{font-size:11.5px; color:var(--ink-3); text-decoration:none}
 #cmd-wrap .fb-clear:hover{color:var(--ink-1); text-decoration:underline}
 
+/* ── workspace context strip ─────────────────────────────────────────────────
+   The list this analysis was opened from, in the list's own terms. Same chip
+   grammar as the filter bar below it, with a series-one rule on the left so it
+   reads as provenance rather than as another filter to remove. */
+#cmd-wrap .ws-strip{
+  display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin:-6px 0 16px;
+  padding:9px 12px; border-radius:10px; background:var(--surface);
+  border:1px solid var(--edge); border-left:3px solid var(--c1)}
+#cmd-wrap .ws-l{
+  font-family:var(--mono); font-size:10px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3); margin-right:4px}
+#cmd-wrap .ws-c{
+  padding:3px 10px; border-radius:20px; background:var(--surface-3);
+  border:1px solid var(--edge); font-size:12px; color:var(--ink-1)}
+#cmd-wrap .ws-j{font-size:11px; color:var(--ink-3); text-transform:uppercase;
+  letter-spacing:.08em}
+#cmd-wrap .ws-g{
+  padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600;
+  color:var(--c1); border:1px solid var(--c1); background:transparent}
+
+#cmd-wrap .ws-by{display:inline-flex; align-items:center; gap:8px; margin-left:auto}
+#cmd-wrap .ws-by-l{font-family:var(--mono); font-size:10px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-3)}
+#cmd-wrap .ws-by-s{font:inherit; font-size:12.5px; color:var(--ink-1);
+  background:var(--surface-3); border:1px solid var(--edge-2); border-radius:8px;
+  padding:5px 28px 5px 10px; min-width:200px; cursor:pointer}
+#cmd-wrap .ws-by-s:focus-visible{outline:2px solid var(--c1); outline-offset:2px}
+#cmd-wrap .ws-rec{
+  display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin:-8px 0 16px;
+  padding:9px 12px; border-radius:10px; background:var(--surface);
+  border:1px solid var(--edge); border-left:3px solid var(--c2)}
+#cmd-wrap .ws-rec-id{font-family:var(--mono); font-size:12.5px; font-weight:600;
+  color:var(--c2); text-decoration:underline; text-underline-offset:3px}
+#cmd-wrap .ws-f{display:inline-flex; align-items:center; gap:7px; padding:3px 10px;
+  border-radius:20px; background:var(--surface-3); border:1px solid var(--edge);
+  font-size:12px; text-decoration:none}
+#cmd-wrap .ws-f:hover{border-color:var(--c2)}
+
+/* Inside the workspace modal: the modal already frames the page, so the page's
+   own outer padding and full-viewport height would only waste its space. */
+.cmd-embed #cmd-wrap{padding:18px 20px 36px; min-height:0}
+.cmd-embed #cmd-wrap .app-h{margin-bottom:16px}
+
 /* ── small controls ──────────────────────────────────────────────────────── */
 #cmd-wrap .seg.sm button{font-size:11px; padding:3px 9px}
 #cmd-wrap .btn.sm{font-size:11.5px; padding:4px 11px}
