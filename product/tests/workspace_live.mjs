@@ -39,8 +39,8 @@ if (SHOTS) mkdirSync(SHOTS, { recursive: true });
    column group-by, a row selection, an allowlisted javascript: filter, a dynamic
    filter, other tables (knowledge, requests, CMDB) and an empty list. */
 const SCENARIOS = [
-  { id: 's1', name: 'Incidents - All, no filter', list: '7ae4da1ec3013010965e070e9140dd66' },
-  { id: 's2', name: 'Incidents - Open', list: 'b16a321ac3013010965e070e9140dd3a' },
+  { id: 's1', name: 'Incidents - All, whole-list overview', list: '7ae4da1ec3013010965e070e9140dd66', tile: 'Whole-list overview' },
+  { id: 's2', name: 'Incidents - Open, column Priority', list: 'b16a321ac3013010965e070e9140dd3a', tile: 'Priority' },
   { id: 's3', name: 'Incidents - All, grouped by Priority from the column menu',
     list: '7ae4da1ec3013010965e070e9140dd66', group: 'Priority' },
   { id: 's4', name: 'Incidents - Open, three rows selected',
@@ -187,6 +187,27 @@ async function run(sc) {
              title: (d.querySelector('h1')||{}).textContent||'',
              fullScreen: !!Array.prototype.filter.call(d.querySelectorAll('a'),function(a){return /Open full screen/.test(a.textContent);}).length,
              renderErrors: Array.prototype.map.call(d.querySelectorAll('.panel .h3'),function(h){return h.textContent;}).filter(function(t){return /failed/i.test(t);}) };})()`));
+  /* The first screen from a list is the column picker. Pick a column the way an
+     agent does -- sc.tile, or the list's first column -- and analyse that. */
+  r.emptyList = await evaluate(`/no rows you can see/.test((__cmdFrame().contentDocument.querySelector('.sub')||{}).textContent||'')`);
+  r.pickerShown = await evaluate(`!!__cmdFrame().contentDocument.querySelector('.col-tile')`);
+  if (r.pickerShown) {
+    r.tiles = await evaluate(`Array.prototype.map.call(__cmdFrame().contentDocument.querySelectorAll('.col-tile .col-t'),function(t){return t.textContent;})`);
+    r.tileClicked = await evaluate(`(function(){var d=__cmdFrame().contentDocument; var ts=d.querySelectorAll('.col-tile');
+      var want=${JSON.stringify(sc.tile || '')}; var t=null;
+      for(var i=0;i<ts.length;i++){ if(want && ts[i].querySelector('.col-t').textContent===want) t=ts[i]; }
+      if(!t) t=ts[0]; t.click(); return t.querySelector('.col-t').textContent;})()`);
+    await sleep(1500);
+    r.tileRenderMs = await waitFor(`(function(){var f=__cmdFrame(); var d=f&&f.contentDocument;
+      return d && /wgroup=|wall=1/.test(f.contentWindow.location.href) && d.getElementById('cmd-data') && d.getElementById('cmd-root').children.length>1;})()`, 120000);
+    if (r.tileRenderMs < 0) { r.fail = 'choosing a column did not open its analysis'; return r; }
+    Object.assign(r, await evaluate(`(function(){var d=__cmdFrame().contentDocument;
+      var p=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(d.getElementById('cmd-data').getAttribute('data-b64')),function(c){return c.charCodeAt(0);})));
+      return { table: p.subject.table, rows: p.subject.rows, query: p.subject.query, error: p.error||'', workspace: p.workspace, acl: p.acl,
+               fieldMode: p.fieldMode||null, panelFields: (p.panels||[]).map(function(x){return x.field||x.kind;}),
+               panelTitles: (p.panels||[]).map(function(x){return x.title||'';}), focusField: p.focusField, notes: p.notes||[],
+               title: (d.querySelector('h1')||{}).textContent||'', stripText: (d.querySelector('.ws-strip')||{}).textContent||'' };})()`));
+  }
   if (sc.pick) {
     /* The "Analyse by" picker inside the modal, changed the way a person does. */
     r.picked = await evaluate(`(function(){var d=__cmdFrame().contentDocument; var s=d.querySelector('.ws-by-s');

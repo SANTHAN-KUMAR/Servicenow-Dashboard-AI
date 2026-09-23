@@ -116,6 +116,14 @@ def main():
                     probe = probe[2:]
                 if probe not in query:
                     problems.append(f"list clause {clause!r} missing from analysed query {query!r}")
+            if r.get("emptyList"):
+                # An empty list says so on the picker instead of offering columns.
+                if r.get("rows") != 0 or r.get("pickerShown"):
+                    problems.append("empty list, but the picker still offered columns")
+            elif r.get("pickerShown") and r.get("tileClicked") not in (None, "Whole-list overview"):
+                fm = r.get("fieldMode") or {}
+                if fm.get("label") != r.get("tileClicked"):
+                    problems.append(f"chose {r.get('tileClicked')!r}, analysis is about {fm.get('label')!r}")
             if r["id"] == "s3" and w.get("group") != "priority":
                 problems.append(f"group-by did not arrive (got {w.get('group')!r})")
             if r["id"] == "s10":
@@ -144,7 +152,7 @@ def main():
             if r["id"] == "s4" and r.get("rows") != len((w.get("selected") or "").split(",")):
                 problems.append("selection count differs from rows analysed")
             oracle = None
-            if admin and not problems:
+            if admin and not problems and not r.get("emptyList"):
                 oracle = secure_count(inst, r["table"], query)
                 acl = r.get("acl") or {}
                 if acl.get("mode") == "BOUNDED" and acl.get("capped"):

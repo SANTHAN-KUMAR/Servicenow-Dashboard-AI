@@ -165,6 +165,18 @@ CmdPayload.prototype = {
         path = path || [];
         opts = opts || {};
 
+        /* Field mode: the page is about ONE field, the way the workspace's own
+           column "Show visualization" is -- but answered with COMMAND's analyses
+           rather than one bar chart. The field leads every lead-driven analysis
+           (trend, change, rank shift, spread, Pareto, the matrix), its breakdown is
+           forced onto the page, and panels about unrelated fields are left out.
+           Validated like any focus field: a name that is not a dimension of this
+           table simply does not lead. */
+        if (opts.fieldMode) {
+            opts.leadField = String(opts.fieldMode);
+            opts.focus = String(opts.fieldMode);
+        }
+
         var d = this.meta.describe(table);
         if (!d.exists) return this._error(table, 'That table does not exist on this instance.');
 
@@ -406,6 +418,20 @@ CmdPayload.prototype = {
             }
         }
         payload.focusField = focusField || null;
+
+        /* Field mode keeps only the chosen field's own breakdown. */
+        if (opts.fieldMode) {
+            var kept = [];
+            for (i = 0; i < dimPanels.length; i++) {
+                if (dimPanels[i].field === String(opts.fieldMode)) kept.push(dimPanels[i]);
+            }
+            dimPanels = kept;
+            payload.fieldMode = { field: String(opts.fieldMode), label: null };
+            for (i = 0; i < dims.length; i++) {
+                if (dims[i].name === String(opts.fieldMode)) payload.fieldMode.label = String(dims[i].label);
+            }
+            if (!payload.fieldMode.label) payload.fieldMode = null;
+        }
 
         /* ── the analysis grid ──
          *
@@ -808,6 +834,10 @@ CmdPayload.prototype = {
          */
         var builders = [];
 
+        if (opts.fieldMode && lead.primary && lead.primary.name === String(opts.fieldMode)) {
+            return this._fieldGrid(table, query, dateField, lead, opts, t0, payload, used);
+        }
+
         /* ── what a leader asks first ── */
         if (dateField && lead.primary) {
             builders.push({ name: 'trend by ' + lead.primary.label, fn: function () {
@@ -978,6 +1008,72 @@ CmdPayload.prototype = {
                 (skipped === 1 ? ' was' : 's were') + ' not attempted, to keep this ' +
                 'page inside its time budget. This table is expensive to ' +
                 'permission-check.');
+        }
+        return out;
+    },
+
+    /**
+     * The analysis grid for field mode: every panel answers a question about the
+     * chosen field. Same builders as the general grid, same gates, same budget --
+     * only the ones that do not involve the field are left out, and the field is
+     * crossed with the other columns of the list the viewer came from.
+     */
+    _fieldGrid: function (table, query, dateField, lead, opts, t0, payload, used) {
+        var self = this, f = lead.primary;
+        var grain = opts.grain || 'month', months = opts.months || 12;
+        var budget = CmdData.GROUP_MS;
+        var builders = [];
+        if (dateField) {
+            builders.push({ name: f.label + ' over time', fn: function () {
+                return self.analysis.trendByGroup(table, query, dateField, f, grain, months, budget); } });
+            builders.push({ name: 'what changed in ' + f.label, fn: function () {
+                return self.analysis.changeBreakdown(table, query, dateField, f, grain, budget); } });
+            builders.push({ name: f.label + ' rank shift', fn: function () {
+                return self.analysis.rankShift(table, query, dateField, f, grain, months, budget); } });
+        }
+        if (f.isOrdinal) {
+            builders.push({ name: f.label + ' funnel', fn: function () {
+                return self.analysis.funnel(table, query, f); } });
+        }
+        builders.push({ name: f.label + ' pareto', fn: function () {
+            return self.analysis.pareto(table, query, f); } });
+        var measures = this.analysis.rankMeasures(table, query, budget);
+        if (measures.length) {
+            builders.push({ name: measures[0].label + ' by ' + f.label, fn: function () {
+                return self.analysis.spreadByGroup(table, query, measures[0], f, budget); } });
+        }
+
+        /* Crossed with the list's own columns first, then the page's runner-up. */
+        var dims = this.meta.dimensions(table), byName = {}, i;
+        for (i = 0; i < dims.length; i++) byName[dims[i].name] = dims[i];
+        var cross = [], seen = {};
+        seen[f.name] = true;
+        var wanted = (opts.crossWith || []).concat(lead.secondary ? [lead.secondary.name] : []);
+        for (i = 0; i < wanted.length && cross.length < 3; i++) {
+            var c = byName[wanted[i]];
+            if (!c || seen[c.name] || c.needsCardinalityCheck || this._contains(used, c.name)) continue;
+            seen[c.name] = true;
+            cross.push(c);
+        }
+        for (i = 0; i < cross.length; i++) {
+            (function (other) {
+                builders.push({ name: f.label + ' by ' + other.label, fn: function () {
+                    return self.analysis.crossHeat(table, query, f, other, budget); } });
+            })(cross[i]);
+        }
+
+        var out = [], skipped = 0;
+        for (i = 0; i < builders.length; i++) {
+            if (this._overBudget(t0)) { skipped++; continue; }
+            var p = null;
+            try { p = builders[i].fn(); } catch (e) {
+                payload.notes.push('The ' + builders[i].name + ' panel could not be built: ' + (e.message || e));
+            }
+            if (p) out.push(p);
+        }
+        if (skipped) {
+            payload.notes.push(skipped + ' analysis of ' + f.label + (skipped === 1 ? ' was' : ' were') +
+                ' not attempted, to keep this page inside its time budget.');
         }
         return out;
     },

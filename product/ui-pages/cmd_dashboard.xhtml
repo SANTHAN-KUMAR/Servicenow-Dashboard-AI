@@ -122,6 +122,8 @@
   var wsel = '' + (RP.getParameterValue('wsel') || '');
   var wlist = '' + (RP.getParameterValue('wlist') || '');
   var wrec = '' + (RP.getParameterValue('wrec') || '');
+  /* wall=1 asks for the whole-list overview rather than one column. */
+  var wall = ('' + (RP.getParameterValue('wall') || '')) === '1';
   var wtitle = '' + (RP.getParameterValue('wtitle') || '');
   var embed = ('' + (RP.getParameterValue('embed') || '')) === '1';
 
@@ -140,8 +142,8 @@
         wsMode = false;
         reportFromList = true;
       } else {
-        wsReportRefusal = 'To analyse a saved report, open its row menu and choose ' +
-          'Analyse in COMMAND, or tick exactly one report and use the header button.';
+        wsReportRefusal = 'To analyse a saved report, tick exactly one report in the ' +
+          'list and then use Analyse in COMMAND.';
       }
     }
   }
@@ -199,13 +201,34 @@
                 subject: { table: table, label: table, rows: 0 },
                 panels: [], path: [], notes: [], drill: { atMax: true, options: [] } };
       } else {
-        /* The grouped column leads only at the top level. Once the viewer has
-           drilled, the path is the question and forcing the list's grouping
-           back onto every level would redraw a breakdown of one value. */
-        out = builder.dashboard(table, path, {
-          months: months, forms: forms,
-          focus: focus || (path.length ? '' : wctx.focus),
-          baseQuery: wctx.query });
+        /* Three shapes, the way the workspace's own column "Show visualization"
+           is one question about one column:
+             - a column chosen (the picker, the list's Group by, or a list
+               defined with a grouping): field mode, everything about it;
+             - nothing chosen yet, and no record or selection: the column
+               picker alone, which costs no analysis at all;
+             - wall=1, a record, or a selection: the whole-list overview. */
+        /* Written as a negated OR: this is Jelly XML, where a bare ampersand does
+           not parse and the page would deploy blank. */
+        var pickOnly = !(wctx.focus || wall || wrec || wctx.selected || path.length);
+        if (pickOnly) {
+          /* The row count, counted the same way the dashboard counts it, so the
+             picker can say how many rows each column analysis will cover -- and
+             say plainly when the list holds none, rather than offer columns of
+             nothing. */
+          var pickTotal = builder.data.total(table, wctx.query);
+          out = { pickOnly: true, subject: { table: table,
+                  label: builder.meta.describe(table).label, rows: pickTotal.count,
+                  query: wctx.query },
+                  panels: [], path: [], notes: [], drill: { atMax: true, options: [] } };
+        } else {
+          out = builder.dashboard(table, path, {
+            months: months, forms: forms,
+            fieldMode: wall ? '' : wctx.focus,
+            crossWith: wctx.columns,
+            focus: focus,
+            baseQuery: wctx.query });
+        }
       }
       var wdims = wctx.ok ? builder.meta.dimensions(table) : [];
       out.workspace = {
@@ -215,7 +238,8 @@
         listQuery: wctx.listQuery,
         list: wctx.list,
         selected: wctx.selectedIds.join(','),
-        group: wctx.focus,
+        group: wall ? '' : wctx.focus,
+        all: wall,
         clauses: wctx.clauses,
         notes: wctx.notes
       };

@@ -2486,6 +2486,7 @@
              (w.group ? '&wgroup=' + encodeURIComponent(w.group) : '') +
              (w.title ? '&wtitle=' + encodeURIComponent(w.title) : '') +
              (w.record && w.record.ok ? '&wrec=' + encodeURIComponent(w.record.sysId) : '') +
+             (w.all ? '&wall=1' : '') +
              (payload.embed ? '&embed=1' : '');
     }
     if (payload.report && payload.report.sysId) {
@@ -2855,9 +2856,11 @@
           ? meas.name
           : (payload.report
               ? payload.subject.label
-              : (wsp && wsp.title
-                  ? wsp.title
-                  : payload.subject.label + ' analysis')))));
+              : (payload.fieldMode
+                  ? payload.fieldMode.label
+                  : (wsp && wsp.title
+                      ? wsp.title
+                      : payload.subject.label + ' analysis'))))));
 
     var sub = el('div', 'sub');
     if (meas) {
@@ -2876,6 +2879,10 @@
       }
     } else {
       sub.appendChild(el('span', '', recs(payload.subject.rows)));
+      if (payload.fieldMode && wsp && wsp.title) {
+        sub.appendChild(el('span', 'dot', '\u00b7'));
+        sub.appendChild(el('span', '', 'in ' + wsp.title));
+      }
     }
     if (payload.report && payload.subject.sublabel) {
       sub.appendChild(el('span', 'dot', '·'));
@@ -3329,9 +3336,15 @@
     box.appendChild(el('span', 'ws-by-l', 'Analyse by'));
     var sel = el('select', 'ws-by-s');
     sel.setAttribute('aria-label', 'Analyse this list by a field');
-    var auto = el('option', '', 'Automatic (COMMAND picks)');
-    auto.value = '';
-    sel.appendChild(auto);
+    if (!w.group && !w.all) {
+      var none = el('option', '', 'Choose a column\u2026');
+      none.value = ''; none.disabled = true; none.selected = true;
+      sel.appendChild(none);
+    }
+    var all = el('option', '', 'Whole-list overview');
+    all.value = '*';
+    if (w.all) all.selected = true;
+    sel.appendChild(all);
     var inList = el('optgroup'); inList.label = 'Columns in this list';
     var other = el('optgroup'); other.label = 'Other fields';
     for (var i = 0; i < w.fields.length; i++) {
@@ -3344,10 +3357,13 @@
     if (inList.children.length) sel.appendChild(inList);
     if (other.children.length) sel.appendChild(other);
     sel.addEventListener('change', function () {
-      var saved = w.group;
-      w.group = sel.value;
+      var saved = w.group, savedAll = w.all, savedRec = w.record;
+      w.all = sel.value === '*';
+      w.group = w.all ? '' : sel.value;
+      /* A new question: the record context and drill path do not carry over. */
+      w.record = null;
       var url = subjectBase(payload) + stateTail(payload);
-      w.group = saved;
+      w.group = saved; w.all = savedAll; w.record = savedRec;
       paintSkeleton(document.getElementById('cmd-root'), url);
       window.location.href = url;
     });
@@ -3391,6 +3407,78 @@
       }
     }
     return bar;
+  }
+
+  /**
+   * The first screen from a workspace list: which column to analyse.
+   *
+   * The workspace's own column menu answers "Show visualization" one column at
+   * a time. This is the same question, asked once for the whole list: pick a
+   * column and COMMAND analyses that column -- its breakdown, its trend, what
+   * changed, how it crosses the list's other columns -- on exactly the list's
+   * rows. The list's own columns first, in its order. No analysis is built
+   * until a column is chosen, so this screen is instant.
+   */
+  function renderColumnPicker(payload, mount) {
+    var w = payload.workspace || {};
+    var h = el('div', 'app-h');
+    var left = el('div');
+    left.appendChild(el('div', 'crumb', (payload.subject.label || '') + ' \u00b7 COMMAND'));
+    left.appendChild(el('h1', 'd2', w.title || payload.subject.label));
+    var n = payload.subject.rows;
+    left.appendChild(el('div', 'sub', n === 0
+      ? 'This list has no rows you can see, so there is nothing to analyse yet.'
+      : 'Choose a column to analyse across all ' + recs(n) + ' in this list, the way you ' +
+        'would open Show visualization on it \u2014 or the whole list at once.'));
+    h.appendChild(left);
+    mount.appendChild(h);
+
+    var strip = el('div', 'ws-strip');
+    strip.appendChild(el('span', 'ws-l', 'From your workspace list'));
+    var cl = w.clauses || [];
+    if (!cl.length) strip.appendChild(el('span', 'ws-c', 'every row, no filter'));
+    for (var c = 0; c < cl.length; c++) strip.appendChild(el('span', cl[c].joiner ? 'ws-j' : 'ws-c', cl[c].text));
+    mount.appendChild(strip);
+    if (n === 0) return;
+
+    function tile(label, hint, url, cls) {
+      var a = el('a', 'col-tile' + (cls ? ' ' + cls : ''));
+      a.href = url;
+      a.appendChild(el('span', 'col-t', label));
+      a.appendChild(el('span', 'col-h', hint));
+      return a;
+    }
+    function urlFor(field, all) {
+      var sg = w.group, sa = w.all;
+      w.group = field; w.all = !!all;
+      var u = subjectBase(payload) + stateTail(payload);
+      w.group = sg; w.all = sa;
+      return u;
+    }
+    var fields = w.fields || [];
+    var inList = [], other = [];
+    for (var i = 0; i < fields.length; i++) (fields[i].inList ? inList : other).push(fields[i]);
+
+    var sec = el('div', 'col-sec');
+    sec.appendChild(el('div', 'col-sh', 'Columns in this list'));
+    var grid = el('div', 'col-grid');
+    for (i = 0; i < inList.length; i++) {
+      grid.appendChild(tile(inList[i].label, 'breakdown \u00b7 trend \u00b7 what changed \u00b7 crossed with the other columns',
+                            urlFor(inList[i].name, false)));
+    }
+    grid.appendChild(tile('Whole-list overview', 'every analysis COMMAND finds worth drawing',
+                          urlFor('', true), 'col-all'));
+    sec.appendChild(grid);
+    mount.appendChild(sec);
+
+    if (other.length) {
+      var sec2 = el('div', 'col-sec');
+      sec2.appendChild(el('div', 'col-sh', 'Other fields on ' + (payload.subject.label || 'this table')));
+      var g2 = el('div', 'col-grid sm');
+      for (i = 0; i < other.length; i++) g2.appendChild(tile(other[i].label, '', urlFor(other[i].name, false), 'sm'));
+      sec2.appendChild(g2);
+      mount.appendChild(sec2);
+    }
   }
 
   /* The label the payload already carries for a field, or the name itself. */
@@ -3783,6 +3871,11 @@
         e.appendChild(back);
       }
       mount.appendChild(e);
+      return;
+    }
+
+    if (payload.pickOnly) {
+      renderColumnPicker(payload, mount);
       return;
     }
 

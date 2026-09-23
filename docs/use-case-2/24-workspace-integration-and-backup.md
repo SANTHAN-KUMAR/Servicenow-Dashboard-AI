@@ -1,7 +1,7 @@
 # COMMAND inside the employee workspace, and keeping the PDI safe
 
 Built and measured on dev390988 (release **Australia**, patch 3) on 2026-09-23.
-Scoped app `x_2185255_command`, released as **COMMAND Analytics 0.3.1**. Every
+Scoped app `x_2185255_command`, released as **COMMAND Analytics 0.3.2**. Every
 claim below was measured on that instance. The command that repeats each
 measurement is given next to it.
 
@@ -42,6 +42,30 @@ Visualization panel and SOW's row menu are not touched.
 **Workspace list → Analyse in COMMAND → COMMAND opens in the workspace's own modal
 over the list, analysing exactly what the list is showing.** The agent never
 leaves the workspace. Closing the modal returns them to the same list.
+
+**Column first (0.3.2).** The native feature answers one question about one
+column. COMMAND now asks that question first: **Analyse in COMMAND** opens a
+**column picker** in about 1 s. It shows the list's own columns (the same fields
+the native Group-by dropdown lists) with the row count the analysis will cover,
+then the other fields. Choosing a column opens that column's own analysis over
+**every row of the list**, not just the page of 20 on screen:
+
+- its breakdown;
+- how it moved over time;
+- what changed between the last two periods, broken down by its values;
+- rank shift;
+- a funnel, if it is a stage field;
+- Pareto;
+- spread of the lead measure;
+- crosstabs against the list's other columns.
+
+Every panel is about that column. This is field mode:
+`CmdPayload.dashboard(opts.fieldMode)` → `_fieldGrid`.
+
+**Whole-list overview** is one tile, and the **Analyse by** dropdown switches
+column without closing the modal. A list the agent has grouped by a column
+(through the column menu) skips the picker and opens straight on that column. An
+empty list says so instead of offering columns.
 
 | The agent wants to analyse | How |
 |---|---|
@@ -221,7 +245,7 @@ Any one of these rebuilds the application:
 
 1. **Source in git** (`product/`), the primary copy. `deploy.py`, `setup_app.py`
    and `workspace.py` rebuild every record from it.
-2. **Release update set**: `product/dist/COMMAND-Analytics-0.3.1-update-set.xml`,
+2. **Release update set**: `product/dist/COMMAND-Analytics-0.3.2-update-set.xml`,
    committed to git. What the client imports.
 3. **XML snapshot**: every record in the app scope, one file per type, as
    produced by the platform's *Export → XML*, with sys_ids intact and a
@@ -230,7 +254,7 @@ Any one of these rebuilds the application:
 
 ```bash
 python3 product/deploy/backup.py                    # snapshot only; read-only on the PDI
-python3 product/deploy/backup.py --release 0.3.2    # snapshot + publish/export an update set
+python3 product/deploy/backup.py --release 0.3.3    # snapshot + publish/export an update set
 ```
 
 Snapshots land in `backup/pdi/<timestamp>/`, which is gitignored, so they stay
@@ -245,7 +269,7 @@ repository to a remote. A single disk is not a backup.
 
 **Fastest route: the update set.**
 *Retrieved Update Sets → Import Update Set from XML* →
-`COMMAND-Analytics-0.3.1-update-set.xml` → *Preview* (resolve any conflicts) →
+`COMMAND-Analytics-0.3.2-update-set.xml` → *Preview* (resolve any conflicts) →
 *Commit*. Then recreate the demo data and personas:
 
 ```bash
@@ -272,7 +296,7 @@ Verify with `workspace_live.py`, `smoke_live.py` and `run_all.sh`.
 
 ## 9. Moving this to the client's instance
 
-1. Import and commit `COMMAND-Analytics-0.3.1-update-set.xml` (section 8). The
+1. Import and commit `COMMAND-Analytics-0.3.2-update-set.xml` (section 8). The
    app keeps its scope `x_2185255_command`. Nothing global is included, so it
    cannot overwrite anything of theirs.
 2. The **Analyse in COMMAND** button appears on every list in every configurable
