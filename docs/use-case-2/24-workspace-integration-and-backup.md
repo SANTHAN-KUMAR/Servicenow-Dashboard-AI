@@ -309,3 +309,77 @@ Verify with `workspace_live.py`, `smoke_live.py` and `run_all.sh`.
    against the viewer.
 4. Re-run `workspace_live.py` there against their own list ids. The list ids in
    the test are SOW defaults and exist on any instance with SOW installed.
+
+---
+
+## 10. Update, 2026-09-26: COMMAND as a side panel beside the list (0.3.3)
+
+The client's picture was the native **Show visualization** side panel, but with
+COMMAND's analysis in it. The centred pop-up is replaced by a **side panel docked
+in the same slot as Data visualization**, still built only from new records in our
+scope. `product/deploy/workspace.py` owns every record and is idempotent.
+
+| # | New record (our scope) | Platform mechanism |
+|---|---|---|
+| 1 | `sys_declarative_action_assignment` **Analyse in COMMAND** | List-model header button (UXF client action), every workspace |
+| 2 | `sys_declarative_action_payload_definition` | the List model's own tokens `{{table}} {{query}} {{groupBy}} {{sysIds}}` |
+| 3 | `sys_ux_addon_event_mapping` | controller-scoped add-on mapping: button → `LIST_CTRL#OPEN_PANEL` on the List Controller, whose own generic *Open panel* script opens the route |
+| 4 | `sys_ux_app_route` | registered on **List Page Panes**, the List Controller's viewport extension point, like Data visualization, Quick edit and Multi edit |
+| 5 | `sys_ux_screen_type` + `sys_ux_screen` | the route's screen |
+| 6 | `sys_ux_macroponent` **COMMAND Analytics panel page** | our own page holding the stock iFrame component, used unmodified |
+
+**What the panel opens on.** It follows the list:
+
+- the list's own condition, read from `sys_ux_list` using the list id taken from
+  the workspace address;
+- the agent's filter;
+- **grouped by a column** (the column ⋮ → Group by) → that column's field
+  analysis;
+- **one ticked row** → that record in context;
+- **several ticked rows** → exactly those rows;
+- **nothing chosen** → the list's analysis, over **the list's own columns only**.
+  On `incident` that is 7 columns instead of 49; ranking all 49 on a cold start
+  drew nothing.
+
+The **Analyse** dropdown switches to any column without closing the panel. The
+panel follows the workspace theme, read from the workspace's background
+brightness, which is read-only. A viewer's own Light/Dark choice still wins.
+
+**Not possible without modifying ServiceNow: following the field that the native
+Data visualization panel is showing.** Its chosen Group-by lives only in browser
+memory. It is not in the URL, not in a preference, and not among the List model's
+tokens. The only way to read it would be scraping ServiceNow's rendered panel,
+which we do not do.
+
+**Speed.** A workspace-opened request gets a larger allowance: 11 s page, 5 s
+permission proof, 11 s scan. It is scoped to that one request, because script
+include statics are evaluated per transaction; verified that a separate request
+still sees 6 s and 2.5 s. Measured cold on dev390988: *Incidents – All*, 4,284
+rows, full analysis, about 16 s. Repeat opens within the 3-minute verdict cache
+are faster. This is the engine's cost, not the panel's, and it is the largest
+remaining gap against the performance budget in CLAUDE.md.
+
+**Verified.** `workspace_live.py` 12/12 through the side panel. Every count
+equals the Table API's permission-checked count. The Knowledge floor is labelled
+BOUNDED.
+
+### Incident, 2026-09-23: a ServiceNow component was renamed by the spike, then restored
+
+The first spike pointed our `sys_ux_screen` at ServiceNow's stock iFrame
+component (`sys_ux_macroponent` `2eda8d95aae6d05a26d94fbf692ac6f9`), and **a
+screen renames the component it points at**. ServiceNow's component became
+"COMMAND Analytics panel", with its props re-serialised.
+
+- **Restored** the same day by loading its shipped version XML through
+  `GlideUpdateManager2`. Every field now equals the shipped copy, and the shipped
+  XML is kept in `backup/incident-2026-09-23-iframe/`.
+- **Audited:** nothing else outside our scope was changed.
+- **Prevented:** our screen now points only at our own page, and every
+  `workspace.py` run aborts if the stock component differs from its shipped state.
+- **Still open, needs the owner:** the three bookkeeping records the platform
+  wrote at 15:36:03 still flag the component as customised. They are a
+  `sys_update_xml` row in the *Default* update set, a `sys_update_version` row
+  and a `sys_metadata_customization` row. Deleting audit history was
+  deliberately not automated. Resolve it in ServiceNow: open the component's
+  *Versions* and **Revert to this version** on the June 2026 shipped version, and
+  keep that Default-set entry out of anything moved to the client.

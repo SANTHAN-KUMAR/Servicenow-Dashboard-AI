@@ -31,11 +31,30 @@
     return d === 'dark' || d === 'light' ? d : null;
   }
 
+  /* Opened inside a workspace (side panel or modal), COMMAND takes the
+     workspace's own theme, so a dark workspace does not get a light pane in the
+     middle of it. Next Experience marks its theme on no class or attribute we
+     could find, only in the colours it paints, so this reads the brightness of
+     the top page's background: read-only, same origin, and silently nothing
+     outside a workspace. A viewer's own Light/Dark choice still wins. */
+  function workspaceTheme() {
+    try {
+      if (window.top === window) return null;
+      var bg = window.top.getComputedStyle(window.top.document.body).backgroundColor;
+      var m = /rgba?\(\s*(\d+)[, ]+(\d+)[, ]+(\d+)/.exec(bg || '');
+      if (!m) return null;
+      var lum = (0.2126 * m[1] + 0.7152 * m[2] + 0.0722 * m[3]) / 255;
+      return lum < 0.4 ? 'dark' : 'light';
+    } catch (e) { return null; }
+  }
+
   function resolve() {
     var s = stored();
     if (s === 'dark' || s === 'light') return s;
     var p = pageDefault();
     if (p) return p;
+    var w = workspaceTheme();
+    if (w) return w;
     try {
       if (window.matchMedia &&
           window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';

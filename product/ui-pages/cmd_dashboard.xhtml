@@ -150,6 +150,19 @@
 
   var out;
   try {
+    /* Opened from a workspace list, the viewer has asked for this analysis and
+       is watching a loading state beside their list, so the request gets a larger
+       time allowance than a browsed dashboard page. Measured on dev390988: a
+       first, uncached open of a 3,800-row list ran out inside the standard
+       limits and drew nothing. Script include statics are evaluated per
+       transaction, so this changes this request only; every other COMMAND page
+       keeps the standard limits. */
+    if (wsMode) {
+      CmdPayload.BUDGET_MS = 11000;
+      CmdPayload.SCAN_MS = 6000;
+      CmdData.PROOF_MS = 5000;
+      CmdData.SCAN_ALLOWANCE_MS = 11000;
+    }
     var builder = new CmdPayload();
     if (portfolio || measure) {
       var ceo = new CmdCeo(builder.data, builder.meta, builder.drill);
@@ -201,34 +214,16 @@
                 subject: { table: table, label: table, rows: 0 },
                 panels: [], path: [], notes: [], drill: { atMax: true, options: [] } };
       } else {
-        /* Three shapes, the way the workspace's own column "Show visualization"
-           is one question about one column:
-             - a column chosen (the picker, the list's Group by, or a list
-               defined with a grouping): field mode, everything about it;
-             - nothing chosen yet, and no record or selection: the column
-               picker alone, which costs no analysis at all;
-             - wall=1, a record, or a selection: the whole-list overview. */
-        /* Written as a negated OR: this is Jelly XML, where a bare ampersand does
-           not parse and the page would deploy blank. */
-        var pickOnly = !(wctx.focus || wall || wrec || wctx.selected || path.length);
-        if (pickOnly) {
-          /* The row count, counted the same way the dashboard counts it, so the
-             picker can say how many rows each column analysis will cover -- and
-             say plainly when the list holds none, rather than offer columns of
-             nothing. */
-          var pickTotal = builder.data.total(table, wctx.query);
-          out = { pickOnly: true, subject: { table: table,
-                  label: builder.meta.describe(table).label, rows: pickTotal.count,
-                  query: wctx.query },
-                  panels: [], path: [], notes: [], drill: { atMax: true, options: [] } };
-        } else {
-          out = builder.dashboard(table, path, {
-            months: months, forms: forms,
-            fieldMode: wall ? '' : wctx.focus,
-            crossWith: wctx.columns,
-            focus: focus,
-            baseQuery: wctx.query });
-        }
+        /* Straight to an analysis, never to an intermediate page: the column
+           the viewer grouped the list by (the column's own menu, Group by) leads
+           as field mode; otherwise the whole list. wall=1 forces the whole list. */
+        out = builder.dashboard(table, path, {
+          months: months, forms: forms,
+          fieldMode: wall ? '' : wctx.focus,
+          crossWith: wctx.columns,
+          listColumns: wctx.columns,
+          focus: focus,
+          baseQuery: wctx.query });
       }
       var wdims = wctx.ok ? builder.meta.dimensions(table) : [];
       out.workspace = {

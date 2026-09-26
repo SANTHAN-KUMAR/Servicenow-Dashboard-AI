@@ -39,8 +39,8 @@ if (SHOTS) mkdirSync(SHOTS, { recursive: true });
    column group-by, a row selection, an allowlisted javascript: filter, a dynamic
    filter, other tables (knowledge, requests, CMDB) and an empty list. */
 const SCENARIOS = [
-  { id: 's1', name: 'Incidents - All, whole-list overview', list: '7ae4da1ec3013010965e070e9140dd66', tile: 'Whole-list overview' },
-  { id: 's2', name: 'Incidents - Open, column Priority', list: 'b16a321ac3013010965e070e9140dd3a', tile: 'Priority' },
+  { id: 's1', name: 'Incidents - All', list: '7ae4da1ec3013010965e070e9140dd66' },
+  { id: 's2', name: 'Incidents - Open', list: 'b16a321ac3013010965e070e9140dd3a' },
   { id: 's3', name: 'Incidents - All, grouped by Priority from the column menu',
     list: '7ae4da1ec3013010965e070e9140dd66', group: 'Priority' },
   { id: 's4', name: 'Incidents - Open, three rows selected',

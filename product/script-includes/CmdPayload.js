@@ -322,6 +322,20 @@ CmdPayload.prototype = {
          * six times. */
         var candidates = [];
         var dims = this.meta.dimensions(table);
+        /* Opened from a workspace list with nothing chosen: the page is about the
+           columns the employee is looking at, not every field on the table. On
+           incident that is ~7 fields instead of 49, which is also what keeps the
+           page inside its budget -- ranking all 49 on a slow instance examined 5
+           of them and drew nothing. Only when enough list columns are real
+           dimensions; otherwise the full ranking stands. */
+        if (opts.listColumns && opts.listColumns.length && !opts.fieldMode) {
+            var inList = [], j;
+            for (j = 0; j < dims.length; j++) {
+                if (this._contains(opts.listColumns, dims[j].name) &&
+                    !dims[j].needsCardinalityCheck) inList.push(dims[j]);
+            }
+            if (inList.length >= 2) dims = inList;
+        }
         var examined = 0;
 
         /* One scan for all the candidate profiles, where that is the cheaper route.

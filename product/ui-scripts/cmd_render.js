@@ -3302,17 +3302,35 @@
     var w = payload.workspace;
     if (!w) return null;
     var bar = el('div', 'ws-strip');
-    bar.appendChild(el('span', 'ws-l', 'From your workspace list'));
-    var clauses = w.clauses || [];
+    var ctx = el('div', 'ws-ctx');
+    ctx.appendChild(el('span', 'ws-l', 'List filter'));
+    var clauses = [];
+    for (var i = 0; i < (w.clauses || []).length; i++) {
+      if (!w.clauses[i].joiner) clauses.push(w.clauses[i].text);
+    }
     if (w.selected) {
       var n = w.selected.split(',').length;
-      bar.appendChild(el('span', 'ws-c', n + (n === 1 ? ' selected row' : ' selected rows')));
+      ctx.appendChild(el('span', 'ws-c', n + (n === 1 ? ' selected row' : ' selected rows')));
     } else if (!clauses.length) {
-      bar.appendChild(el('span', 'ws-c', 'every row, no filter'));
+      ctx.appendChild(el('span', 'ws-c', 'None \u2014 every row'));
+    } else {
+      /* Three conditions at most on the line; the rest on hover. A list
+         definition can carry dozens, and printing them all is what turned this
+         strip into a wall of text. */
+      var shown = clauses.slice(0, 3);
+      for (i = 0; i < shown.length; i++) {
+        var t = shown[i].length > 64 ? shown[i].slice(0, 61) + '\u2026' : shown[i];
+        var chip = el('span', 'ws-c', t);
+        chip.title = shown[i];
+        ctx.appendChild(chip);
+      }
+      if (clauses.length > 3) {
+        var more = el('span', 'ws-more', '+' + (clauses.length - 3) + ' more');
+        more.title = clauses.slice(3).join('\n');
+        ctx.appendChild(more);
+      }
     }
-    for (var i = 0; i < clauses.length; i++) {
-      bar.appendChild(el('span', clauses[i].joiner ? 'ws-j' : 'ws-c', clauses[i].text));
-    }
+    bar.appendChild(ctx);
     if (w.fields && w.fields.length) bar.appendChild(analyseByControl(payload));
     var wrap = el('div');
     wrap.appendChild(bar);
@@ -3333,17 +3351,12 @@
   function analyseByControl(payload) {
     var w = payload.workspace;
     var box = el('label', 'ws-by');
-    box.appendChild(el('span', 'ws-by-l', 'Analyse by'));
+    box.appendChild(el('span', 'ws-l', 'Analyse'));
     var sel = el('select', 'ws-by-s');
     sel.setAttribute('aria-label', 'Analyse this list by a field');
-    if (!w.group && !w.all) {
-      var none = el('option', '', 'Choose a column\u2026');
-      none.value = ''; none.disabled = true; none.selected = true;
-      sel.appendChild(none);
-    }
-    var all = el('option', '', 'Whole-list overview');
+    var all = el('option', '', 'Whole list');
     all.value = '*';
-    if (w.all) all.selected = true;
+    if (!w.group) all.selected = true;
     sel.appendChild(all);
     var inList = el('optgroup'); inList.label = 'Columns in this list';
     var other = el('optgroup'); other.label = 'Other fields';
@@ -3407,78 +3420,6 @@
       }
     }
     return bar;
-  }
-
-  /**
-   * The first screen from a workspace list: which column to analyse.
-   *
-   * The workspace's own column menu answers "Show visualization" one column at
-   * a time. This is the same question, asked once for the whole list: pick a
-   * column and COMMAND analyses that column -- its breakdown, its trend, what
-   * changed, how it crosses the list's other columns -- on exactly the list's
-   * rows. The list's own columns first, in its order. No analysis is built
-   * until a column is chosen, so this screen is instant.
-   */
-  function renderColumnPicker(payload, mount) {
-    var w = payload.workspace || {};
-    var h = el('div', 'app-h');
-    var left = el('div');
-    left.appendChild(el('div', 'crumb', (payload.subject.label || '') + ' \u00b7 COMMAND'));
-    left.appendChild(el('h1', 'd2', w.title || payload.subject.label));
-    var n = payload.subject.rows;
-    left.appendChild(el('div', 'sub', n === 0
-      ? 'This list has no rows you can see, so there is nothing to analyse yet.'
-      : 'Choose a column to analyse across all ' + recs(n) + ' in this list, the way you ' +
-        'would open Show visualization on it \u2014 or the whole list at once.'));
-    h.appendChild(left);
-    mount.appendChild(h);
-
-    var strip = el('div', 'ws-strip');
-    strip.appendChild(el('span', 'ws-l', 'From your workspace list'));
-    var cl = w.clauses || [];
-    if (!cl.length) strip.appendChild(el('span', 'ws-c', 'every row, no filter'));
-    for (var c = 0; c < cl.length; c++) strip.appendChild(el('span', cl[c].joiner ? 'ws-j' : 'ws-c', cl[c].text));
-    mount.appendChild(strip);
-    if (n === 0) return;
-
-    function tile(label, hint, url, cls) {
-      var a = el('a', 'col-tile' + (cls ? ' ' + cls : ''));
-      a.href = url;
-      a.appendChild(el('span', 'col-t', label));
-      a.appendChild(el('span', 'col-h', hint));
-      return a;
-    }
-    function urlFor(field, all) {
-      var sg = w.group, sa = w.all;
-      w.group = field; w.all = !!all;
-      var u = subjectBase(payload) + stateTail(payload);
-      w.group = sg; w.all = sa;
-      return u;
-    }
-    var fields = w.fields || [];
-    var inList = [], other = [];
-    for (var i = 0; i < fields.length; i++) (fields[i].inList ? inList : other).push(fields[i]);
-
-    var sec = el('div', 'col-sec');
-    sec.appendChild(el('div', 'col-sh', 'Columns in this list'));
-    var grid = el('div', 'col-grid');
-    for (i = 0; i < inList.length; i++) {
-      grid.appendChild(tile(inList[i].label, 'breakdown \u00b7 trend \u00b7 what changed \u00b7 crossed with the other columns',
-                            urlFor(inList[i].name, false)));
-    }
-    grid.appendChild(tile('Whole-list overview', 'every analysis COMMAND finds worth drawing',
-                          urlFor('', true), 'col-all'));
-    sec.appendChild(grid);
-    mount.appendChild(sec);
-
-    if (other.length) {
-      var sec2 = el('div', 'col-sec');
-      sec2.appendChild(el('div', 'col-sh', 'Other fields on ' + (payload.subject.label || 'this table')));
-      var g2 = el('div', 'col-grid sm');
-      for (i = 0; i < other.length; i++) g2.appendChild(tile(other[i].label, '', urlFor(other[i].name, false), 'sm'));
-      sec2.appendChild(g2);
-      mount.appendChild(sec2);
-    }
   }
 
   /* The label the payload already carries for a field, or the name itself. */
@@ -3856,6 +3797,8 @@
     return box;
   }
 
+  var HOUSEKEEPING = /time budget|further analysis panel|expensive to permission-check|not attempted|Drill options were not computed/;
+
   function renderDashboard(payload, mount) {
     mount.innerHTML = '';
     mount.appendChild(gradients());
@@ -3871,11 +3814,6 @@
         e.appendChild(back);
       }
       mount.appendChild(e);
-      return;
-    }
-
-    if (payload.pickOnly) {
-      renderColumnPicker(payload, mount);
       return;
     }
 
@@ -3937,6 +3875,12 @@
 
     if (payload.notes && payload.notes.length) {
       for (var n = 0; n < payload.notes.length; n++) {
+        /* Inside the workspace the page is a quick read beside a list, so the
+           engine's own housekeeping -- which fields the time budget let it examine,
+           which panels it dropped for repeating a form -- stays out. What a viewer
+           must know (a lower bound, a refusal, a field that could not be drawn)
+           is carried by the chips and panels themselves. */
+        if (payload.embed && HOUSEKEEPING.test(payload.notes[n])) continue;
         mount.appendChild(el('div', 'note', payload.notes[n]));
       }
     }

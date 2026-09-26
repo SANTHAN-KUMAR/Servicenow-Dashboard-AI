@@ -159,6 +159,14 @@ CmdWorkspace.prototype = {
             if (!out.columns.length) out.columns = this._viewColumns(table, String(ul.getValue('view') || ''));
         }
         if (!out.columns.length) out.columns = this._viewColumns(table, '');
+        /* Some workspace lists (the CMDB ones, measured) already carry their own
+           condition in g_list's query. ANDing it again changes no count but
+           reads twice in the context strip, so the repeated part is dropped. */
+        if (def && q) {
+            if (q === def) q = '';
+            else if (q.indexOf(def + '^') === 0) q = q.substring(def.length + 1);
+            out.listQuery = q;
+        }
         var combined = this._and(def, q);
         if (combined === null) {
             return this._refuse(out, 'Both the list and your filter use top-level OR ' +
@@ -230,12 +238,35 @@ CmdWorkspace.prototype = {
                 }
             }
             for (var c = 0; c < clauses.length && out.length < 12; c++) {
-                var bits = [];
-                for (var o = 0; o < clauses[c].length; o++) bits.push(this._clause(gr, clauses[c][o]));
-                out.push({ text: bits.join(' or ') });
+                out.push({ text: this._orChain(gr, clauses[c]) });
             }
         }
         return out;
+    },
+
+    /* "Class is A or Class is B or ... (32 of them)" is unreadable, and it is
+       what every CMDB workspace list is made of. An OR chain of equalities on
+       one field reads as that field and its values, and past three values as a
+       count, with every value still available to the page as `values`. */
+    _orChain: function (gr, parts) {
+        if (parts.length > 1) {
+            var field = null, vals = [];
+            for (var i = 0; i < parts.length; i++) {
+                var m = /^([a-z0-9_.]+)=(.*)$/.exec(parts[i]);
+                if (!m || (field !== null && m[1] !== field)) { field = null; break; }
+                field = m[1];
+                vals.push(this._value(gr, m[1], m[2]));
+            }
+            if (field) {
+                var label = this._label(gr, field);
+                return vals.length > 3
+                    ? label + ' is one of ' + vals.length + ' values'
+                    : label + ' is ' + vals.join(' or ');
+            }
+        }
+        var bits = [];
+        for (var o = 0; o < parts.length; o++) bits.push(this._clause(gr, parts[o]));
+        return bits.join(' or ');
     },
 
     _clause: function (gr, c) {

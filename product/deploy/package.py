@@ -55,7 +55,11 @@ PROCESSOR = "com.snc.apps.AppsAjaxProcessor"
 # 0.3.0 adds the workspace integration: CmdWorkspace, the cmd_frame page and its
 # loader script, and the "Analyse in COMMAND" list action (an Action Assignment).
 EXPECTED = {"Script Include": 12, "UI Page": 4, "UI Script": 5, "Custom Application": 1,
-            "Action Assignment": 1}
+            "Action Assignment": 3}
+# 0.3.3: the side panel. Three action records -- the live "Analyse in COMMAND"
+# panel button, and the retired modal and spike buttons, kept inactive so their
+# history travels. The panel's page, screen, route and add-on mapping are
+# listed by type in the output.
 
 
 def ajax(inst, function, **params):

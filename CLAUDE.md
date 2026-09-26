@@ -427,14 +427,18 @@ this use case, and neither has been built yet.
   not a settled one — re-check native capability against new release notes periodically, and don't
   build the pitch on a gap that's actively being narrowed.
 - For commercial questions (pricing, margin, channel) — ask the client, don't theorize.
-- **Workspace entry point (2026-09-23):** COMMAND is reached from every Next Experience
-  workspace list via one List declarative action, **Analyse in COMMAND**, opening in the
-  workspace's own modal (through `cmd_frame`, because the modal closes when its iframe
-  navigates). The column menu's *Show visualization*, the Data visualization panel, SOW's
-  row ⋮ menu and the left-nav ⋮ menu are **not extensible without editing
-  ServiceNow-owned records** — measured, not assumed — so they are not touched. List
-  context from a URL goes through `CmdWorkspace` only. Full record:
-  `docs/use-case-2/24-workspace-integration-and-backup.md`.
+- **Workspace entry point (2026-09-26):** every Next Experience workspace list has one
+  button, **Analyse in COMMAND**, that opens COMMAND as a **side panel** in the same slot
+  as the native Data visualization. It is built only from new records in our scope: a
+  List declarative action, a controller-scoped add-on event mapping to
+  `LIST_CTRL#OPEN_PANEL`, a route on the *List Page Panes* extension point, and our own
+  page holding the stock iFrame. The panel follows the list's condition, grouping and
+  ticked rows. The column ⋮ menu, row ⋮ menu, left-nav menu and the Data visualization
+  panel's own contents are **not extensible without editing ServiceNow-owned records**
+  (measured), so they are not touched. **Never point a `sys_ux_screen` at a
+  ServiceNow-owned macroponent: a screen renames what it points at.** That happened
+  once and was restored; `workspace.py` now aborts if it recurs. Full record:
+  `docs/use-case-2/24-workspace-integration-and-backup.md` §10.
 - **Back up after every session:** `python3 product/deploy/backup.py` (read-only
   snapshot); `--release <ver>` before any hand-off. The PDI is reclaimed after 10 days
   without an explicit login and is unrecoverable once reset.
