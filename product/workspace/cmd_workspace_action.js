@@ -71,6 +71,16 @@ function onClick() {
         if (lm) listId = lm[1];
     } catch (e) { listId = ''; }
     var title = safe(function () { return g_list.getTitle(); }, '');
+
+    /* The field the employee is visualising right now, if the native Data
+       visualization panel is open: its "Group by dropdown" shows the chosen
+       field's label (Priority, State, ...). Read-only -- the label is read, not
+       changed -- and read at the moment of the click, because opening COMMAND
+       replaces that panel. The server maps the label back to a field of this
+       table and ignores anything that is not one. If the panel is not open, or
+       ServiceNow ever draws it differently, this finds nothing and COMMAND falls
+       back to the list's own grouping or to the whole list. */
+    var vizLabel = safe(function () { return visualisedField(top.document); }, '');
     var checked = String(safe(function () { return g_list.getChecked(); }, '')).split(',').filter(function (s) {
         /* getChecked() can return "display@sys_id" on some lists; keep the id. */
         return !!s;
@@ -84,6 +94,7 @@ function onClick() {
         '&wq=' + encodeURIComponent(query) +
         (listId ? '&wlist=' + listId : '') +
         (group ? '&wgroup=' + encodeURIComponent(group) : '') +
+        (vizLabel ? '&wglabel=' + encodeURIComponent(vizLabel) : '') +
         (title ? '&wtitle=' + encodeURIComponent(title) : '') +
         (checked.length === 1
             ? '&wrec=' + encodeURIComponent(checked[0])
@@ -104,5 +115,22 @@ function onClick() {
         });
     } else {
         top.window.open(url.replace('&embed=1', ''), '_blank');
+    }
+
+    function visualisedField(doc) {
+        var found = '';
+        (function walk(root) {
+            if (found || !root || !root.querySelectorAll) return;
+            var hits = root.querySelectorAll('button[role="combobox"][aria-label="Group by dropdown"]');
+            for (var h = 0; h < hits.length && !found; h++) {
+                var r = hits[h].getBoundingClientRect();
+                if (r.width > 0 && r.height > 0) found = String(hits[h].textContent || '').trim();
+            }
+            var all = root.querySelectorAll('*');
+            for (var k = 0; k < all.length && !found; k++) {
+                if (all[k].shadowRoot) walk(all[k].shadowRoot);
+            }
+        })(doc);
+        return found.substring(0, 80);
     }
 }

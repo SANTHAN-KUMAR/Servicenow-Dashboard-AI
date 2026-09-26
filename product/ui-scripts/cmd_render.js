@@ -2910,7 +2910,8 @@
       /* Inside the workspace modal there is no "All subjects" to go back to --
          closing the modal is the way back. What the viewer can want instead is
          more room, so the same analysis opens full screen in a browser tab. */
-      var full = el('a', 'btn', 'Open full screen');
+      var full = el('a', 'btn', 'Open in new tab');
+      full.title = 'Open this analysis, with the same field and the same rows, in its own browser tab';
       full.href = window.location.href.replace(/([?&])embed=1(&|$)/, '$1').replace(/[?&]$/, '');
       full.target = '_blank';
       full.rel = 'noopener';
@@ -3949,7 +3950,10 @@
        reasonably conclude the click did nothing. The "You asked to see this" tag
        (buildPanel) is the honest marker; this is what gets it in front of them
        without them having to go hunting for it. */
-    if (payload.focusField) {
+    /* Not in field mode: there the whole page is about the one field, its name
+       is the page title, and jumping past the title and the record count to the
+       first of its panels only hides what the page is. */
+    if (payload.focusField && !payload.fieldMode) {
       var focusEl = mount.querySelector('.cp.focus');
       if (focusEl && focusEl.scrollIntoView) {
         focusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });

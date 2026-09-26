@@ -64,7 +64,17 @@ FRAME = "/x_2185255_command_cmd_frame.do"
 SRC = (FRAME + "?ws=1&embed=1&panel=1&table={{table}}&wq={{query}}"
        "&wgroup={{groupBy}}&wsel={{sysIds}}")
 
-RETIRED_ACTIONS = ["x_2185255_command_analyse"]
+# 2026-09-26, the client's choice (option 1): the header button opens COMMAND in
+# the workspace modal via a client script, because only a client script runs at
+# click time -- and that is the only moment the field the employee is
+# visualising in the native Data visualization panel can be read (opening COMMAND
+# replaces that panel; the choice is in no URL, storage or List-model token).
+# The side-panel records above stay deployed but the panel button is inactive.
+BUTTON = "x_2185255_command_analyse"
+CLIENT_SCRIPT = Path(__file__).resolve().parents[1] / "workspace" / "cmd_workspace_action.js"
+# 2026-09-27, the client's call: both buttons. "Analyse in COMMAND" (modal, follows
+# the visualised field) and "COMMAND side panel" (docked, follows grouping/ticks).
+RETIRED_ACTIONS = []
 
 
 def upsert(inst, table, key, keyval, payload):
@@ -148,11 +158,11 @@ def main():
         "payload_template": json.dumps({"src": SRC, "title": "COMMAND Analytics"}),
     })
     da = upsert(inst, "sys_declarative_action_assignment", "action_name", "x_2185255_command_panel", {
-        "label": "Analyse in COMMAND", "model": LIST_MODEL, "table": "global",
+        "label": "COMMAND side panel", "model": LIST_MODEL, "table": "global",
         "declarative_action_type": "uxf_client_action", "client_action": pd,
-        "active": "false" if args.remove else "true", "enabled": "true",
+        "active": "false" if args.remove else "true", "enabled": "true", "order": "51",
         "enable_for_all_experiences": "true", "record_selection_required": "false",
-        "button_type": "secondary", "order": "50",
+        "button_type": "secondary",
         "tooltip": "Analyse this list in COMMAND, beside the list. Group the list by a "
                    "column, or tick a row, and COMMAND opens straight on it.",
     })
@@ -165,6 +175,16 @@ def main():
             "fields": {"type": "MAP_CONTAINER", "container": {
                 "src": {"type": "EVENT_PAYLOAD_BINDING", "binding": {"address": ["src"]}},
                 "title": {"type": "EVENT_PAYLOAD_BINDING", "binding": {"address": ["title"]}}}}}}),
+    })
+
+    upsert(inst, "sys_declarative_action_assignment", "action_name", BUTTON, {
+        "label": "Analyse in COMMAND", "model": LIST_MODEL, "table": "global",
+        "declarative_action_type": "client_script", "client_script": CLIENT_SCRIPT.read_text(),
+        "active": "false" if args.remove else "true", "enabled": "true",
+        "enable_for_all_experiences": "true", "record_selection_required": "false",
+        "button_type": "secondary", "order": "50", "group": "",
+        "tooltip": "Analyse in COMMAND. Opens on the field you are visualising, the "
+                   "column you grouped by, or the rows you ticked.",
     })
 
     for name in RETIRED_ACTIONS + ["x_2185255_command_panel_spike"]:
@@ -180,7 +200,7 @@ def main():
                             f"{iframe_before} -> {iframe_after}. Restore it from its "
                             f"shipped version (doc 24 section 10).")
     print("\n  ServiceNow's iFrame component: unchanged, as shipped")
-    print(f"  'Analyse in COMMAND' {'removed' if args.remove else 'opens COMMAND as a side panel'}"
+    print(f"  'Analyse in COMMAND' {'removed' if args.remove else 'live (modal, follows the visualised field)'}"
           f" on every workspace list\n")
     return 0
 

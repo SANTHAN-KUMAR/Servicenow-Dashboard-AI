@@ -2404,8 +2404,70 @@ CmdData.prototype = {
      * how the renderer draws it.
      */
     seriesByGroup: function (table, dateField, groupField, grain, buckets, query, budgetMs) {
+        /* A viewer proven to read every row of this query gets the trend from
+           indexed counts, one grouped count per period, over exactly the bucket
+           boundaries the scan uses. Same answer as the scan by construction, in
+           milliseconds instead of seconds -- and complete. Measured on dev390988:
+           the scan read 4,284 incidents in 5.3s for the first trend and then ran
+           out of allowance part-way through the next two (2,960 and 1,630 rows),
+           so the same field drew different "lower bound" numbers on every open.
+           Only for a trusted verdict, the same proof tieredGroupBy relies on;
+           everyone else keeps the permission-checked scan. Booleans stay on the
+           scan, for the accessor reason recorded at _boolGroupBy. */
+        var v = this.aclVerdict(table, query);
+        if (v.trusted && !v.denied && !(groupField && this._isBool(table, groupField))) {
+            var fast = this._fastSeries(table, dateField, groupField, grain || 'month',
+                                        buckets || 12, query);
+            if (fast) return fast;
+        }
         return this._one(table, query,
             this.specs.series(dateField, groupField, grain, buckets), budgetMs);
+    },
+
+    _fastSeries: function (table, dateField, groupField, grain, buckets, query) {
+        var ck = 'fs|' + table + '|' + dateField + '|' + (groupField || '') + '|' +
+                 grain + '|' + buckets + '|' + (query || '');
+        if (this._counts[ck] !== undefined) return this._counts[ck];
+        try {
+            var now = new GlideDateTime();
+            var periods = [], byGroup = {}, labels = {}, inWindow = 0, i, slot;
+            for (i = buckets - 1, slot = 0; i >= 0; i--, slot++) {
+                var b = this._bucketBounds(now, grain, i);
+                periods.push({ period: b.key, label: b.label, partial: i === 0 });
+                var q = dateField + '>=' + b.from + '^' + dateField + '<' + b.to;
+                if (query) q = query + '^' + q;
+                var ga = new GlideAggregate(table);
+                ga.addEncodedQuery(q);
+                ga.addAggregate('COUNT');
+                if (groupField) ga.groupBy(groupField);
+                ga.query();
+                while (ga.next()) {
+                    var raw = groupField ? ga.getValue(groupField) : '';
+                    var key = groupField ? this._canonKey(table, groupField, raw) : '';
+                    var n = parseInt(ga.getAggregate('COUNT'), 10) || 0;
+                    if (!byGroup[key]) {
+                        byGroup[key] = zeros(buckets);
+                        labels[key] = groupField ? this._label(ga, groupField, raw) : '';
+                    }
+                    byGroup[key][slot] += n;
+                    inWindow += n;
+                }
+            }
+            var dated = this.fastCount(table, (query ? query + '^' : '') + dateField + 'ISNOTEMPTY');
+            var series = [], k;
+            for (k in byGroup) {
+                if (!byGroup.hasOwnProperty(k)) continue;
+                series.push({ key: k, label: labels[k], counts: byGroup[k], total: sumArr(byGroup[k]) });
+            }
+            series.sort(function (x, y) { return y.total - x.total; });
+            var out = { periods: periods, series: series,
+                        outside: Math.max(0, dated - inWindow), grain: grain,
+                        scanned: dated, capped: false, timedOut: false, via: 'aggregate' };
+            this._counts[ck] = out;
+            return out;
+        } catch (e) {
+            return null;                  /* the scan remains the answer */
+        }
     },
 
     /**

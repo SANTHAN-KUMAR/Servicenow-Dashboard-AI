@@ -383,3 +383,37 @@ screen renames the component it points at**. ServiceNow's component became
   deliberately not automated. Resolve it in ServiceNow: open the component's
   *Versions* and **Revert to this version** on the June 2026 shipped version, and
   keep that Default-set entry out of anything moved to the client.
+
+## 11. Update, 2026-09-27: two buttons, following what the employee is looking at (0.3.4)
+
+The client's choice. Both buttons are verified by hand in a real browser, with a
+screenshot at every step.
+
+| Button | Opens | Follows |
+|---|---|---|
+| **Analyse in COMMAND** | the workspace pop-up, with **Open in new tab** | **the field shown in the native Data visualization panel** (Show visualization on Priority → COMMAND on Priority), otherwise the column the list is grouped by, a ticked row, or ticked rows |
+| **COMMAND side panel** | docked beside the list, in Data visualization's slot | the column the list is grouped by, a ticked row, or ticked rows |
+
+**Why only the pop-up follows the Data visualization field.** Only a client-script
+list action runs code at click time. That is the one moment the field is on
+screen: opening COMMAND replaces that panel, and the field is in no URL, no
+storage and no List-model token.
+
+- The script reads the label of the panel's `Group by dropdown` combobox,
+  read-only. The server maps the label to a field of the table
+  (`CmdWorkspace._fieldForLabel`) and ignores anything that is not one.
+- The side-panel button is configuration (a UXF client action). Measured: its
+  client script never runs.
+- If ServiceNow ever redraws that panel, the read finds nothing and COMMAND falls
+  back to the list's own context.
+
+**The field view is exact and stable.** For a viewer proven to read every row,
+trends come from indexed counts over the scan's own month boundaries
+(`CmdData._fastSeries`). On `incident` the fast path and an unlimited full scan
+matched on every value: 143 ms against 3.3 s. Before this, the same field drew
+different "lower bound" trend numbers on each open. The field's own breakdown is
+now drawn first, and the page no longer jumps past its title.
+
+**Still slow.** A full field view takes about 12 s on dev390988, because the KPI
+tiles and the spread chart still read rows one by one. Moving those to indexed
+aggregates for trusted viewers is the next performance step.

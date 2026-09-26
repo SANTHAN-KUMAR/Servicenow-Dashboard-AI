@@ -487,6 +487,22 @@ CmdPayload.prototype = {
 
         payload.panels = payload.panels.concat(dimPanels);
 
+        /* Field mode reads top-down as "this field": its own breakdown first,
+           then everything else about it in builder order, and the generic volume
+           line -- the same for every field of the list -- last. Opened on
+           Priority and then on State, the first chart used to be that identical
+           volume line, and the two pages looked the same at a glance. */
+        if (opts.fieldMode && payload.fieldMode) {
+            var ff = payload.fieldMode.field, own = [], rest = [], generic = [];
+            for (i = 0; i < payload.panels.length; i++) {
+                var pp = payload.panels[i];
+                if (pp.kind === 'dimension' && pp.field === ff) own.push(pp);
+                else if (pp.kind === 'series') generic.push(pp);
+                else rest.push(pp);
+            }
+            payload.panels = own.concat(rest, generic);
+        }
+
         /* ── the report matrix ──
          *
          * The artifact that separates a report from a dashboard, and the thing the
@@ -601,9 +617,15 @@ CmdPayload.prototype = {
 
         /* The trend, the week cycle and the calendar all read the same column. */
         if (dateField) {
-            plan.push(sp.series(dateField, null, grain, months));
-            plan.push(sp.dow(dateField));
-            plan.push(sp.day(dateField, 182));
+            /* The trend comes from indexed counts when the verdict is trusted
+               (CmdData.seriesByGroup); the week cycle and calendar still need rows. */
+            if (!v.trusted) plan.push(sp.series(dateField, null, grain, months));
+            /* Field mode draws neither a week cycle nor a calendar (_fieldGrid), so
+               it does not pay a full row pass for them. */
+            if (!opts.fieldMode) {
+                plan.push(sp.dow(dateField));
+                plan.push(sp.day(dateField, 182));
+            }
         }
 
         /* Numeric columns, for the ranking that decides which are worth a chart. */
@@ -663,7 +685,12 @@ CmdPayload.prototype = {
         var sp = this.data.specs;
         var plan = [], i;
 
-        if (dateField) {
+        /* A trusted verdict gets its trends from indexed counts in
+           CmdData.seriesByGroup, so planning them onto the row scan would spend
+           the allowance on answers the index already has and starve the scans
+           that genuinely need rows (measures, pairs). */
+        var trustedLead = this.data.aclVerdict(table, query).trusted;
+        if (dateField && !trustedLead) {
             plan.push(sp.series(dateField, lead.primary.name, grain, months));
             /* Three buckets, for the change breakdown's two complete periods. */
             plan.push(sp.series(dateField, lead.primary.name, grain, 3));

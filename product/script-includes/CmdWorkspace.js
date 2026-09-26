@@ -198,6 +198,13 @@ CmdWorkspace.prototype = {
            well as the bare field, whichever a host workspace's client sends. */
         var group = String(raw.group || '').replace(/^\^?GROUPBY/, '') || groupFromQuery ||
                     listGroup;
+        /* The field the employee was visualising in the native Data
+           visualization panel, sent as its label. It wins over the list's
+           grouping: it is what they were looking at when they clicked. Mapped
+           to a field of this table by exact label, the list's own columns
+           first; a label that is not a field of this table is ignored. */
+        var byLabel = this._fieldForLabel(probe, String(raw.groupLabel || ''), out.columns);
+        if (byLabel) group = byLabel;
         if (group && /^[a-z0-9_]{1,80}$/.test(group) && probe.isValidField(group)) {
             out.focus = group;
         }
@@ -418,6 +425,26 @@ CmdWorkspace.prototype = {
             if (/^[a-z0-9_]{1,80}$/.test(f)) out.push(f);
         }
         return out;
+    },
+
+    _fieldForLabel: function (probe, label, columns) {
+        label = label.replace(/^\s+|\s+$/g, '').toLowerCase();
+        if (!label || label.length > 80) return '';
+        var gr = new GlideRecord(probe.getTableName());
+        gr.initialize();
+        var i, f;
+        for (i = 0; i < (columns || []).length; i++) {
+            f = columns[i];
+            if (!gr.isValidField(f)) continue;
+            var ce = gr.getElement(f);
+            if (ce !== null && ce !== undefined && String(ce.getLabel()).toLowerCase() === label) return f;
+        }
+        /* getElements(), not getFields(): the latter is refused in a scoped app. */
+        var els = gr.getElements();
+        for (i = 0; i < els.length; i++) {
+            if (String(els[i].getLabel()).toLowerCase() === label) return String(els[i].getName());
+        }
+        return '';
     },
 
     /* Drops view state (ORDERBY, the ^EQ terminator) and lifts GROUPBY out. */
